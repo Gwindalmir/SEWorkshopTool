@@ -12,7 +12,7 @@ using VRage.Utils;
 
 namespace SEBatchModTool
 {
-    class Uploader
+    class Uploader : IMod
     {
         string m_modPath;
         bool m_compile;
@@ -20,8 +20,8 @@ namespace SEBatchModTool
         ulong m_modId = 0;
         string m_title;
         SteamSDK.PublishedFileVisibility m_visibility;
-        readonly string[] tags = { "mod" };
-        readonly string[] ignoredExtensions = { ".sbmi" };
+        readonly string[] m_tags = { MySteamWorkshop.WORKSHOP_MOD_TAG };
+        readonly string[] m_ignoredExtensions = { ".sbmi" };
 
         private static MyScriptManager _scriptManager;
         private static MethodInfo _publishMethod;
@@ -29,6 +29,8 @@ namespace SEBatchModTool
 
         public string Title { get { return m_title; } }
         public ulong ModId { get { return m_modId; } }
+
+        public string ModPath { get { return m_modPath; } }
 
         public Uploader(string path, bool compile = false, bool dryrun = false, bool development = false, SteamSDK.PublishedFileVisibility visibility = SteamSDK.PublishedFileVisibility.Public)
         {
@@ -54,7 +56,7 @@ namespace SEBatchModTool
             }
 
             if (development)
-                tags[tags.Length - 1] = MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG;
+                m_tags[m_tags.Length - 1] = MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG;
 
         }
 
@@ -122,8 +124,8 @@ namespace SEBatchModTool
                         null,
                         new ulong?(m_modId),
                         m_visibility,
-                        tags,
-                        ignoredExtensions
+                        m_tags,
+                        m_ignoredExtensions
                 });
 
                 MyDebug.AssertDebug(ret is ulong);

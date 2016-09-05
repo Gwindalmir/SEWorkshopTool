@@ -18,6 +18,8 @@ using System.Runtime.InteropServices;
 using Sandbox.Game.World;
 using VRage.Game;
 using VRage.Scripting;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SEBatchModTool
 {
@@ -25,6 +27,8 @@ namespace SEBatchModTool
     {
         private static MySandboxGame m_spacegame = null;
         private static MyCommonProgramStartup m_startup;
+        private static MySteamService m_steamService;
+
         const uint AppId_SE = 244850;      // MUST MATCH SE
         const uint AppId_ME = 333950;      // TODO
 
@@ -55,7 +59,19 @@ namespace SEBatchModTool
                 if (methodtoreplace != null && methodtoinject != null)
                     MethodUtil.ReplaceMethod(methodtoreplace, methodtoinject);
 
-                UploadMods(options);
+                System.Threading.Tasks.Task Task;
+
+                if (options.Download)
+                    Task = DownloadMods(options);
+                else
+                    Task = UploadMods(options);
+
+                // Wait for file transfers to finish (separate thread)
+                while (!Task.Wait(500))
+                {
+                    if (MySteam.API != null)
+                        MySteam.API.RunCallbacks();
+                }
 
                 // Cleanup
                 CleanupSandbox();
@@ -66,6 +82,7 @@ namespace SEBatchModTool
         private static void CleanupSandbox()
         {
             VRage.Plugins.MyPlugins.Unload();   // Prevents assert in debug
+            m_steamService.Dispose();
         }
 
         // This is mostly copied from MyProgram.Main(), with UI stripped out.
@@ -83,36 +100,33 @@ namespace SEBatchModTool
 
             if (!m_startup.Check64Bit()) return;
 
-            using (MySteamService steamService = new MySteamService(MySandboxGame.IsDedicated, AppId_SE))
+            m_steamService = new MySteamService(MySandboxGame.IsDedicated, AppId_SE);
+            SpaceEngineersGame.SetupPerGameSettings();
+
+            if (!m_startup.CheckSteamRunning(m_steamService)) return;
+
+            VRageGameServices services = new VRageGameServices(m_steamService);
+
+            if (!MySandboxGame.IsDedicated)
+                MyFileSystem.InitUserSpecific(m_steamService.UserId.ToString());
+
+            try
             {
-                SpaceEngineersGame.SetupPerGameSettings();
-
-                if (!m_startup.CheckSteamRunning(steamService)) return;
-
-                VRageGameServices services = new VRageGameServices(steamService);
-
-                if (!MySandboxGame.IsDedicated)
-                    MyFileSystem.InitUserSpecific(steamService.UserId.ToString());
-
-                try
-                {
-                    // NOTE: an assert may be thrown in debug, about missing Tutorials.sbx. Ignore it.
-                    m_spacegame = new SpaceEngineersGame(services, null);
-                }
-                catch(Exception ex)
-                {
-                    // This shouldn't fail, but don't stop even if it does
-                    System.Console.WriteLine("An exception occured, ignoring: " + ex.Message);
-                }
+                // NOTE: an assert may be thrown in debug, about missing Tutorials.sbx. Ignore it.
+                m_spacegame = new SpaceEngineersGame(services, null);
+            }
+            catch(Exception ex)
+            {
+                // This shouldn't fail, but don't stop even if it does
+                System.Console.WriteLine("An exception occured, ignoring: " + ex.Message);
             }
         }
         #endregion
 
-        static void UploadMods(Options options)
+        static System.Threading.Tasks.Task UploadMods(Options options)
         {
             // Get PublishItemBlocking internal method via reflection
             System.Console.WriteLine(System.Environment.NewLine + "Beginning batch mod upload...");
-            System.Threading.Tasks.Task[] Tasks = new System.Threading.Tasks.Task[options.ModPaths.Length];
 
             var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
@@ -132,17 +146,49 @@ namespace SEBatchModTool
                     }
                     System.Console.WriteLine();
                 }
+                System.Console.WriteLine("Batch mod upload complete!");
             });
 
-            Thread.Sleep(2000);
-            // Wait for uploads to finish (separate thread)
-            while (!Task.Wait(500))
-            {
-                if (MySteam.API != null)
-                    MySteam.API.RunCallbacks();
-            }
+            return Task;
+        }
 
-            System.Console.WriteLine("Batch mod upload complete!");
+        static System.Threading.Tasks.Task DownloadMods(Options options)
+        {
+            // Get PublishItemBlocking internal method via reflection
+            System.Console.WriteLine(System.Environment.NewLine + "Beginning batch mod download...");
+
+            var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
+            {
+                var items = new List<MySteamWorkshop.SubscribedItem>();
+                var modids = options.ModPaths.Select(ulong.Parse);
+
+                if (MySteamWorkshop.GetItemsBlocking(items, modids))
+                {
+                    var result = MySteamWorkshop.DownloadModsBlocking(items);
+                    if( result.Success )
+                    {
+                        System.Console.WriteLine("Download success!");
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("Download FAILED!");
+                        return;
+                    }
+
+                    if (options.Extract)
+                    {
+                        foreach (var item in items)
+                        {
+                            var mod = new Downloader(MyFileSystem.ModsPath, item.PublishedFileId, item.Title, item.Tags);
+                            mod.Extract();
+                            System.Console.WriteLine();
+                        }
+                    }
+                }
+                System.Console.WriteLine("Batch mod download complete!");
+            });
+
+            return Task;
         }
     }
 }

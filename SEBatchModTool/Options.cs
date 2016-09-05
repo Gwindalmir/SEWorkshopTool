@@ -34,7 +34,13 @@ namespace SEBatchModTool
         [Option('d', "dry-run", DefaultValue = false, HelpText = "Only run a test, do not actually upload. Useful with --compile")]
         public bool DryRun { get; set; }
 
-        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload", Required = true)]
+        [Option("download", DefaultValue = false, HelpText = "Download mods")]
+        public bool Download { get; set; }
+
+        [Option('e', "extract", DefaultValue = false, HelpText = "Extract downloaded mods (valid for download only)")]
+        public bool Extract { get; set; }
+
+        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode)", Required = true)]
         public string[] ModPaths { get; set; } 
     }
 }
