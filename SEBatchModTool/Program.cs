@@ -80,7 +80,7 @@ namespace SEBatchModTool
             var appDataPath = m_startup.GetAppDataPath();
             MyInitializer.InvokeBeforeRun(AppId_SE, MyPerGameSettings.BasicGameInfo.ApplicationName, appDataPath);
             MyInitializer.InitCheckSum();
-            m_startup.InitSplashScreen();
+
             if (!m_startup.Check64Bit()) return;
 
             using (MySteamService steamService = new MySteamService(MySandboxGame.IsDedicated, AppId_SE))
