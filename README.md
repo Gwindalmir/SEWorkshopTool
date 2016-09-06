@@ -13,9 +13,9 @@ Please note, this is a command-line application only. A GUI may be considered in
 
 # Build Steps
 1. Open **SEBatchModTool.sln**
-2. Change the references for *Sandbox.Game.dll*, *SpaceEngineers.Game.dll*, *Vrage.dll*, *VRage.Game.dll*, *VRage.Library.dll*, and *VRage.Scripting.dll* to point to the location where Space Engineers is installed (typically *&lt;SteamApps&gt;\Common\SpaceEngineers\Bin64*
+2. Change the references for *CommandLine.dll*, *Sandbox.Game.dll*, *SpaceEngineers.Game.dll*, *Vrage.dll*, *VRage.Game.dll*, *VRage.Library.dll*, and *VRage.Scripting.dll* to point to the location where Space Engineers is installed (typically *&lt;SteamApps&gt;\Common\SpaceEngineers\Bin64*
 3. Select **Release**, **Any CPU**, and build the solution.
-4. Copy the following files into the Space Engineers *Bin64* directory above: *CommandLine.dll*, *SEBatchModTool.exe*, and *SEBatchModTool.exe.config*.
+4. Copy the following files into the Space Engineers *Bin64* directory above: *SEBatchModTool.exe*, and *SEBatchModTool.exe.config*.
 5. Open a command prompt in the Space Engineers *Bin64* directory as used above.
 6. Run the tool with the appropriate options.
 
