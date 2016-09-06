@@ -1,4 +1,5 @@
-﻿using Sandbox.Engine.Networking;
+﻿using Sandbox;
+using Sandbox.Engine.Networking;
 using Sandbox.Game.World;
 using System;
 using System.Collections.Generic;
@@ -71,7 +72,7 @@ namespace SEBatchModTool
             {
                 if (_compileMethod != null)
                 {
-                    System.Console.WriteLine("Compiling...");
+                    MySandboxGame.Log.WriteLineAndConsole("Compiling...");
                     var mod = new MyModContext();
                     mod.Init(m_title, null, m_modPath);
                     _compileMethod.Invoke(_scriptManager, new object[]
@@ -84,15 +85,16 @@ namespace SEBatchModTool
                     var errors = MyDefinitionErrors.GetErrors();
                     if (errors.Count > 0)
                     {
-                        System.Console.WriteLine("There are {0} compile errors:", errors.Count);
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile errors:", errors.Count));
                         foreach (var error in errors)
-                            System.Console.WriteLine("{0}: {1}", error.ModName, error.Message);
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("{0}: {1}", error.ModName, error.Message));
 
                         MyDefinitionErrors.Clear();     // Clear old ones, so next mod starts fresh
-                        System.Console.WriteLine("Compilation FAILED!");
+                        MySandboxGame.Log.WriteLineAndConsole("Compilation FAILED!");
                         return false;
                     }
-                    System.Console.WriteLine("Compilation successful!" + System.Environment.NewLine);
+                    MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
+                    MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                 }
                 return true;
             }
@@ -110,17 +112,17 @@ namespace SEBatchModTool
             // Upload/Publish
             if (m_modId == 0)
             {
-                System.Console.WriteLine("Uploading new mod: {0}", m_title);
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Uploading new mod: {0}", m_title));
                 newMod = true;
             }
             else
             {
-                System.Console.WriteLine("Updating mod: {0}; {1}", m_title, m_modId);
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating mod: {0}; {1}", m_title, m_modId));
             }
 
             if (m_dryrun)
             {
-                System.Console.WriteLine("DRY-RUN; No action taken");
+                MySandboxGame.Log.WriteLineAndConsole("DRY-RUN; No action taken");
             }
             else
             {
@@ -140,21 +142,21 @@ namespace SEBatchModTool
 
                 if (m_modId == 0)
                 {
-                    System.Console.WriteLine("Upload/Publish FAILED!");
+                    MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
                     return false;
                 }
                 else
                 {
-                    System.Console.WriteLine("Upload/Publish success: {0}", m_modId);
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId));
                     if (newMod)
                     {
                         if (MySteamWorkshop.GenerateModInfo(m_modPath, m_modId, MySteam.UserId))
                         {
-                            System.Console.WriteLine("Create modinfo.sbmi success: {0}", m_modId);
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi success: {0}", m_modId));
                         }
                         else
                         {
-                            System.Console.WriteLine("Create modinfo.sbmi FAILED: {0}", m_modId);
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi FAILED: {0}", m_modId));
                             return false;
                         }
                     }

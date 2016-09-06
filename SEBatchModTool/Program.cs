@@ -122,7 +122,7 @@ namespace SEBatchModTool
             catch(Exception ex)
             {
                 // This shouldn't fail, but don't stop even if it does
-                System.Console.WriteLine("An exception occured, ignoring: " + ex.Message);
+                MySandboxGame.Log.WriteLineAndConsole("An exception occured, ignoring: " + ex.Message);
             }
         }
         #endregion
@@ -130,27 +130,28 @@ namespace SEBatchModTool
         static System.Threading.Tasks.Task UploadMods(Options options)
         {
             // Get PublishItemBlocking internal method via reflection
-            System.Console.WriteLine(System.Environment.NewLine + "Beginning batch mod upload...");
+            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
+            MySandboxGame.Log.WriteLineAndConsole("Beginning batch mod upload...");
 
             var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
                 for (int idx = 0; idx < options.ModPaths.Length; idx++)
                 {
                     var mod = new Uploader(Path.GetFullPath(options.ModPaths[idx]), options.Compile, options.DryRun, options.Development, options.Visibility);
-                    System.Console.WriteLine("Processing mod: {0}", mod.Title);
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing mod: {0}", mod.Title));
 
                     if (mod.Compile())
                     {
                         if( mod.Publish() )
-                            System.Console.WriteLine("Complete: {0}", mod.Title);
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
                     }
                     else
                     {
-                        System.Console.WriteLine("Skipping mod: {0}", mod.Title);
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Skipping mod: {0}", mod.Title));
                     }
-                    System.Console.WriteLine();
+                    MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                 }
-                System.Console.WriteLine("Batch mod upload complete!");
+                MySandboxGame.Log.WriteLineAndConsole("Batch mod upload complete!");
             });
 
             return Task;
@@ -159,7 +160,8 @@ namespace SEBatchModTool
         static System.Threading.Tasks.Task DownloadMods(Options options)
         {
             // Get PublishItemBlocking internal method via reflection
-            System.Console.WriteLine(System.Environment.NewLine + "Beginning batch mod download...");
+            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
+            MySandboxGame.Log.WriteLineAndConsole("Beginning batch mod download...");
 
             var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
@@ -171,11 +173,11 @@ namespace SEBatchModTool
                     var result = MySteamWorkshop.DownloadModsBlocking(items);
                     if( result.Success )
                     {
-                        System.Console.WriteLine("Download success!");
+                        MySandboxGame.Log.WriteLineAndConsole("Download success!");
                     }
                     else
                     {
-                        System.Console.WriteLine("Download FAILED!");
+                        MySandboxGame.Log.WriteLineAndConsole("Download FAILED!");
                         return;
                     }
 
@@ -185,11 +187,11 @@ namespace SEBatchModTool
                         {
                             var mod = new Downloader(MyFileSystem.ModsPath, item.PublishedFileId, item.Title, item.Tags);
                             mod.Extract();
-                            System.Console.WriteLine();
+                            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                         }
                     }
                 }
-                System.Console.WriteLine("Batch mod download complete!");
+                MySandboxGame.Log.WriteLineAndConsole("Batch mod download complete!");
             });
 
             return Task;

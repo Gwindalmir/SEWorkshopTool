@@ -1,4 +1,5 @@
-﻿using Sandbox.Engine.Networking;
+﻿using Sandbox;
+using Sandbox.Engine.Networking;
 using Sandbox.Game.World;
 using System;
 using System.Collections.Generic;
@@ -48,7 +49,7 @@ namespace SEBatchModTool
             var sanitizedTitle = Path.GetInvalidFileNameChars().Aggregate(Title, (current, c) => current.Replace(c.ToString(), "_"));
             var source = Path.Combine(m_modPath, m_modId.ToString() + ext);
             var dest = Path.Combine(m_modPath, string.Format("{0}_{1}", sanitizedTitle, m_modId.ToString()));
-            System.Console.WriteLine("Extracting mod: '{0}' to: \"{1}\"", sanitizedTitle, dest);
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Extracting mod: '{0}' to: \"{1}\"", sanitizedTitle, dest));
             MyZipArchive.ExtractToDirectory(source, dest);
             return true;
         }
