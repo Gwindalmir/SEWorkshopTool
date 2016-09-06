@@ -105,11 +105,18 @@ namespace SEBatchModTool
         /// <returns></returns>
         public bool Publish()
         {
+            bool newMod = false;
+
             // Upload/Publish
             if (m_modId == 0)
+            {
                 System.Console.WriteLine("Uploading new mod: {0}", m_title);
+                newMod = true;
+            }
             else
+            {
                 System.Console.WriteLine("Updating mod: {0}; {1}", m_title, m_modId);
+            }
 
             if (m_dryrun)
             {
@@ -139,6 +146,18 @@ namespace SEBatchModTool
                 else
                 {
                     System.Console.WriteLine("Upload/Publish success: {0}", m_modId);
+                    if (newMod)
+                    {
+                        if (MySteamWorkshop.GenerateModInfo(m_modPath, m_modId, MySteam.UserId))
+                        {
+                            System.Console.WriteLine("Create modinfo.sbmi success: {0}", m_modId);
+                        }
+                        else
+                        {
+                            System.Console.WriteLine("Create modinfo.sbmi FAILED: {0}", m_modId);
+                            return false;
+                        }
+                    }
                 }
             }
             return true;
