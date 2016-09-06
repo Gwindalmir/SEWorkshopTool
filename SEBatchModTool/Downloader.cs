@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VRage.Compression;
 using VRage.Game;
@@ -44,9 +45,10 @@ namespace SEBatchModTool
             else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_WORLD_TAG))
                 ext = ".sbw";
 
+            var sanitizedTitle = Path.GetInvalidFileNameChars().Aggregate(Title, (current, c) => current.Replace(c.ToString(), "_"));
             var source = Path.Combine(m_modPath, m_modId.ToString() + ext);
-            var dest = Path.Combine(m_modPath, string.Format("{0}_{1}", Title, m_modId.ToString()));
-            System.Console.WriteLine("Extracting mod: '{0}' to: \"{1}\"", Title, dest);
+            var dest = Path.Combine(m_modPath, string.Format("{0}_{1}", sanitizedTitle, m_modId.ToString()));
+            System.Console.WriteLine("Extracting mod: '{0}' to: \"{1}\"", sanitizedTitle, dest);
             MyZipArchive.ExtractToDirectory(source, dest);
             return true;
         }
