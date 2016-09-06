@@ -27,7 +27,7 @@ namespace SEBatchModTool
     {
         private static MySandboxGame m_spacegame = null;
         private static MyCommonProgramStartup m_startup;
-        private static MySteamService m_steamService;
+        private static Sandbox.MySteamService m_steamService;
 
         const uint AppId_SE = 244850;      // MUST MATCH SE
         const uint AppId_ME = 333950;      // TODO
@@ -39,6 +39,10 @@ namespace SEBatchModTool
 
             if (parser.ParseArgumentsStrict(args, options, () => Environment.Exit(-2)))
             {
+                // Steam API doesn't initialize correctly if it can't find steam_appid.txt
+                if (!File.Exists("steam_appid.txt"))
+                    Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(VRage.FastResourceLock).Assembly.Location) + "\\..");
+
                 // Initialize game code
                 InitSandbox(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineers"));
 
@@ -95,7 +99,7 @@ namespace SEBatchModTool
             m_startup = new MyCommonProgramStartup(new string[] { });
 
             var appDataPath = m_startup.GetAppDataPath();
-            MyInitializer.InvokeBeforeRun(AppId_SE, MyPerGameSettings.BasicGameInfo.ApplicationName, appDataPath);
+            MyInitializer.InvokeBeforeRun(AppId_SE, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", appDataPath);
             MyInitializer.InitCheckSum();
 
             if (!m_startup.Check64Bit()) return;
