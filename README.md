@@ -19,7 +19,9 @@ Please note, this is a command-line application only. A GUI may be considered in
 5. Open a command prompt in the Space Engineers *Bin64* directory as used above.
 6. Run the tool with the appropriate options.
 
-# Example
+# Examples
+
+## Uploading
 To upload a mod, execute the following:
 `SEBatchModTool --mods %appdata%\SpaceEngineers\Mods\FTL`
 
@@ -34,4 +36,14 @@ If you just prefer to test the compilation, without uploading to the workshop, y
 
 To upload a mod tagged for the development branch, use the **--dev** argument (can be combined with above options):
 `SEBatchModTool --dev --mods %appdata%\SpaceEngineers\Mods\FTL`
+
+
+## Downloading
+To download a set of mods, use the **--download** argument. Then supply a list of workshop IDs with the **--mods** argument.
+`SEBatchModTool --download --mods 754173702 681276386`
+
+If desired, you can also automatically extract the mods to your local *%appdata%\SpaceEngineers\Mods* directory with the **--extract** argument:
+`SEBatchModTool --extract --download --mods 754173702 681276386`
+
+They will be extracted to a directory in the format: *&lt;Mod Title&gt;_&lt;WorkshopId&gt;*
 
