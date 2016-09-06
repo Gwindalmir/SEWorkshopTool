@@ -37,6 +37,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\CommandLine.dll</HintPath>
+    </Reference>
     <Reference Include="Sandbox.Game, Version=0.1.6081.18645, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\trunk\Sources\SpaceEngineers\bin\x64\Debug\Bin64\Sandbox.Game.dll</HintPath>
@@ -88,12 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CommandLine\src\libcmdline\CommandLine.csproj">
-      <Project>{5dea2811-2ffa-4959-830b-cad3acacabeb}</Project>
-      <Name>CommandLine</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
