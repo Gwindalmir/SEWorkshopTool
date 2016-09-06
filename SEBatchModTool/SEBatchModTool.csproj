@@ -79,6 +79,7 @@
     <Compile Include="IMod.cs" />
     <Compile Include="InjectedMethod.cs" />
     <Compile Include="MethodUtil.cs" />
+    <Compile Include="MySteamService.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
