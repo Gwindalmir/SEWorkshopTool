@@ -9,21 +9,8 @@ namespace SEBatchModTool
 {
     public sealed class Options
     {
-        private SteamSDK.PublishedFileVisibility m_visibility = SteamSDK.PublishedFileVisibility.Public;
-        public SteamSDK.PublishedFileVisibility Visibility { get { return m_visibility; } }
-
-        [Option("visibility", DefaultValue = "Public", HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
-        public string VisibilityString
-        {
-            get { return Visibility.ToString(); }
-            set
-            {
-                if(!Enum.TryParse<SteamSDK.PublishedFileVisibility>(value, out m_visibility))
-                {
-                    throw new ArgumentOutOfRangeException("Visibility must be one of: Public, FriendsOnly, Private");
-                }
-            }
-        }
+        [Option("visibility", DefaultValue = SteamSDK.PublishedFileVisibility.Public, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
+        public SteamSDK.PublishedFileVisibility Visibility { get; set; }
 
         [Option("dev", DefaultValue = false, HelpText = "Set to true if the mod will have the 'development' tag when uploaded")]
         public bool Development { get; set; }
@@ -40,7 +27,14 @@ namespace SEBatchModTool
         [Option('e', "extract", DefaultValue = false, HelpText = "Extract downloaded mods (valid for download only)")]
         public bool Extract { get; set; }
 
+        // Disable for now
+        //[Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
+        public bool Force { get; set; }
+
         [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode)", Required = true)]
-        public string[] ModPaths { get; set; } 
+        public string[] ModPaths { get; set; }
+
+        [OptionArray('t', "tags", HelpText = "List of workshop mod categories/tags to use (removes previous, default is keep existing)")]
+        public string[] Tags { get; set; }
     }
 }

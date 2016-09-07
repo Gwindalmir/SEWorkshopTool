@@ -118,6 +118,13 @@ namespace SEBatchModTool
             {
                 // NOTE: an assert may be thrown in debug, about missing Tutorials.sbx. Ignore it.
                 m_spacegame = new SpaceEngineersGame(services, null);
+
+                // Initializing the workshop means the categories are available
+                var initWorkshopMethod = typeof(SpaceEngineersGame).GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                MyDebug.AssertDebug(initWorkshopMethod != null);
+                if( initWorkshopMethod != null)
+                    initWorkshopMethod.Invoke(m_spacegame, null);
             }
             catch(Exception ex)
             {
@@ -137,7 +144,7 @@ namespace SEBatchModTool
             {
                 for (int idx = 0; idx < options.ModPaths.Length; idx++)
                 {
-                    var mod = new Uploader(Path.GetFullPath(options.ModPaths[idx]), options.Compile, options.DryRun, options.Development, options.Visibility);
+                    var mod = new Uploader(WorkshopType.mod, Path.GetFullPath(options.ModPaths[idx]), options.Tags, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing mod: {0}", mod.Title));
 
                     if (mod.Compile())
@@ -181,9 +188,10 @@ namespace SEBatchModTool
                         return;
                     }
 
-                    if (options.Extract)
+                    foreach (var item in items)
                     {
-                        foreach (var item in items)
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Mod '{0}' tags: ", item.PublishedFileId, item.Tags));
+                        if (options.Extract)
                         {
                             var mod = new Downloader(MyFileSystem.ModsPath, item.PublishedFileId, item.Title, item.Tags);
                             mod.Extract();

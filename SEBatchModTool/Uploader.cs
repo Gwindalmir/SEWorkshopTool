@@ -7,22 +7,38 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using VRage.Game;
 using VRage.Utils;
 
 namespace SEBatchModTool
 {
+    // The enum values must match the workshop tags used
+    enum WorkshopType
+    {
+        Invalid,
+        mod,
+        ingameScript,
+        blueprint,
+        world,
+        scenario,
+    }
+
     class Uploader : IMod
     {
+        readonly string[] m_ignoredExtensions = { ".sbmi" };
+
         string m_modPath;
         bool m_compile;
         bool m_dryrun;
         ulong m_modId = 0;
         string m_title;
         SteamSDK.PublishedFileVisibility m_visibility;
-        readonly string[] m_tags = { MySteamWorkshop.WORKSHOP_MOD_TAG };
-        readonly string[] m_ignoredExtensions = { ".sbmi" };
+        WorkshopType m_type;
+        string[] m_tags = new string[1];
+        bool m_isDev = false;
+        bool m_force;
 
         private static MyScriptManager _scriptManager;
         private static MethodInfo _publishMethod;
@@ -30,10 +46,9 @@ namespace SEBatchModTool
 
         public string Title { get { return m_title; } }
         public ulong ModId { get { return m_modId; } }
-
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(string path, bool compile = false, bool dryrun = false, bool development = false, SteamSDK.PublishedFileVisibility visibility = SteamSDK.PublishedFileVisibility.Public)
+        public Uploader(WorkshopType type, string path, string[] tags = null, bool compile = false, bool dryrun = false, bool development = false, SteamSDK.PublishedFileVisibility visibility = SteamSDK.PublishedFileVisibility.Public, bool force = false)
         {
             m_modPath = path;
             m_compile = compile;
@@ -41,8 +56,14 @@ namespace SEBatchModTool
             m_visibility = visibility;
             m_title = Path.GetFileName(path);
             m_modId = MySteamWorkshop.GetWorkshopIdFromLocalMod(m_modPath);
+            m_type = type;
+            m_isDev = development;
+            m_force = force;
 
-            if ( m_compile )
+            if( tags != null )
+                m_tags = tags;
+
+            if ( m_compile && m_type == WorkshopType.mod)
             {
                 if (_scriptManager == null)
                     _scriptManager = new MyScriptManager();
@@ -55,13 +76,6 @@ namespace SEBatchModTool
             {
                 _publishMethod = typeof(MySteamWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
             }
-
-            if (development)
-            {
-                Array.Resize(ref m_tags, m_tags.Length + 1);
-                m_tags[m_tags.Length - 1] = MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG;
-            }
-
         }
 
         /// <summary>
@@ -123,9 +137,12 @@ namespace SEBatchModTool
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating mod: {0}; {1}", m_title, m_modId));
             }
 
+            // Process Tags
+            ProcessTags();
+
             if (m_dryrun)
             {
-                MySandboxGame.Log.WriteLineAndConsole("DRY-RUN; No action taken");
+                MySandboxGame.Log.WriteLineAndConsole("DRY-RUN; Publish skipped");
             }
             else
             {
@@ -142,30 +159,146 @@ namespace SEBatchModTool
 
                 MyDebug.AssertDebug(ret is ulong);
                 m_modId = (ulong)ret;
-
-                if (m_modId == 0)
+            }
+            if (m_modId == 0)
+            {
+                MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
+                return false;
+            }
+            else
+            {
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId));
+                if (newMod)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
-                    return false;
-                }
-                else
-                {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId));
-                    if (newMod)
+                    if (MySteamWorkshop.GenerateModInfo(m_modPath, m_modId, MySteam.UserId))
                     {
-                        if (MySteamWorkshop.GenerateModInfo(m_modPath, m_modId, MySteam.UserId))
-                        {
-                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi success: {0}", m_modId));
-                        }
-                        else
-                        {
-                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi FAILED: {0}", m_modId));
-                            return false;
-                        }
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi success: {0}", m_modId));
+                    }
+                    else
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi FAILED: {0}", m_modId));
+                        return false;
                     }
                 }
             }
             return true;
+        }
+
+        void ProcessTags()
+        {
+            // TODO: This code could be better.
+
+            // Get the list of existing tags, if there are any
+            var existingTags = GetTags();
+            var length = m_tags.Length;
+
+            // Order or tag processing matters
+            // 1) Copy mod type into tags
+            var modtype = m_type.ToString();
+
+            // 2) Verify the modtype matches what was listed in the workshop
+            // TODO If type doesn't match, process as workshop type
+            if (existingTags.Length > 0)
+                MyDebug.AssertRelease(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
+
+            // 3a) check if user passed in the 'development' tag
+            // If so, remove it, and mark the mod as 'dev' so it doesn't get flagged later
+            if (m_tags.Contains(MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG))
+            {
+                m_tags = (from tag in m_tags where tag != MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG select tag).ToArray();
+                m_isDev = true;
+            }
+
+            // 3b If tags contain mod type, remove it
+            if (m_tags.Contains(modtype))
+            {
+                m_tags = (from tag in m_tags where tag != modtype select tag).ToArray();
+            }
+
+            // 4)
+            if ( m_tags.Length == 1 && m_tags[0] == null)
+            {
+                // 4a) If user passed no tags, use existing ones
+                Array.Resize(ref m_tags, existingTags.Length);
+                Array.Copy(existingTags, m_tags, existingTags.Length);
+            }
+            else
+            {
+                // 4b) Verify passed in tags are valid for this mod type
+                MySteamWorkshop.Category[] validTags = new MySteamWorkshop.Category[0];
+                switch(m_type)
+                {
+                    case WorkshopType.mod:
+                        validTags = MySteamWorkshop.ModCategories;
+                        break;
+                    case WorkshopType.blueprint:
+                        validTags = MySteamWorkshop.BlueprintCategories;
+                        break;
+                    case WorkshopType.scenario:
+                        validTags = MySteamWorkshop.ScenarioCategories;
+                        break;
+                    case WorkshopType.world:
+                        validTags = MySteamWorkshop.WorldCategories;
+                        break;
+                    case WorkshopType.ingameScript:
+                        //tags = new MySteamWorkshop.Category[0];     // There are none currently
+                        break;
+                    default:
+                        MyDebug.FailRelease("Invalid category.");
+                        break;
+                }
+
+                // This query gets all the items in 'm_tags' that do *not* exist in 'validTags'
+                // This is for detecting invalid tags passed in
+                var invalidItems = from utag in m_tags
+                                   where !(
+                                        from tag in validTags
+                                        select tag.Id
+                                   ).Contains(utag)
+                                   select utag;
+
+                if( invalidItems.Count() > 0 )
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} invalid tags: {1}", (m_force ? "Forced" : "Removing"), string.Join(", ", invalidItems)));
+
+                    if (!m_force)
+                        m_tags = (from tag in m_tags where !invalidItems.Contains(tag) select tag).ToArray();
+                }
+
+                // Now prepend the 'Type' tag
+                string[] newTags = new string[m_tags.Length + 1];
+                newTags[0] = m_type.ToString();
+                Array.Copy(m_tags, 0, newTags, 1, m_tags.Length);
+                m_tags = newTags;
+            }
+
+            // 5) Set or clear development tag
+            if (m_isDev)
+            {
+                // If user selected dev, add dev tag
+                if (!m_tags.Contains(MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG))
+                {
+                    Array.Resize(ref m_tags, m_tags.Length + 1);
+                    m_tags[m_tags.Length - 1] = MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG;
+                }
+            }
+            else
+            {
+                // If not, remove tag
+                if (m_tags.Contains(MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG))
+                    m_tags = (from tag in m_tags where tag != MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG select tag).ToArray(); 
+            }
+
+            // 6) Strip empty values
+            m_tags = m_tags.Where(x => !string.IsNullOrEmpty(x)).ToArray();
+
+            // Done
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Publishing with tags: {0}", string.Join(", ", m_tags)));
+        }
+
+        string[] GetTags()
+        {
+            return WorkshopHelper.GetSubscribedItem(m_modId).Tags;
         }
     }
 }
