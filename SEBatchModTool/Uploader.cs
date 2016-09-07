@@ -57,7 +57,10 @@ namespace SEBatchModTool
             }
 
             if (development)
+            {
+                Array.Resize(ref m_tags, m_tags.Length + 1);
                 m_tags[m_tags.Length - 1] = MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG;
+            }
 
         }
 
