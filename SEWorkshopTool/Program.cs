@@ -139,12 +139,22 @@ namespace SEWorkshopTool
             // Get PublishItemBlocking internal method via reflection
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
             MySandboxGame.Log.WriteLineAndConsole("Beginning batch mod upload...");
+            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
+            List<string> modPaths = new List<string>();
+            
+            // Check all mod paths for shell globs
+            foreach(var path in options.ModPaths)
+            {
+                var dirs = Directory.EnumerateDirectories(Path.GetDirectoryName(path), Path.GetFileName(path));
+                // Ignore directories starting with '.' (eg. ".vs")
+                modPaths.AddList(dirs.Where(i => !Path.GetFileName(i).StartsWith(".")).Select(i => i).ToList());
+            }
 
             var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
-                for (int idx = 0; idx < options.ModPaths.Length; idx++)
+                for (int idx = 0; idx < modPaths.Count; idx++)
                 {
-                    var mod = new Uploader(WorkshopType.mod, Path.GetFullPath(options.ModPaths[idx]), options.Tags, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
+                    var mod = new Uploader(WorkshopType.mod, Path.GetFullPath(modPaths[idx]), options.Tags, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
                     if (options.UpdateOnly && mod.ModId == 0)
                     {
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -174,6 +184,7 @@ namespace SEWorkshopTool
             // Get PublishItemBlocking internal method via reflection
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
             MySandboxGame.Log.WriteLineAndConsole("Beginning batch mod download...");
+            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
             var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
@@ -200,8 +211,8 @@ namespace SEWorkshopTool
                         {
                             var mod = new Downloader(MyFileSystem.ModsPath, item.PublishedFileId, item.Title, item.Tags);
                             mod.Extract();
-                            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                         }
+                        MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                     }
                 }
                 MySandboxGame.Log.WriteLineAndConsole("Batch mod download complete!");
