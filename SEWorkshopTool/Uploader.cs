@@ -129,12 +129,12 @@ namespace SEWorkshopTool
             // Upload/Publish
             if (m_modId == 0)
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Uploading new mod: {0}", m_title));
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Uploading new {0}: {1}", m_type.ToString(), m_title));
                 newMod = true;
             }
             else
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating mod: {0}; {1}", m_title, m_modId));
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_title, m_modId));
             }
 
             // Process Tags

@@ -34,8 +34,20 @@ namespace SEWorkshopTool
         //[Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
         public bool Force { get; set; }
 
-        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode)", Required = true)]
+        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode)")]
         public string[] ModPaths { get; set; }
+
+        [OptionArray('b', "blueprints", HelpText = "List of directories of blueprints to upload; or Workshop ID of blueprints to download (when in download mode)")]
+        public string[] Blueprints { get; set; }
+
+        [OptionArray('s', "scenarios", HelpText = "List of directories of scenarios to upload; or Workshop ID of scenarios to download (when in download mode)")]
+        public string[] Scenarios { get; set; }
+
+        [OptionArray('w', "worlds", HelpText = "List of directories of worlds to upload; or Workshop ID of worlds to download (when in download mode)")]
+        public string[] Worlds { get; set; }
+
+        [OptionArray('i', "scripts", HelpText = "List of directories of scripts to upload; or Workshop ID of scripts to download (when in download mode)")]
+        public string[] IngameScripts { get; set; }
 
         [OptionArray('t', "tags", HelpText = "List of workshop mod categories/tags to use (removes previous, default is keep existing)")]
         public string[] Tags { get; set; }

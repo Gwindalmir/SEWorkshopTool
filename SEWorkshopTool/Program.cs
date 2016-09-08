@@ -136,47 +136,84 @@ namespace SEWorkshopTool
 
         static System.Threading.Tasks.Task UploadMods(Options options)
         {
-            // Get PublishItemBlocking internal method via reflection
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
-            MySandboxGame.Log.WriteLineAndConsole("Beginning batch mod upload...");
-            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
-            List<string> modPaths = new List<string>();
-            
-            // Check all mod paths for shell globs
-            foreach(var path in options.ModPaths)
-            {
-                var dirs = Directory.EnumerateDirectories(Path.GetDirectoryName(path), Path.GetFileName(path));
-                // Ignore directories starting with '.' (eg. ".vs")
-                modPaths.AddList(dirs.Where(i => !Path.GetFileName(i).StartsWith(".")).Select(i => i).ToList());
-            }
 
             var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
-                for (int idx = 0; idx < modPaths.Count; idx++)
-                {
-                    var mod = new Uploader(WorkshopType.mod, Path.GetFullPath(modPaths[idx]), options.Tags, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
-                    if (options.UpdateOnly && mod.ModId == 0)
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
-                        continue;
-                    }
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing mod: {0}", mod.Title));
+                MySandboxGame.Log.WriteLineAndConsole("Beginning batch workshop upload...");
+                MySandboxGame.Log.WriteLineAndConsole(string.Empty);
+                List<string> itemPaths;
 
-                    if (mod.Compile())
-                    {
-                        if( mod.Publish() )
-                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
-                    }
-                    else
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Skipping mod: {0}", mod.Title));
-                    }
-                    MySandboxGame.Log.WriteLineAndConsole(string.Empty);
-                }
-                MySandboxGame.Log.WriteLineAndConsole("Batch mod upload complete!");
+                // Process mods
+                itemPaths = GetGlobbedPaths(options.ModPaths);
+                ProcessItemsUpload(WorkshopType.mod, itemPaths, options);
+
+                // Process blueprints
+                itemPaths = GetGlobbedPaths(options.Blueprints);
+                ProcessItemsUpload(WorkshopType.blueprint, itemPaths, options);
+
+                // Process ingame scripts
+                itemPaths = GetGlobbedPaths(options.IngameScripts);
+                ProcessItemsUpload(WorkshopType.ingameScript, itemPaths, options);
+
+                // Process worlds
+                itemPaths = GetGlobbedPaths(options.Worlds);
+                ProcessItemsUpload(WorkshopType.world, itemPaths, options);
+
+                // Process scenarios
+                itemPaths = GetGlobbedPaths(options.Scenarios);
+                ProcessItemsUpload(WorkshopType.scenario, itemPaths, options);
+
+                MySandboxGame.Log.WriteLineAndConsole("Batch workshop upload complete!");
             });
 
             return Task;
+        }
+
+        /// <summary>
+        /// Processes list of files, and returns a glob expanded list.
+        /// </summary>
+        /// <param name="paths"></param>
+        /// <returns></returns>
+        static List<string> GetGlobbedPaths(string[] paths)
+        {
+            List<string> itemPaths = new List<string>();
+
+            if (paths == null)
+                return itemPaths;
+
+            foreach (var path in paths)
+            {
+                var dirs = Directory.EnumerateDirectories(Path.GetDirectoryName(path), Path.GetFileName(path));
+                // Ignore directories starting with '.' (eg. ".vs")
+                itemPaths.AddList(dirs.Where(i => !Path.GetFileName(i).StartsWith(".")).Select(i => i).ToList());
+            }
+            return itemPaths;
+        }
+
+        static void ProcessItemsUpload(WorkshopType type, List<string> paths, Options options)
+        {
+            for (int idx = 0; idx < paths.Count; idx++)
+            {
+                var mod = new Uploader(type, Path.GetFullPath(paths[idx]), options.Tags, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
+                if (options.UpdateOnly && mod.ModId == 0)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
+                    continue;
+                }
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing {0}: {1}", type.ToString(), mod.Title));
+
+                if (mod.Compile())
+                {
+                    if (mod.Publish())
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
+                }
+                else
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Skipping {0}: {1}", type.ToString(), mod.Title));
+                }
+                MySandboxGame.Log.WriteLineAndConsole(string.Empty);
+            }
         }
 
         static System.Threading.Tasks.Task DownloadMods(Options options)
