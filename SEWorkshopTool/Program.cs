@@ -145,6 +145,11 @@ namespace SEWorkshopTool
                 for (int idx = 0; idx < options.ModPaths.Length; idx++)
                 {
                     var mod = new Uploader(WorkshopType.mod, Path.GetFullPath(options.ModPaths[idx]), options.Tags, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
+                    if (options.UpdateOnly && mod.ModId == 0)
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
+                        continue;
+                    }
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing mod: {0}", mod.Title));
 
                     if (mod.Compile())

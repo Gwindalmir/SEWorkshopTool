@@ -27,6 +27,9 @@ namespace SEWorkshopTool
         [Option('e', "extract", DefaultValue = false, HelpText = "Extract downloaded mods (valid for download only)")]
         public bool Extract { get; set; }
 
+        [Option('u', "update-only", DefaultValue = false, HelpText = "Only update existing mods (don't upload new)")]
+        public bool UpdateOnly { get; set; }
+
         // Disable for now
         //[Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
         public bool Force { get; set; }
