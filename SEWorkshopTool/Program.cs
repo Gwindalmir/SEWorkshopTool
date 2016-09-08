@@ -223,42 +223,102 @@ namespace SEWorkshopTool
         {
             // Get PublishItemBlocking internal method via reflection
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
-            MySandboxGame.Log.WriteLineAndConsole("Beginning batch mod download...");
-            MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
             var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
-                var items = new List<MySteamWorkshop.SubscribedItem>();
-                var modids = options.ModPaths.Select(ulong.Parse);
+                MySandboxGame.Log.WriteLineAndConsole("Beginning batch workshop download...");
+                MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
-                if (MySteamWorkshop.GetItemsBlocking(items, modids))
-                {
-                    var result = MySteamWorkshop.DownloadModsBlocking(items);
-                    if( result.Success )
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole("Download success!");
-                    }
-                    else
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole("Download FAILED!");
-                        return;
-                    }
+                ProcessItemsDownload(WorkshopType.mod, options.ModPaths, options);
+                ProcessItemsDownload(WorkshopType.blueprint, options.Blueprints, options);
+                ProcessItemsDownload(WorkshopType.ingameScript, options.IngameScripts, options);
+                ProcessItemsDownload(WorkshopType.world, options.Worlds, options);
+                ProcessItemsDownload(WorkshopType.scenario, options.Scenarios, options);
 
-                    foreach (var item in items)
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Mod '{0}' tags: ", item.PublishedFileId, item.Tags));
-                        if (options.Extract)
-                        {
-                            var mod = new Downloader(MyFileSystem.ModsPath, item.PublishedFileId, item.Title, item.Tags);
-                            mod.Extract();
-                        }
-                        MySandboxGame.Log.WriteLineAndConsole(string.Empty);
-                    }
-                }
-                MySandboxGame.Log.WriteLineAndConsole("Batch mod download complete!");
+                MySandboxGame.Log.WriteLineAndConsole("Batch workshop download complete!");
             });
 
             return Task;
+        }
+
+        static void ProcessItemsDownload(WorkshopType type, string[] paths, Options options)
+        {
+            if (paths == null)
+                return;
+
+            var items = new List<MySteamWorkshop.SubscribedItem>();
+            var modids = paths.Select(ulong.Parse);
+
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing {0}s...", type.ToString()));
+            // Get proper path to download to
+            var downloadPath = MyFileSystem.ModsPath;
+            switch(type)
+            {
+                case WorkshopType.blueprint:
+                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Blueprints", "local");
+                    break;
+                case WorkshopType.ingameScript:
+                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, Sandbox.Game.Gui.MyGuiIngameScriptsPage.SCRIPTS_DIRECTORY, "local"); ;
+                    break;
+                case WorkshopType.world:
+                case WorkshopType.scenario:
+                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteam.UserId.ToString());
+                    break;
+            }
+
+            if (MySteamWorkshop.GetItemsBlocking(items, modids))
+            {
+                bool success = false;
+                if (type == WorkshopType.mod)
+                {
+                    var result = MySteamWorkshop.DownloadModsBlocking(items);
+                    success = result.Success;
+                }
+                else
+                {
+                    if (type == WorkshopType.blueprint)
+                    {
+                        success = MySteamWorkshop.DownloadBlueprintsBlocking(items);
+                    }
+                    else if (type == WorkshopType.ingameScript)
+                    {
+                        var loopsucess = false;
+                        foreach (var item in items)
+                        {
+                            loopsucess = MySteamWorkshop.DownloadScriptBlocking(item);
+                            if (!loopsucess)
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.PublishedFileId));
+                            else
+                                success = true;
+                        }
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(string.Format("Downloading of {0} not yet supported.", type.ToString()));
+                    }
+                }
+
+                if (success)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole("Download success!");
+                }
+                else
+                {
+                    MySandboxGame.Log.WriteLineAndConsole("Download FAILED!");
+                    return;
+                }
+
+                foreach (var item in items)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} '{1}' tags: {2}", item.PublishedFileId, item.Title, string.Join(",", item.Tags)));
+                    if (options.Extract)
+                    {
+                        var mod = new Downloader(downloadPath, item.PublishedFileId, item.Title, item.Tags);
+                        mod.Extract();
+                    }
+                    MySandboxGame.Log.WriteLineAndConsole(string.Empty);
+                }
+            }
         }
     }
 }

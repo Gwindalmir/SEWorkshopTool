@@ -20,7 +20,7 @@ namespace SEWorkshopTool
         string m_modPath;
         ulong m_modId = 0;
         string m_title;
-        readonly string[] m_tags = { MySteamWorkshop.WORKSHOP_MOD_TAG };
+        string[] m_tags = new string[0];
 
         public string Title { get { return m_title; } }
         public ulong ModId { get { return m_modId; } }
@@ -31,6 +31,9 @@ namespace SEWorkshopTool
             m_modId = modid;
             m_title = title;
             m_modPath = path;
+
+            if ( tags != null )
+                m_tags = tags;
         }
 
         public bool Extract()
@@ -41,13 +44,19 @@ namespace SEWorkshopTool
                 ext = ".sbm";
             else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_BLUEPRINT_TAG))
                 ext = ".sbb";
-            else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_SCENARIO_TAG))
+            else if (m_tags.Contains(WorkshopType.ingameScript.ToString()))
                 ext = ".sbs";
             else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_WORLD_TAG))
                 ext = ".sbw";
+            else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_SCENARIO_TAG))
+                ext = ".sbs";
 
             var sanitizedTitle = Path.GetInvalidFileNameChars().Aggregate(Title, (current, c) => current.Replace(c.ToString(), "_"));
             var source = Path.Combine(m_modPath, m_modId.ToString() + ext);
+
+            if ( !File.Exists(source) )
+                source = Path.Combine(m_modPath, @"..\workshop", m_modId.ToString() + ext);
+
             var dest = Path.Combine(m_modPath, string.Format("{0} {1} ({2})", Constants.SEWT_Prefix, sanitizedTitle, m_modId.ToString()));
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Extracting mod: '{0}' to: \"{1}\"", sanitizedTitle, dest));
             MyZipArchive.ExtractToDirectory(source, dest);
