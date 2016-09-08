@@ -145,29 +145,40 @@ namespace SEWorkshopTool
                 List<string> itemPaths;
 
                 // Process mods
-                itemPaths = GetGlobbedPaths(options.ModPaths);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.mod, options.ModPaths));
                 ProcessItemsUpload(WorkshopType.mod, itemPaths, options);
 
                 // Process blueprints
-                itemPaths = GetGlobbedPaths(options.Blueprints);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.blueprint, options.Blueprints));
                 ProcessItemsUpload(WorkshopType.blueprint, itemPaths, options);
 
                 // Process ingame scripts
-                itemPaths = GetGlobbedPaths(options.IngameScripts);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.ingameScript, options.IngameScripts));
                 ProcessItemsUpload(WorkshopType.ingameScript, itemPaths, options);
 
                 // Process worlds
-                itemPaths = GetGlobbedPaths(options.Worlds);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.world, options.Worlds));
                 ProcessItemsUpload(WorkshopType.world, itemPaths, options);
 
                 // Process scenarios
-                itemPaths = GetGlobbedPaths(options.Scenarios);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.scenario, options.Scenarios));
                 ProcessItemsUpload(WorkshopType.scenario, itemPaths, options);
 
                 MySandboxGame.Log.WriteLineAndConsole("Batch workshop upload complete!");
             });
 
             return Task;
+        }
+
+        static string[] TestPathAndMakeAbsolute(WorkshopType type, string[] paths)
+        {
+            for (int idx = 0; paths != null && idx < paths.Length; idx++)
+            {
+                // If the passed in path doesn't exist, and is relative, try to match it with the expected data directory
+                if (!Directory.Exists(paths[idx]) && !Path.IsPathRooted(paths[idx]))
+                    paths[idx] = Path.Combine(WorkshopHelper.GetWorkshopItemPath(type), paths[idx]);
+            }
+            return paths;
         }
 
         /// <summary>
@@ -250,21 +261,8 @@ namespace SEWorkshopTool
             var modids = paths.Select(ulong.Parse);
 
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing {0}s...", type.ToString()));
-            // Get proper path to download to
-            var downloadPath = MyFileSystem.ModsPath;
-            switch(type)
-            {
-                case WorkshopType.blueprint:
-                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Blueprints", "local");
-                    break;
-                case WorkshopType.ingameScript:
-                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, Sandbox.Game.Gui.MyGuiIngameScriptsPage.SCRIPTS_DIRECTORY, "local"); ;
-                    break;
-                case WorkshopType.world:
-                case WorkshopType.scenario:
-                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteam.UserId.ToString());
-                    break;
-            }
+
+            var downloadPath = WorkshopHelper.GetWorkshopItemPath(type);
 
             if (MySteamWorkshop.GetItemsBlocking(items, modids))
             {
