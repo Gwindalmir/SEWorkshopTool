@@ -111,7 +111,6 @@ namespace SEWorkshopTool
                         return false;
                     }
                     MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
-                    MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                 }
                 return true;
             }
