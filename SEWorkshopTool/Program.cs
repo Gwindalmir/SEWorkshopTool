@@ -185,8 +185,11 @@ namespace SEWorkshopTool
             foreach (var path in paths)
             {
                 var dirs = Directory.EnumerateDirectories(Path.GetDirectoryName(path), Path.GetFileName(path));
-                // Ignore directories starting with '.' (eg. ".vs")
-                itemPaths.AddList(dirs.Where(i => !Path.GetFileName(i).StartsWith(".")).Select(i => i).ToList());
+                
+                itemPaths.AddList(dirs
+                    .Where(i => !(Path.GetFileName(i).StartsWith(".") ||                // Ignore directories starting with "." (eg. ".vs")
+                                Path.GetFileName(i).StartsWith(Constants.SEWT_Prefix))) // also ignore directories starting with "[_SEWT_]" (downloaded by this mod)
+                            .Select(i => i).ToList());
             }
             return itemPaths;
         }

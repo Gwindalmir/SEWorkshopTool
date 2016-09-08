@@ -48,7 +48,7 @@ namespace SEWorkshopTool
 
             var sanitizedTitle = Path.GetInvalidFileNameChars().Aggregate(Title, (current, c) => current.Replace(c.ToString(), "_"));
             var source = Path.Combine(m_modPath, m_modId.ToString() + ext);
-            var dest = Path.Combine(m_modPath, string.Format("{0}_{1}", sanitizedTitle, m_modId.ToString()));
+            var dest = Path.Combine(m_modPath, string.Format("{0} {1} ({2})", Constants.SEWT_Prefix, sanitizedTitle, m_modId.ToString()));
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Extracting mod: '{0}' to: \"{1}\"", sanitizedTitle, dest));
             MyZipArchive.ExtractToDirectory(source, dest);
             return true;

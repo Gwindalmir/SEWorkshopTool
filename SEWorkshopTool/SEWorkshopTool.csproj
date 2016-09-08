@@ -80,6 +80,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants.cs" />
     <Compile Include="IMod.cs" />
     <Compile Include="InjectedMethod.cs" />
     <Compile Include="MethodUtil.cs" />
