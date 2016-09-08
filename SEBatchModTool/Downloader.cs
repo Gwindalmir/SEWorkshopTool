@@ -13,7 +13,7 @@ using VRage.Compression;
 using VRage.Game;
 using VRage.Utils;
 
-namespace SEBatchModTool
+namespace SEWorkshopTool
 {
     class Downloader : IMod
     {

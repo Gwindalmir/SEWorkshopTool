@@ -5,7 +5,7 @@ using System.Text;
 using VRage.Utils;
 
 
-namespace SEBatchModTool
+namespace SEWorkshopTool
 {
     /// <summary>
     /// Keen's steam service calls RestartIfNecessary, which triggers steam to think the game was launched

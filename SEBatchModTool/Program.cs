@@ -21,7 +21,7 @@ using VRage.Scripting;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SEBatchModTool
+namespace SEWorkshopTool
 {
     class Program
     {

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using VRage.Game;
 using VRage.Utils;
 
-namespace SEBatchModTool
+namespace SEWorkshopTool
 {
     // The enum values must match the workshop tags used
     enum WorkshopType

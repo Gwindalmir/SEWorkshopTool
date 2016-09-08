@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SEBatchModTool
+namespace SEWorkshopTool
 {
     // This was taken from SESN, and butchered: https://github.com/Jimmacle/SESN/blob/master/SEServerNetwork/MethodUtil.cs
     public static class MethodUtil
