@@ -109,8 +109,10 @@ namespace SEWorkshopTool
         #region Sandbox stuff
         private static void CleanupSandbox()
         {
-            VRage.Plugins.MyPlugins.Unload();   // Prevents assert in debug
             m_steamService.Dispose();
+            m_spacegame.Dispose();
+            m_steamService = null;
+            m_spacegame = null;
         }
 
         // This is mostly copied from MyProgram.Main(), with UI stripped out.
