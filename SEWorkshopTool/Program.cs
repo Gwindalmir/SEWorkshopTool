@@ -53,6 +53,8 @@ namespace SEWorkshopTool
 
                     if (initmethod != null)
                         initmethod.Invoke(m_spacegame, null);
+                    else
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "InitModAPI"));
                 }
 
                 // Keen's code for WriteAndShareFileBlocking has a UI dependency
@@ -62,6 +64,8 @@ namespace SEWorkshopTool
 
                 if (methodtoreplace != null && methodtoinject != null)
                     MethodUtil.ReplaceMethod(methodtoreplace, methodtoinject);
+                else
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "WriteAndShareFileBlocking"));
 
                 System.Threading.Tasks.Task Task;
 
@@ -123,8 +127,10 @@ namespace SEWorkshopTool
                 var initWorkshopMethod = typeof(SpaceEngineersGame).GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
 
                 MyDebug.AssertDebug(initWorkshopMethod != null);
-                if( initWorkshopMethod != null)
+                if (initWorkshopMethod != null)
                     initWorkshopMethod.Invoke(m_spacegame, null);
+                else
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "InitSteamWorkshop"));
             }
             catch(Exception ex)
             {

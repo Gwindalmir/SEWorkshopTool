@@ -112,6 +112,10 @@ namespace SEWorkshopTool
                     }
                     MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
                 }
+                else
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                }
                 return true;
             }
             return true;
@@ -145,8 +149,10 @@ namespace SEWorkshopTool
             }
             else
             {
-                var ret = _publishMethod.Invoke(null, new object[]
+                if (_publishMethod != null)
                 {
+                    var ret = _publishMethod.Invoke(null, new object[]
+                    {
                         m_modPath,
                         m_title,
                         null,
@@ -154,10 +160,15 @@ namespace SEWorkshopTool
                         m_visibility,
                         m_tags,
                         m_ignoredExtensions
-                });
+                    });
 
-                MyDebug.AssertDebug(ret is ulong);
-                m_modId = (ulong)ret;
+                    MyDebug.AssertDebug(ret is ulong);
+                    m_modId = (ulong)ret;
+                }
+                else
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
+                }
             }
             if (m_modId == 0)
             {
