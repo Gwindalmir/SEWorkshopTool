@@ -55,5 +55,5 @@ To download a set of mods, use the **--download** argument. Then supply a list o
 If desired, you can also automatically extract the mods to your local *%appdata%\SpaceEngineers\Mods* directory with the **--extract** argument:  
 `SEWorkshopTool --extract --download --mods 754173702 681276386`
 
-They will be extracted to the standard Mods directory in the format: *&lt;Mod Title&gt;_&lt;WorkshopId&gt;*
+They will be extracted to their appropriate directory in the format: *[\_SEWT\_] &lt;Mod Title&gt; (&lt;WorkshopId&gt;)*
 
