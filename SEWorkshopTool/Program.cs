@@ -32,19 +32,38 @@ namespace SEWorkshopTool
         const uint AppId_SE = 244850;      // MUST MATCH SE
         const uint AppId_ME = 333950;      // TODO
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             var options = new Options();
             var parser = new CommandLine.Parser(with => with.HelpWriter = Console.Error);
 
-            if (parser.ParseArgumentsStrict(args, options, () => Environment.Exit(-2)))
+            if (parser.ParseArgumentsStrict(args, options, () => Environment.Exit(1)))
             {
                 // Steam API doesn't initialize correctly if it can't find steam_appid.txt
                 if (!File.Exists("steam_appid.txt"))
                     Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(VRage.FastResourceLock).Assembly.Location) + "\\..");
 
-                // Initialize game code
-                InitSandbox(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineers"));
+                if (options.ModPaths == null &&
+                    options.Blueprints == null &&
+                    options.IngameScripts == null &&
+                    options.Scenarios == null &&
+                    options.Worlds == null)
+                {
+                    System.Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
+                    return 1;
+                }
+
+                try
+                {
+                    // Initialize game code
+                    InitSandbox(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpaceEngineers"));
+                }
+                catch(Exception ex)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("An exception occurred intializing game libraries: {0}", ex.Message));
+                    MySandboxGame.Log.WriteLineAndConsole(ex.StackTrace);
+                    return 2;
+                }
 
                 if (options.Compile)
                 {
@@ -84,6 +103,7 @@ namespace SEWorkshopTool
                 // Cleanup
                 CleanupSandbox();
             }
+            return 0;
         }
 
         #region Sandbox stuff
