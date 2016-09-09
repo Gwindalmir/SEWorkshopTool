@@ -280,14 +280,37 @@ namespace SEWorkshopTool
                     }
                     else if (type == WorkshopType.ingameScript)
                     {
-                        var loopsucess = false;
+                        var loopsuccess = false;
                         foreach (var item in items)
                         {
-                            loopsucess = MySteamWorkshop.DownloadScriptBlocking(item);
-                            if (!loopsucess)
+                            loopsuccess = MySteamWorkshop.DownloadScriptBlocking(item);
+                            if (!loopsuccess)
                                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.PublishedFileId));
                             else
                                 success = true;
+                        }
+                    }
+                    else if(type == WorkshopType.world || type == WorkshopType.scenario)
+                    {
+                        var loopsuccess = false;
+                        string path;
+                        MySteamWorkshop.MyWorkshopPathInfo pathinfo = type == WorkshopType.world ? 
+                                                                MySteamWorkshop.MyWorkshopPathInfo.CreateWorldInfo() : 
+                                                                MySteamWorkshop.MyWorkshopPathInfo.CreateScenarioInfo();
+
+                        foreach (var item in items)
+                        {
+                            // This downloads and extracts automatically, no control over it
+                            loopsuccess = MySteamWorkshop.TryCreateWorldInstanceBlocking(item, pathinfo, out path, false);
+                            if (!loopsuccess)
+                            {
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.PublishedFileId));
+                            }
+                            else
+                            {
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Downloaded '{0}' to {1}", item.Title, path));
+                                success = true;
+                            }
                         }
                     }
                     else
