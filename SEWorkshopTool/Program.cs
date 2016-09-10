@@ -359,7 +359,7 @@ namespace SEWorkshopTool
 
                 foreach (var item in items)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} '{1}' tags: {2}", item.PublishedFileId, item.Title, string.Join(",", item.Tags)));
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} '{1}' tags: {2}", item.PublishedFileId, item.Title, string.Join(", ", item.Tags)));
                     if (options.Extract)
                     {
                         var mod = new Downloader(downloadPath, item.PublishedFileId, item.Title, item.Tags);
