@@ -20,7 +20,7 @@ namespace SEWorkshopTool
             {
                 MySteam.API.RemoteStorage.GetPublishedFileDetails(modid, 0, (ioFailure, result) =>
                 {
-                    if (!ioFailure)
+                    if (!ioFailure && result.Result == SteamSDK.Result.OK)
                     {
                         item.Description = result.Description;
                         item.Title = result.Title;
