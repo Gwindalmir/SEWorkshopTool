@@ -64,6 +64,7 @@ namespace SEWorkshopTool
                     MySandboxGame.Log.WriteLineAndConsole(ex.StackTrace);
                     return 2;
                 }
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("SEWT {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
                 if (options.Compile)
                 {
@@ -93,11 +94,22 @@ namespace SEWorkshopTool
                 else
                     Task = UploadMods(options);
 
-                // Wait for file transfers to finish (separate thread)
-                while (!Task.Wait(500))
+                try
                 {
-                    if (MySteam.API != null)
-                        MySteam.API.RunCallbacks();
+                    // Wait for file transfers to finish (separate thread)
+                    while (!Task.Wait(500))
+                    {
+                        if (MySteam.API != null)
+                            MySteam.API.RunCallbacks();
+                    }
+                }
+                catch(AggregateException ex)
+                {
+                    MyDebug.AssertDebug(Task.IsFaulted);
+                    MyDebug.AssertDebug(ex.InnerException != null);
+                    var exception = ex.InnerException;
+                    MySandboxGame.Log.WriteLineAndConsole("An exception occurred: " + exception.Message);
+                    MySandboxGame.Log.WriteLineAndConsole(exception.StackTrace);
                 }
 
                 // Cleanup
