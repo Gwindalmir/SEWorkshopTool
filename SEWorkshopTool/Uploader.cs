@@ -208,7 +208,7 @@ namespace SEWorkshopTool
 
             // 2) Verify the modtype matches what was listed in the workshop
             // TODO If type doesn't match, process as workshop type
-            if (existingTags.Length > 0)
+            if (existingTags != null && existingTags.Length > 0)
                 MyDebug.AssertRelease(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
 
             // 3a) check if user passed in the 'development' tag
@@ -226,7 +226,7 @@ namespace SEWorkshopTool
             }
 
             // 4)
-            if ( m_tags.Length == 1 && m_tags[0] == null)
+            if ( m_tags.Length == 1 && m_tags[0] == null && existingTags != null && existingTags.Length > 0)
             {
                 // 4a) If user passed no tags, use existing ones
                 Array.Resize(ref m_tags, existingTags.Length);
