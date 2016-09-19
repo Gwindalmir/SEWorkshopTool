@@ -222,6 +222,14 @@ namespace SEWorkshopTool
                 if (item != null)
                     title = item.Title;
 
+                // Check if the mod owner in the sbmi matches steam owner
+                MyDebug.AssertDebug(item.SteamIDOwner == MySteam.UserId);
+                if(item.SteamIDOwner != MySteam.UserId)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", item.SteamIDOwner, MySteam.UserId));
+                    MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
+                    return false;
+                }
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, title));
             }
 
