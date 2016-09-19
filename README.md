@@ -23,25 +23,37 @@ Please note, this is a command-line application only. A GUI may be considered in
 
 ## Uploading
 To upload a mod, execute the following:  
-`SEWorkshopTool --mods %appdata%\SpaceEngineers\Mods\FTL`
+`SEWorkshopTool --upload --mods %appdata%\SpaceEngineers\Mods\FTL`
 
 To upload multiple mods at the same time, just append more directories to the command:  
-`SEWorkshopTool --mods %appdata%\SpaceEngineers\Mods\FTL %appdata%\SpaceEngineers\Mods\Stargate`
+`SEWorkshopTool --upload --mods %appdata%\SpaceEngineers\Mods\FTL %appdata%\SpaceEngineers\Mods\Stargate`
+
+Relative paths are allowed and, if used, the default data path for that mod type will be prepended:  
+`SEWorkshopTool --upload --mods FTL Stargate --script Off-Roading`
 
 For additional checks, you can also compile the mods with the **--compile** argument, to verify they are valid before uploading:  
-`SEWorkshopTool --compile --mods %appdata%\SpaceEngineers\Mods\FTL %appdata%\SpaceEngineers\Mods\Stargate`
+`SEWorkshopTool --upload --compile --mods FTL %appdata%\SpaceEngineers\Mods\Stargate`
 
-If you just prefer to test the compilation, without uploading to the workshop, you can use the **--dry-run** argument:  
-`SEWorkshopTool --dry-run --compile --mods %appdata%\SpaceEngineers\Mods\FTL %appdata%\SpaceEngineers\Mods\Stargate`
+If you just prefer to test the compilation, without uploading to the workshop, you can omit **--upload** argument:  
+`SEWorkshopTool --compile --mods FTL %appdata%\SpaceEngineers\Mods\Stargate`
+
+If you prefer to test publishing, but not actually publish, you can use the **--dry-run** argument:  
+`SEWorkshopTool --upload --dry-run --compile --mods FTL %appdata%\SpaceEngineers\Mods\Stargate`
 
 To upload a mod tagged for the development branch, use the **--dev** argument (can be combined with above options):  
-`SEWorkshopTool --dev --mods %appdata%\SpaceEngineers\Mods\FTL`
+`SEWorkshopTool --dev --upload --mods FTL`
 
-If the mod directory contains spaces, surround the path with double-quotes:  
-`SEWorkshopTool --dev --mods "%appdata%\SpaceEngineers\Mods\Mod Folder"`
+If the mod directory or name contains spaces, surround the path with double-quotes:  
+`SEWorkshopTool --dev --upload --mods "%appdata%\SpaceEngineers\Mods\Mod Folder" "My Fabulous Mod"`
+
+To upload a new mod with hidden visibility (only works for new mods):  
+`SEWorkshopTool --upload --mods "Mod Folder" --visibility Private`
+
+You can pass custom file extensions to ignore during the upload with the **--exclude** argument (with or without a leading dot):  
+`SEWorkshopTool --upload --mods FTL --exclude .fbx .pdb xml`
 
 You can also specify the mod categories with the **--tags** argument:  
-`SEWorkshopTool --mods %appdata%\SpaceEngineers\Mods\FTL --tags block script`
+`SEWorkshopTool --upload --mods FTL --tags block script`
 
 Note with Tags:
 If you do *not* specify any tags, then the existing tags on the workshop will be preserved (for updating mods). However if you specify *any* tags, then *all* tags will be replaced with what was entered.
