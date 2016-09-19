@@ -66,10 +66,22 @@ namespace SEWorkshopTool
                 }
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("SEWT {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
+                ParameterInfo[] parameters;
                 if (options.Compile)
                 {
                     // Init ModAPI
                     var initmethod = typeof(MySandboxGame).GetMethod("InitModAPI", BindingFlags.Instance | BindingFlags.NonPublic);
+                    MyDebug.AssertDebug(initmethod != null);
+
+                    if (initmethod != null)
+                    {
+                        parameters = initmethod.GetParameters();
+                        MyDebug.AssertDebug(parameters.Count() == 2);
+                        MyDebug.AssertDebug(parameters[0].ParameterType == typeof(MySandboxGame));
+
+                        if(!(parameters.Count() == 2 && parameters[0].ParameterType == typeof(MySandboxGame)))
+                            initmethod = null;
+                    }
 
                     if (initmethod != null)
                         initmethod.Invoke(m_spacegame, null);
@@ -81,6 +93,17 @@ namespace SEWorkshopTool
                 // This method need to be replaced with a custom one, which removes the unnecessary UI code.
                 var methodtoreplace = typeof(MySteamWorkshop).GetMethod("WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
                 var methodtoinject = typeof(InjectedMethod).GetMethod("WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
+
+                MyDebug.AssertDebug(methodtoreplace != null);
+                if (methodtoreplace != null)
+                {
+                    parameters = methodtoreplace.GetParameters();
+                    MyDebug.AssertDebug(parameters.Count() == 1);
+                    MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
+
+                    if (!(parameters.Count() == 1 && parameters[0].ParameterType == typeof(string)))
+                        methodtoreplace = null;
+                }
 
                 if (methodtoreplace != null && methodtoinject != null)
                     MethodUtil.ReplaceMethod(methodtoreplace, methodtoinject);
@@ -159,8 +182,14 @@ namespace SEWorkshopTool
 
                 // Initializing the workshop means the categories are available
                 var initWorkshopMethod = typeof(SpaceEngineersGame).GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
-
                 MyDebug.AssertDebug(initWorkshopMethod != null);
+
+                if (initWorkshopMethod != null)
+                {
+                    var parameters = initWorkshopMethod.GetParameters();
+                    MyDebug.AssertDebug(parameters.Count() == 0);
+                }
+
                 if (initWorkshopMethod != null)
                     initWorkshopMethod.Invoke(m_spacegame, null);
                 else
