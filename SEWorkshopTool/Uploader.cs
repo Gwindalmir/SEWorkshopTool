@@ -27,7 +27,7 @@ namespace SEWorkshopTool
 
     class Uploader : IMod
     {
-        readonly string[] m_ignoredExtensions = { ".sbmi" };
+        readonly string[] m_ignoredExtensions;
 
         string m_modPath;
         bool m_compile;
@@ -63,7 +63,27 @@ namespace SEWorkshopTool
             if( tags != null )
                 m_tags = tags;
 
-            if( ignoredExtensions != null )
+            // This file list should match the PublishXXXAsync methods in MySteamWorkshop
+            switch(type)
+            {
+                case WorkshopType.mod:
+                    m_ignoredExtensions = new string[] { ".sbmi" };
+                    break;
+                case WorkshopType.ingameScript:
+                    m_ignoredExtensions = new string[] { ".sbmi", ".png", ".jpg" };
+                    break;
+                case WorkshopType.world:
+                    m_ignoredExtensions = new string[] { ".xmlcache", ".png" };
+                    break;
+                case WorkshopType.blueprint:
+                    m_ignoredExtensions = new string[] { };
+                    break;
+                case WorkshopType.scenario:
+                    m_ignoredExtensions = new string[] { };
+                    break;
+            }
+
+            if ( ignoredExtensions != null )
             {
                 ignoredExtensions = ignoredExtensions.Select(s => "." + s.TrimStart(new[]{ '.', '*'})).ToArray();
                 string[] allIgnoredExtensions = new string[m_ignoredExtensions.Length + ignoredExtensions.Length];
