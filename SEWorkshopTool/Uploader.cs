@@ -15,6 +15,7 @@ using VRage.Utils;
 namespace SEWorkshopTool
 {
     // The enum values must match the workshop tags used
+    // Case is important here
     enum WorkshopType
     {
         Invalid,
