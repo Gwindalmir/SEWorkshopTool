@@ -259,8 +259,16 @@ namespace SEWorkshopTool
 
                 if (mod.Compile())
                 {
-                    if (mod.Publish())
+                    if (options.Upload)
+                    {
+                        if (mod.Publish())
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
+                    }
+                    else
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Not uploading: {0}", mod.Title));
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
+                    }
                 }
                 else
                 {

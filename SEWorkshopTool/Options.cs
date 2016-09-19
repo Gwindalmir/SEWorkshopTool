@@ -24,6 +24,9 @@ namespace SEWorkshopTool
         [Option("download", DefaultValue = false, HelpText = "Download mods")]
         public bool Download { get; set; }
 
+        [Option("upload", DefaultValue = false, HelpText = "Upload and publish mods")]
+        public bool Upload { get; set; }
+
         [Option('e', "extract", DefaultValue = false, HelpText = "Extract downloaded mods (valid for download only)")]
         public bool Extract { get; set; }
 
