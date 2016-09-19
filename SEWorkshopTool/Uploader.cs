@@ -64,7 +64,7 @@ namespace SEWorkshopTool
                 m_tags = tags;
 
             // This file list should match the PublishXXXAsync methods in MySteamWorkshop
-            switch(type)
+            switch(m_type)
             {
                 case WorkshopType.mod:
                     m_ignoredExtensions = new string[] { ".sbmi" };
@@ -92,7 +92,12 @@ namespace SEWorkshopTool
                 m_ignoredExtensions = allIgnoredExtensions;
             }
 
-            if( m_compile && m_type == WorkshopType.mod)
+            SetupReflection();
+        }
+
+        private void SetupReflection()
+        {
+            if (m_compile && m_type == WorkshopType.mod)
             {
                 if (_scriptManager == null)
                     _scriptManager = new MyScriptManager();
@@ -109,7 +114,7 @@ namespace SEWorkshopTool
                         MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
                         MyDebug.AssertDebug(parameters[1].ParameterType == typeof(MyModContext));
 
-                        if(!(parameters.Count() == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(MyModContext)))
+                        if (!(parameters.Count() == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(MyModContext)))
                         {
                             _compileMethod = null;
                             MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
@@ -118,7 +123,7 @@ namespace SEWorkshopTool
                 }
             }
 
-            if( !m_dryrun )
+            if (!m_dryrun)
             {
                 _publishMethod = typeof(MySteamWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
                 MyDebug.AssertDebug(_publishMethod != null);
