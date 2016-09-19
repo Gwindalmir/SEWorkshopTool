@@ -63,18 +63,71 @@ namespace SEWorkshopTool
             if( tags != null )
                 m_tags = tags;
 
-            if ( m_compile && m_type == WorkshopType.mod)
+            if( ignoredExtensions != null )
+            {
+                ignoredExtensions = ignoredExtensions.Select(s => "." + s.TrimStart(new[]{ '.', '*'})).ToArray();
+                string[] allIgnoredExtensions = new string[m_ignoredExtensions.Length + ignoredExtensions.Length];
+                ignoredExtensions.CopyTo(allIgnoredExtensions, 0);
+                m_ignoredExtensions.CopyTo(allIgnoredExtensions, ignoredExtensions.Length);
+                m_ignoredExtensions = allIgnoredExtensions;
+            }
+
+            if( m_compile && m_type == WorkshopType.mod)
             {
                 if (_scriptManager == null)
                     _scriptManager = new MyScriptManager();
 
                 if (_compileMethod == null)
+                {
                     _compileMethod = typeof(MyScriptManager).GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance);
+                    MyDebug.AssertDebug(_compileMethod != null);
+
+                    if (_compileMethod != null)
+                    {
+                        var parameters = _compileMethod.GetParameters();
+                        MyDebug.AssertDebug(parameters.Count() == 2);
+                        MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
+                        MyDebug.AssertDebug(parameters[1].ParameterType == typeof(MyModContext));
+
+                        if(!(parameters.Count() == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(MyModContext)))
+                        {
+                            _compileMethod = null;
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                        }
+                    }
+                }
             }
 
             if( !m_dryrun )
             {
                 _publishMethod = typeof(MySteamWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
+                MyDebug.AssertDebug(_publishMethod != null);
+
+                if (_publishMethod != null)
+                {
+                    var parameters = _publishMethod.GetParameters();
+                    MyDebug.AssertDebug(parameters.Count() == 7);
+                    MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
+                    MyDebug.AssertDebug(parameters[1].ParameterType == typeof(string));
+                    MyDebug.AssertDebug(parameters[2].ParameterType == typeof(string));
+                    MyDebug.AssertDebug(parameters[3].ParameterType == typeof(ulong?));
+                    MyDebug.AssertDebug(parameters[4].ParameterType == typeof(SteamSDK.PublishedFileVisibility));
+                    MyDebug.AssertDebug(parameters[5].ParameterType == typeof(string[]));
+                    MyDebug.AssertDebug(parameters[6].ParameterType == typeof(string[]));
+
+                    if (!(parameters.Count() == 7 &&
+                        parameters[0].ParameterType == typeof(string) &&
+                        parameters[1].ParameterType == typeof(string) &&
+                        parameters[2].ParameterType == typeof(string) &&
+                        parameters[3].ParameterType == typeof(ulong?) &&
+                        parameters[4].ParameterType == typeof(SteamSDK.PublishedFileVisibility) &&
+                        parameters[5].ParameterType == typeof(string[]) &&
+                        parameters[6].ParameterType == typeof(string[])))
+                    {
+                        _publishMethod = null;
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
+                    }
+                }
             }
         }
 
