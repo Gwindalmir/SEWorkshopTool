@@ -76,10 +76,9 @@ namespace SEWorkshopTool
                     if (initmethod != null)
                     {
                         parameters = initmethod.GetParameters();
-                        MyDebug.AssertDebug(parameters.Count() == 2);
-                        MyDebug.AssertDebug(parameters[0].ParameterType == typeof(MySandboxGame));
+                        MyDebug.AssertDebug(parameters.Count() == 0);
 
-                        if(!(parameters.Count() == 2 && parameters[0].ParameterType == typeof(MySandboxGame)))
+                        if(!(parameters.Count() == 0))
                             initmethod = null;
                     }
 
