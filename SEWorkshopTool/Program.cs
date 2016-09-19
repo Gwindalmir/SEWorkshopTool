@@ -277,7 +277,7 @@ namespace SEWorkshopTool
         {
             for (int idx = 0; idx < paths.Count; idx++)
             {
-                var mod = new Uploader(type, Path.GetFullPath(paths[idx]), options.Tags, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
+                var mod = new Uploader(type, Path.GetFullPath(paths[idx]), options.Tags, options.ExcludeExtensions, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
                 if (options.UpdateOnly && mod.ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));

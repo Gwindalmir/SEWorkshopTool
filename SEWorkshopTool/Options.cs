@@ -33,6 +33,9 @@ namespace SEWorkshopTool
         [Option('u', "update-only", DefaultValue = false, HelpText = "Only update existing mods (don't upload new)")]
         public bool UpdateOnly { get; set; }
 
+        [OptionArray('x', "exclude", HelpText = "List of extensions to exclude from archiving for upload")]
+        public string[] ExcludeExtensions { get; set; }
+
         // Disable for now
         //[Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
         public bool Force { get; set; }

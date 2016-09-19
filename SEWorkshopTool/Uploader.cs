@@ -48,7 +48,7 @@ namespace SEWorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, bool compile = false, bool dryrun = false, bool development = false, SteamSDK.PublishedFileVisibility visibility = SteamSDK.PublishedFileVisibility.Public, bool force = false)
+        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, bool compile = false, bool dryrun = false, bool development = false, SteamSDK.PublishedFileVisibility visibility = SteamSDK.PublishedFileVisibility.Public, bool force = false)
         {
             m_modPath = path;
             m_compile = compile;
