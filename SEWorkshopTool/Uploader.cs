@@ -137,7 +137,13 @@ namespace SEWorkshopTool
             }
             else
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_title, m_modId));
+                var title = m_title;
+                var item = WorkshopHelper.GetSubscribedItem(m_modId);
+
+                if (item != null)
+                    title = item.Title;
+
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, title));
             }
 
             // Process Tags
