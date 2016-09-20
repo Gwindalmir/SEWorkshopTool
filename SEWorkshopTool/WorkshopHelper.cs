@@ -16,6 +16,9 @@ namespace SEWorkshopTool
         {
             MySteamWorkshop.SubscribedItem item = new MySteamWorkshop.SubscribedItem();
 
+            if (MySteam.API == null)
+                return item;
+
             using (var mrEvent = new ManualResetEvent(false))
             {
                 MySteam.API.RemoteStorage.GetPublishedFileDetails(modid, 0, (ioFailure, result) =>

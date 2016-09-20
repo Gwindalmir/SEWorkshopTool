@@ -64,6 +64,19 @@ namespace SEWorkshopTool
                     MySandboxGame.Log.WriteLineAndConsole(ex.StackTrace);
                     return 2;
                 }
+
+                if (MySteam.API == null)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole("* Steam not detected. Is Steam UAC elevated? *");
+                    MySandboxGame.Log.WriteLineAndConsole("* Only compile testing is available. *");
+                    MySandboxGame.Log.WriteLineAndConsole("");
+
+                    if (options.Download)
+                        return 3;
+
+                    options.Upload = false;
+                }
+
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("SEWT {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
                 ParameterInfo[] parameters;
@@ -167,7 +180,9 @@ namespace SEWorkshopTool
             m_steamService = new MySteamService(MySandboxGame.IsDedicated, AppId_SE);
             SpaceEngineersGame.SetupPerGameSettings();
 
-            if (!m_startup.CheckSteamRunning(m_steamService)) return;
+
+            if (System.Diagnostics.Debugger.IsAttached)
+                m_startup.CheckSteamRunning(m_steamService);        // Just give the warning message box when debugging, ignore for release
 
             VRageGameServices services = new VRageGameServices(m_steamService);
 

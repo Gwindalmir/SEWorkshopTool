@@ -208,6 +208,12 @@ namespace SEWorkshopTool
         {
             bool newMod = false;
 
+            if( MySteam.API == null )
+            {
+                MySandboxGame.Log.WriteLineAndConsole("Cannot publish, Steam not detected!");
+                return false;
+            }
+
             // Upload/Publish
             if (m_modId == 0)
             {
