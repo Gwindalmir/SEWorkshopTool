@@ -48,14 +48,14 @@ namespace SEWorkshopTool
             var downloadPath = MyFileSystem.ModsPath;
             switch (type)
             {
-                case WorkshopType.blueprint:
+                case WorkshopType.Blueprint:
                     downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Blueprints", local ? "local" : "workshop");
                     break;
-                case WorkshopType.ingameScript:
+                case WorkshopType.IngameScript:
                     downloadPath = Path.Combine(MyFileSystem.UserDataPath, Sandbox.Game.Gui.MyGuiIngameScriptsPage.SCRIPTS_DIRECTORY, local ? "local" : "workshop");
                     break;
-                case WorkshopType.world:
-                case WorkshopType.scenario:
+                case WorkshopType.World:
+                case WorkshopType.Scenario:
                     downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteam.UserId.ToString());
                     break;
             }

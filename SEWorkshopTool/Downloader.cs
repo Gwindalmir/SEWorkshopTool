@@ -44,7 +44,7 @@ namespace SEWorkshopTool
                 ext = ".sbm";
             else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_BLUEPRINT_TAG))
                 ext = ".sbb";
-            else if (m_tags.Contains(WorkshopType.ingameScript.ToString()))
+            else if (m_tags.Contains(WorkshopType.IngameScript.ToString()))
                 ext = ".sbs";
             else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_WORLD_TAG))
                 ext = ".sbw";

@@ -19,11 +19,11 @@ namespace SEWorkshopTool
     enum WorkshopType
     {
         Invalid,
-        mod,
-        ingameScript,
-        blueprint,
-        world,
-        scenario,
+        Mod,
+        IngameScript,
+        Blueprint,
+        World,
+        Scenario,
     }
 
     class Uploader : IMod
@@ -67,19 +67,19 @@ namespace SEWorkshopTool
             // This file list should match the PublishXXXAsync methods in MySteamWorkshop
             switch(m_type)
             {
-                case WorkshopType.mod:
+                case WorkshopType.Mod:
                     m_ignoredExtensions = new string[] { ".sbmi" };
                     break;
-                case WorkshopType.ingameScript:
+                case WorkshopType.IngameScript:
                     m_ignoredExtensions = new string[] { ".sbmi", ".png", ".jpg" };
                     break;
-                case WorkshopType.world:
+                case WorkshopType.World:
                     m_ignoredExtensions = new string[] { ".xmlcache", ".png" };
                     break;
-                case WorkshopType.blueprint:
+                case WorkshopType.Blueprint:
                     m_ignoredExtensions = new string[] { };
                     break;
-                case WorkshopType.scenario:
+                case WorkshopType.Scenario:
                     m_ignoredExtensions = new string[] { };
                     break;
             }
@@ -98,7 +98,7 @@ namespace SEWorkshopTool
 
         private void SetupReflection()
         {
-            if (m_compile && m_type == WorkshopType.mod)
+            if (m_compile && m_type == WorkshopType.Mod)
             {
                 if (_scriptManager == null)
                     _scriptManager = new MyScriptManager();
@@ -308,7 +308,7 @@ namespace SEWorkshopTool
             // 2) Verify the modtype matches what was listed in the workshop
             // TODO If type doesn't match, process as workshop type
             if (existingTags != null && existingTags.Length > 0)
-                MyDebug.AssertRelease(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
+                MyDebug.AssertDebug(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
 
             // 3a) check if user passed in the 'development' tag
             // If so, remove it, and mark the mod as 'dev' so it doesn't get flagged later
@@ -337,19 +337,19 @@ namespace SEWorkshopTool
                 MySteamWorkshop.Category[] validTags = new MySteamWorkshop.Category[0];
                 switch(m_type)
                 {
-                    case WorkshopType.mod:
+                    case WorkshopType.Mod:
                         validTags = MySteamWorkshop.ModCategories;
                         break;
-                    case WorkshopType.blueprint:
+                    case WorkshopType.Blueprint:
                         validTags = MySteamWorkshop.BlueprintCategories;
                         break;
-                    case WorkshopType.scenario:
+                    case WorkshopType.Scenario:
                         validTags = MySteamWorkshop.ScenarioCategories;
                         break;
-                    case WorkshopType.world:
+                    case WorkshopType.World:
                         validTags = MySteamWorkshop.WorldCategories;
                         break;
-                    case WorkshopType.ingameScript:
+                    case WorkshopType.IngameScript:
                         //tags = new MySteamWorkshop.Category[0];     // There are none currently
                         break;
                     default:

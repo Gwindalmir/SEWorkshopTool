@@ -228,24 +228,24 @@ namespace SEWorkshopTool
                 List<string> itemPaths;
 
                 // Process mods
-                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.mod, options.ModPaths));
-                ProcessItemsUpload(WorkshopType.mod, itemPaths, options);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Mod, options.ModPaths));
+                ProcessItemsUpload(WorkshopType.Mod, itemPaths, options);
 
                 // Process blueprints
-                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.blueprint, options.Blueprints));
-                ProcessItemsUpload(WorkshopType.blueprint, itemPaths, options);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Blueprint, options.Blueprints));
+                ProcessItemsUpload(WorkshopType.Blueprint, itemPaths, options);
 
                 // Process ingame scripts
-                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.ingameScript, options.IngameScripts));
-                ProcessItemsUpload(WorkshopType.ingameScript, itemPaths, options);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.IngameScript, options.IngameScripts));
+                ProcessItemsUpload(WorkshopType.IngameScript, itemPaths, options);
 
                 // Process worlds
-                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.world, options.Worlds));
-                ProcessItemsUpload(WorkshopType.world, itemPaths, options);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.World, options.Worlds));
+                ProcessItemsUpload(WorkshopType.World, itemPaths, options);
 
                 // Process scenarios
-                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.scenario, options.Scenarios));
-                ProcessItemsUpload(WorkshopType.scenario, itemPaths, options);
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Scenario, options.Scenarios));
+                ProcessItemsUpload(WorkshopType.Scenario, itemPaths, options);
 
                 MySandboxGame.Log.WriteLineAndConsole("Batch workshop upload complete!");
             });
@@ -331,11 +331,11 @@ namespace SEWorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole("Beginning batch workshop download...");
                 MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
-                ProcessItemsDownload(WorkshopType.mod, options.ModPaths, options);
-                ProcessItemsDownload(WorkshopType.blueprint, options.Blueprints, options);
-                ProcessItemsDownload(WorkshopType.ingameScript, options.IngameScripts, options);
-                ProcessItemsDownload(WorkshopType.world, options.Worlds, options);
-                ProcessItemsDownload(WorkshopType.scenario, options.Scenarios, options);
+                ProcessItemsDownload(WorkshopType.Mod, options.ModPaths, options);
+                ProcessItemsDownload(WorkshopType.Blueprint, options.Blueprints, options);
+                ProcessItemsDownload(WorkshopType.IngameScript, options.IngameScripts, options);
+                ProcessItemsDownload(WorkshopType.World, options.Worlds, options);
+                ProcessItemsDownload(WorkshopType.Scenario, options.Scenarios, options);
 
                 MySandboxGame.Log.WriteLineAndConsole("Batch workshop download complete!");
             });
@@ -358,18 +358,18 @@ namespace SEWorkshopTool
             if (MySteamWorkshop.GetItemsBlocking(items, modids))
             {
                 bool success = false;
-                if (type == WorkshopType.mod)
+                if (type == WorkshopType.Mod)
                 {
                     var result = MySteamWorkshop.DownloadModsBlocking(items);
                     success = result.Success;
                 }
                 else
                 {
-                    if (type == WorkshopType.blueprint)
+                    if (type == WorkshopType.Blueprint)
                     {
                         success = MySteamWorkshop.DownloadBlueprintsBlocking(items);
                     }
-                    else if (type == WorkshopType.ingameScript)
+                    else if (type == WorkshopType.IngameScript)
                     {
                         var loopsuccess = false;
                         foreach (var item in items)
@@ -381,11 +381,11 @@ namespace SEWorkshopTool
                                 success = true;
                         }
                     }
-                    else if(type == WorkshopType.world || type == WorkshopType.scenario)
+                    else if(type == WorkshopType.World || type == WorkshopType.Scenario)
                     {
                         var loopsuccess = false;
                         string path;
-                        MySteamWorkshop.MyWorkshopPathInfo pathinfo = type == WorkshopType.world ? 
+                        MySteamWorkshop.MyWorkshopPathInfo pathinfo = type == WorkshopType.World ? 
                                                                 MySteamWorkshop.MyWorkshopPathInfo.CreateWorldInfo() : 
                                                                 MySteamWorkshop.MyWorkshopPathInfo.CreateScenarioInfo();
 
