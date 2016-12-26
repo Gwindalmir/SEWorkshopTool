@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using VRage.Game;
+using VRage.Scripting;
 using VRage.Utils;
 
 namespace SEWorkshopTool
@@ -166,34 +167,68 @@ namespace SEWorkshopTool
             // Compile
             if (m_compile)
             {
-                if (_compileMethod != null)
+                if (m_type == WorkshopType.Mod)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole("Compiling...");
-                    var mod = new MyModContext();
-                    mod.Init(m_title, null, m_modPath);
-                    _compileMethod.Invoke(_scriptManager, new object[]
+                    if (_compileMethod != null)
                     {
+                        MySandboxGame.Log.WriteLineAndConsole("Compiling...");
+                        var mod = new MyModContext();
+                        mod.Init(m_title, null, m_modPath);
+                        _compileMethod.Invoke(_scriptManager, new object[]
+                        {
                         m_modPath,
                         mod
-                    });
+                        });
 
-                    // Process any errors
-                    var errors = MyDefinitionErrors.GetErrors();
-                    if (errors.Count > 0)
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile errors:", errors.Count));
-                        foreach (var error in errors)
-                            MySandboxGame.Log.WriteLineAndConsole(string.Format("{0}: {1}", error.ModName, error.Message));
+                        // Process any errors
+                        var errors = MyDefinitionErrors.GetErrors();
+                        if (errors.Count > 0)
+                        {
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile errors:", errors.Count));
+                            foreach (var error in errors)
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("{0}: {1}", error.ModName, error.Message));
 
-                        MyDefinitionErrors.Clear();     // Clear old ones, so next mod starts fresh
-                        MySandboxGame.Log.WriteLineAndConsole("Compilation FAILED!");
-                        return false;
+                            MyDefinitionErrors.Clear();     // Clear old ones, so next mod starts fresh
+                            MySandboxGame.Log.WriteLineAndConsole("Compilation FAILED!");
+                            return false;
+                        }
+                        MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
                     }
-                    MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
+                    else
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                    }
                 }
-                else
+                else if(m_type == WorkshopType.IngameScript)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                    // Load the ingame script from the disk
+                    // I don't like this, but meh
+                    var input = new StreamReader(Path.Combine(m_modPath, "Script.cs"));
+                    var program = input.ReadToEnd();
+                    input.Close();
+                    var ingamescript = MyScriptCompiler.Static.GetIngameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial");
+                    var messages = new List<MyScriptCompiler.Message>();
+                    var assembly = MyScriptCompiler.Static.Compile(MyApiTarget.Ingame, null, ingamescript, messages).Result;
+
+                    if (messages.Count > 0)
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile messages:", messages.Count));
+                        int errors = 0;
+                        foreach (var msg in messages)
+                        {
+                            MySandboxGame.Log.WriteLineAndConsole(msg.Text);
+
+                            if (msg.Severity > TErrorSeverity.Warning)
+                                errors++;
+                        }
+                        if (errors > 0)
+                        {
+                            return false;
+                        }
+                    }
+
+                    if (assembly == null)
+                        return false;
                 }
                 return true;
             }
