@@ -165,6 +165,8 @@ namespace SEWorkshopTool
         // This is mostly copied from MyProgram.Main(), with UI stripped out.
         private static void InitSandbox(string instancepath)
         {
+            MyFakes.ENABLE_INFINARIO = false;
+
             if (m_spacegame != null)
                 m_spacegame.Exit();
 
