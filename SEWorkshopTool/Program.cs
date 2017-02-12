@@ -122,7 +122,7 @@ namespace SEWorkshopTool
                 else
                     MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "WriteAndShareFileBlocking"));
 
-                System.Threading.Tasks.Task Task;
+                System.Threading.Tasks.Task<bool> Task;
 
                 if (options.Download)
                     Task = DownloadMods(options);
@@ -145,7 +145,12 @@ namespace SEWorkshopTool
                     var exception = ex.InnerException;
                     MySandboxGame.Log.WriteLineAndConsole("An exception occurred: " + exception.Message);
                     MySandboxGame.Log.WriteLineAndConsole(exception.StackTrace);
+                    return 4;
                 }
+
+                // If the task reported any error, return exit code
+                if (!Task.Result)
+                    return -1;
 
                 // Cleanup
                 CleanupSandbox();
@@ -219,37 +224,44 @@ namespace SEWorkshopTool
         }
         #endregion
 
-        static System.Threading.Tasks.Task UploadMods(Options options)
+        static System.Threading.Tasks.Task<bool> UploadMods(Options options)
         {
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
-            var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
+            var Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(() =>
             {
+                bool success = true;
                 MySandboxGame.Log.WriteLineAndConsole("Beginning batch workshop upload...");
                 MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                 List<string> itemPaths;
 
                 // Process mods
                 itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Mod, options.ModPaths));
-                ProcessItemsUpload(WorkshopType.Mod, itemPaths, options);
+                if (!ProcessItemsUpload(WorkshopType.Mod, itemPaths, options))
+                    success = false;
 
                 // Process blueprints
                 itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Blueprint, options.Blueprints));
-                ProcessItemsUpload(WorkshopType.Blueprint, itemPaths, options);
+                if (!ProcessItemsUpload(WorkshopType.Blueprint, itemPaths, options))
+                    success = false;
 
                 // Process ingame scripts
                 itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.IngameScript, options.IngameScripts));
-                ProcessItemsUpload(WorkshopType.IngameScript, itemPaths, options);
+                if (!ProcessItemsUpload(WorkshopType.IngameScript, itemPaths, options))
+                    success = false;
 
                 // Process worlds
                 itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.World, options.Worlds));
-                ProcessItemsUpload(WorkshopType.World, itemPaths, options);
+                if (!ProcessItemsUpload(WorkshopType.World, itemPaths, options))
+                    success = false;
 
                 // Process scenarios
                 itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Scenario, options.Scenarios));
-                ProcessItemsUpload(WorkshopType.Scenario, itemPaths, options);
+                if (!ProcessItemsUpload(WorkshopType.Scenario, itemPaths, options))
+                    success = false;
 
                 MySandboxGame.Log.WriteLineAndConsole("Batch workshop upload complete!");
+                return success;
             });
 
             return Task;
@@ -290,8 +302,9 @@ namespace SEWorkshopTool
             return itemPaths;
         }
 
-        static void ProcessItemsUpload(WorkshopType type, List<string> paths, Options options)
+        static bool ProcessItemsUpload(WorkshopType type, List<string> paths, Options options)
         {
+            bool success = true;
             for (int idx = 0; idx < paths.Count; idx++)
             {
                 var mod = new Uploader(type, Path.GetFullPath(paths[idx]), options.Tags, options.ExcludeExtensions, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
@@ -308,6 +321,8 @@ namespace SEWorkshopTool
                     {
                         if (mod.Publish())
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
+                        else
+                            success = false;
                     }
                     else
                     {
@@ -318,37 +333,47 @@ namespace SEWorkshopTool
                 else
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Skipping {0}: {1}", type.ToString(), mod.Title));
+                    success = false;
                 }
                 MySandboxGame.Log.WriteLineAndConsole(string.Empty);
             }
+            return success;
         }
 
-        static System.Threading.Tasks.Task DownloadMods(Options options)
+        static System.Threading.Tasks.Task<bool> DownloadMods(Options options)
         {
             // Get PublishItemBlocking internal method via reflection
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
-            var Task = System.Threading.Tasks.Task.Factory.StartNew(() =>
+            var Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(() =>
             {
+                bool success = true;
+
                 MySandboxGame.Log.WriteLineAndConsole("Beginning batch workshop download...");
                 MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
-                ProcessItemsDownload(WorkshopType.Mod, options.ModPaths, options);
-                ProcessItemsDownload(WorkshopType.Blueprint, options.Blueprints, options);
-                ProcessItemsDownload(WorkshopType.IngameScript, options.IngameScripts, options);
-                ProcessItemsDownload(WorkshopType.World, options.Worlds, options);
-                ProcessItemsDownload(WorkshopType.Scenario, options.Scenarios, options);
+                if (!ProcessItemsDownload(WorkshopType.Mod, options.ModPaths, options))
+                    success = false;
+                if (!ProcessItemsDownload(WorkshopType.Blueprint, options.Blueprints, options))
+                    success = false;
+                if (!ProcessItemsDownload(WorkshopType.IngameScript, options.IngameScripts, options))
+                    success = false;
+                if (!ProcessItemsDownload(WorkshopType.World, options.Worlds, options))
+                    success = false;
+                if (!ProcessItemsDownload(WorkshopType.Scenario, options.Scenarios, options))
+                    success = false;
 
                 MySandboxGame.Log.WriteLineAndConsole("Batch workshop download complete!");
+                return success;
             });
 
             return Task;
         }
 
-        static void ProcessItemsDownload(WorkshopType type, string[] paths, Options options)
+        static bool ProcessItemsDownload(WorkshopType type, string[] paths, Options options)
         {
             if (paths == null)
-                return;
+                return true;
 
             var items = new List<MySteamWorkshop.SubscribedItem>();
             var modids = paths.Select(ulong.Parse);
@@ -419,7 +444,7 @@ namespace SEWorkshopTool
                 else
                 {
                     MySandboxGame.Log.WriteLineAndConsole("Download FAILED!");
-                    return;
+                    return false;
                 }
 
                 foreach (var item in items)
@@ -433,6 +458,7 @@ namespace SEWorkshopTool
                     MySandboxGame.Log.WriteLineAndConsole(string.Empty);
                 }
             }
+            return true;
         }
     }
 }
