@@ -176,21 +176,42 @@ namespace SEWorkshopTool
                         mod.Init(m_title, null, m_modPath);
                         _compileMethod.Invoke(_scriptManager, new object[]
                         {
-                        m_modPath,
-                        mod
+                            m_modPath,
+                            mod
                         });
 
                         // Process any errors
                         var errors = MyDefinitionErrors.GetErrors();
                         if (errors.Count > 0)
                         {
-                            MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile errors:", errors.Count));
+                            int errorCount = 0;
+                            int warningCount = 0;
+                            
+                            // This is not efficient, but I'm lazy
                             foreach (var error in errors)
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("{0}: {1}", error.ModName, error.Message));
+                            {
+                                if (error.Severity >= TErrorSeverity.Error)
+                                    errorCount++;
+                                if (error.Severity == TErrorSeverity.Warning)
+                                    warningCount++;
+                            }
+
+                            if( errorCount > 0)
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile errors:", errorCount));
+                            if (warningCount > 0)
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile warnings:", warningCount));
+
+                            // Output raw message, which is usually in msbuild friendly format, for automated tools
+                            foreach (var error in errors)
+                                System.Console.WriteLine(error.Message);
 
                             MyDefinitionErrors.Clear();     // Clear old ones, so next mod starts fresh
-                            MySandboxGame.Log.WriteLineAndConsole("Compilation FAILED!");
-                            return false;
+
+                            if (errorCount > 0)
+                            {
+                                MySandboxGame.Log.WriteLineAndConsole("Compilation FAILED!");
+                                return false;
+                            }
                         }
                         MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
                     }
