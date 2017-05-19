@@ -20,6 +20,7 @@ using VRage.Game;
 using VRage.Scripting;
 using System.Collections.Generic;
 using System.Linq;
+using VRageRender;
 
 namespace SEWorkshopTool
 {
@@ -196,8 +197,15 @@ namespace SEWorkshopTool
             if (!MySandboxGame.IsDedicated)
                 MyFileSystem.InitUserSpecific(m_steamService.UserId.ToString());
 
+            
             try
             {
+                // Init null render so profiler-enabled builds don't crash
+                var render = new MyNullRender();
+                MyRenderProxy.Initialize(render);
+                MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
+                MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
+
                 // NOTE: an assert may be thrown in debug, about missing Tutorials.sbx. Ignore it.
                 m_spacegame = new SpaceEngineersGame(services, null);
 

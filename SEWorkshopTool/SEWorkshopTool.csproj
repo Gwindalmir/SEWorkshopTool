@@ -78,6 +78,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Library.dll</HintPath>
     </Reference>
+    <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Render.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render11, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Render11.dll</HintPath>
+    </Reference>
     <Reference Include="VRage.Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Scripting.dll</HintPath>
