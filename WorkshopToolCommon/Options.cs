@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SEWorkshopTool
+namespace Phoenix.WorkshopTool
 {
     public sealed class Options
     {
@@ -52,9 +52,10 @@ namespace SEWorkshopTool
         [OptionArray('w', "worlds", HelpText = "List of directories of worlds to upload; or Workshop ID of worlds to download (when in download mode)")]
         public string[] Worlds { get; set; }
 
+#if SE
         [OptionArray('i', "scripts", HelpText = "List of directories of scripts to upload; or Workshop ID of scripts to download (when in download mode)")]
         public string[] IngameScripts { get; set; }
-
+#endif
         [OptionArray('t', "tags", HelpText = "List of workshop mod categories/tags to use (removes previous, default is keep existing)")]
         public string[] Tags { get; set; }
     }

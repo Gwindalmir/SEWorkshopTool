@@ -7,14 +7,17 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using VRage.FileSystem;
+#if SE
+using MySubscribedItem = Sandbox.Engine.Networking.MySteamWorkshop.SubscribedItem;
+#endif
 
-namespace SEWorkshopTool
+namespace Phoenix.WorkshopTool
 {
     class WorkshopHelper
     {
-        public static MySteamWorkshop.SubscribedItem GetSubscribedItem(ulong modid)
+        public static MySubscribedItem GetSubscribedItem(ulong modid)
         {
-            MySteamWorkshop.SubscribedItem item = new MySteamWorkshop.SubscribedItem();
+            MySubscribedItem item = new MySubscribedItem();
 
             if (MySteam.API == null)
                 return item;

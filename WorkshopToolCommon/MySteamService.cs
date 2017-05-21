@@ -5,7 +5,7 @@ using System.Text;
 using VRage.Utils;
 
 
-namespace SEWorkshopTool
+namespace Phoenix.WorkshopTool
 {
     /// <summary>
     /// Keen's steam service calls RestartIfNecessary, which triggers steam to think the game was launched
@@ -30,7 +30,15 @@ namespace SEWorkshopTool
             else
             {
                 var SteamAPI = SteamSDK.SteamAPI.Instance;
-                steam.GetField("SteamAPI").SetValue(this, SteamSDK.SteamAPI.Instance);
+                var api = steam.GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                steam.GetField(
+#if SE
+                    "SteamAPI"
+#else
+                    "m_steamAPI"
+#endif
+                    , System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                    .SetValue(this, SteamSDK.SteamAPI.Instance);
                 steam.GetProperty("IsActive").GetSetMethod(true).Invoke(this, new object[] { SteamSDK.SteamAPI.Instance != null });
 
                 if (SteamAPI != null)

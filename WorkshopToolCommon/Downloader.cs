@@ -13,7 +13,7 @@ using VRage.Compression;
 using VRage.Game;
 using VRage.Utils;
 
-namespace SEWorkshopTool
+namespace Phoenix.WorkshopTool
 {
     class Downloader : IMod
     {

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>f854b41f-d141-467d-a009-74bb31e7a873</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Phoenix.WorkshopToolCommon</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Downloader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IMod.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InjectedMethod.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MethodUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MySteamService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Options.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Uploader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WorkshopHelper.cs" />
+  </ItemGroup>
+</Project>

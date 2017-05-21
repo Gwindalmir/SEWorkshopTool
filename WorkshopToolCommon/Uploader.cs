@@ -13,7 +13,7 @@ using VRage.Game;
 using VRage.Scripting;
 using VRage.Utils;
 
-namespace SEWorkshopTool
+namespace Phoenix.WorkshopTool
 {
     // The enum values must match the workshop tags used
     // Case is important here
@@ -42,7 +42,7 @@ namespace SEWorkshopTool
         bool m_isDev = false;
         bool m_force;
 
-        private static MyScriptManager _scriptManager;
+        private static object _scriptManager;
         private static MethodInfo _publishMethod;
         private static MethodInfo _compileMethod;
 
@@ -101,22 +101,31 @@ namespace SEWorkshopTool
         {
             if (m_compile && m_type == WorkshopType.Mod)
             {
+#if SE
                 if (_scriptManager == null)
                     _scriptManager = new MyScriptManager();
-
+#else
+                if (_scriptManager == null)
+                    _scriptManager = new MyModManager();
+#endif
                 if (_compileMethod == null)
                 {
-                    _compileMethod = typeof(MyScriptManager).GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance);
+                    _compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
                     MyDebug.AssertDebug(_compileMethod != null);
 
                     if (_compileMethod != null)
                     {
                         var parameters = _compileMethod.GetParameters();
+#if SE
                         MyDebug.AssertDebug(parameters.Count() == 2);
                         MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
                         MyDebug.AssertDebug(parameters[1].ParameterType == typeof(MyModContext));
-
                         if (!(parameters.Count() == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(MyModContext)))
+#else
+                        MyDebug.AssertDebug(parameters.Count() == 1);
+                        MyDebug.AssertDebug(parameters[0].ParameterType == typeof(MyModContext));
+                        if (!(parameters.Count() == 1 && parameters[0].ParameterType == typeof(MyModContext)))
+#endif
                         {
                             _compileMethod = null;
                             MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
@@ -172,11 +181,17 @@ namespace SEWorkshopTool
                     if (_compileMethod != null)
                     {
                         MySandboxGame.Log.WriteLineAndConsole("Compiling...");
+#if SE
                         var mod = new MyModContext();
                         mod.Init(m_title, null, m_modPath);
+#else
+                        var mod = new MyModContext(m_title, Path.GetFileNameWithoutExtension(m_modPath), m_modPath);
+#endif
                         _compileMethod.Invoke(_scriptManager, new object[]
                         {
+#if SE
                             m_modPath,
+#endif
                             mod
                         });
 
@@ -220,6 +235,7 @@ namespace SEWorkshopTool
                         MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
                     }
                 }
+#if SE
                 else if(m_type == WorkshopType.IngameScript)
                 {
                     // Load the ingame script from the disk
@@ -251,6 +267,7 @@ namespace SEWorkshopTool
                     if (assembly == null)
                         return false;
                 }
+#endif
                 return true;
             }
             return true;
@@ -366,6 +383,7 @@ namespace SEWorkshopTool
             if (existingTags != null && existingTags.Length > 0)
                 MyDebug.AssertDebug(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
 
+#if SE
             // 3a) check if user passed in the 'development' tag
             // If so, remove it, and mark the mod as 'dev' so it doesn't get flagged later
             if (m_tags.Contains(MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG))
@@ -373,7 +391,7 @@ namespace SEWorkshopTool
                 m_tags = (from tag in m_tags where tag != MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG select tag).ToArray();
                 m_isDev = true;
             }
-
+#endif
             // 3b If tags contain mod type, remove it
             if (m_tags.Contains(modtype))
             {
@@ -436,7 +454,7 @@ namespace SEWorkshopTool
                 Array.Copy(m_tags, 0, newTags, 1, m_tags.Length);
                 m_tags = newTags;
             }
-
+#if SE
             // 5) Set or clear development tag
             if (m_isDev)
             {
@@ -453,7 +471,7 @@ namespace SEWorkshopTool
                 if (m_tags.Contains(MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG))
                     m_tags = (from tag in m_tags where tag != MySteamWorkshop.WORKSHOP_DEVELOPMENT_TAG select tag).ToArray(); 
             }
-
+#endif
             // 6) Strip empty values
             m_tags = m_tags.Where(x => !string.IsNullOrEmpty(x)).ToArray();
 
