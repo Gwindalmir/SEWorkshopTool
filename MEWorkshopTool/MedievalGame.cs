@@ -5,8 +5,12 @@ using Sandbox.Game;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using VRage.FileSystem;
+using VRage.Utils;
+using VRageRender;
 
 namespace Phoenix.MEWorkshopTool
 {

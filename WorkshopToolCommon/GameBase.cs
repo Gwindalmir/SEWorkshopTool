@@ -21,15 +21,26 @@ using System.Linq;
 using VRageRender;
 #if SE
 using MySubscribedItem = Sandbox.Engine.Networking.MySteamWorkshop.SubscribedItem;
+using VRage;
+#endif
+
+#if SE
+using MySteamServiceBase = VRage.Steam.MySteamService;
+#else
+using MySteamServiceBase = Sandbox.MySteamService;
 #endif
 
 namespace Phoenix.WorkshopTool
 {
     abstract class GameBase
     {
+#if SE
+        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
+#endif
+
         protected MySandboxGame m_game = null;
         protected MyCommonProgramStartup m_startup;
-        protected Sandbox.MySteamService m_steamService;
+        protected MySteamServiceBase m_steamService;
         protected static readonly uint AppId = 244850;
         protected static readonly string AppName = "SEWT";
         protected static readonly bool IsME = false;
@@ -182,8 +193,11 @@ namespace Phoenix.WorkshopTool
         }
 
         protected abstract bool SetupBasicGameInfo();
+#if SE
+        protected abstract MySandboxGame InitGame();
+#else
         protected abstract MySandboxGame InitGame(VRageGameServices services);
-
+#endif
         // This is mostly copied from MyProgram.Main(), with UI stripped out.
         protected virtual void InitSandbox(string instancepath)
         {
@@ -196,10 +210,15 @@ namespace Phoenix.WorkshopTool
                 return;
 
             if (System.Diagnostics.Debugger.IsAttached)
+#if SE
+                m_startup.CheckSteamRunning();        // Just give the warning message box when debugging, ignore for release
+#else
                 m_startup.CheckSteamRunning(m_steamService);        // Just give the warning message box when debugging, ignore for release
+#endif
 
+#if !SE
             VRageGameServices services = new VRageGameServices(m_steamService);
-
+#endif
             if (!MySandboxGame.IsDedicated)
                 MyFileSystem.InitUserSpecific(m_steamService.UserId.ToString());
 
@@ -212,7 +231,11 @@ namespace Phoenix.WorkshopTool
                 MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
 
                 // NOTE: an assert may be thrown in debug, about missing Tutorials.sbx. Ignore it.
+#if SE
+                m_game = InitGame();
+#else
                 m_game = InitGame(services);
+#endif
 
                 // Initializing the workshop means the categories are available
                 var initWorkshopMethod = m_game.GetType().GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -229,7 +252,7 @@ namespace Phoenix.WorkshopTool
                 else
                     MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "InitSteamWorkshop"));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 // This shouldn't fail, but don't stop even if it does
                 MySandboxGame.Log.WriteLineAndConsole("An exception occured, ignoring: " + ex.Message);
@@ -377,7 +400,15 @@ namespace Phoenix.WorkshopTool
                 {
                     if (type == WorkshopType.Blueprint)
                     {
-                        success = MySteamWorkshop.DownloadBlueprintsBlocking(items);
+                        var loopsuccess = false;
+                        foreach (var item in items)
+                        {
+                            loopsuccess = MySteamWorkshop.DownloadBlueprintBlocking(item);
+                            if (!loopsuccess)
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.PublishedFileId));
+                            else
+                                success = true;
+                        }
                     }
                     else if (type == WorkshopType.IngameScript)
                     {

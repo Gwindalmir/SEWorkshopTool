@@ -9,9 +9,15 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VRage;
 using VRage.Game;
 using VRage.Scripting;
 using VRage.Utils;
+#if SE
+using PublishedFileVisibility = VRage.GameServices.MyPublishedFileVisibility;
+#else
+using PublishedFileVisibility = SteamSDK.PublishedFileVisibility;
+#endif
 
 namespace Phoenix.WorkshopTool
 {
@@ -29,6 +35,9 @@ namespace Phoenix.WorkshopTool
 
     class Uploader : IMod
     {
+#if SE
+        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
+#endif
         readonly string[] m_ignoredExtensions;
 
         string m_modPath;
@@ -36,7 +45,7 @@ namespace Phoenix.WorkshopTool
         bool m_dryrun;
         ulong m_modId = 0;
         string m_title;
-        SteamSDK.PublishedFileVisibility m_visibility;
+        PublishedFileVisibility m_visibility;
         WorkshopType m_type;
         string[] m_tags = new string[1];
         bool m_isDev = false;
@@ -50,7 +59,7 @@ namespace Phoenix.WorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, bool compile = false, bool dryrun = false, bool development = false, SteamSDK.PublishedFileVisibility visibility = SteamSDK.PublishedFileVisibility.Public, bool force = false)
+        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, bool compile = false, bool dryrun = false, bool development = false, PublishedFileVisibility visibility = PublishedFileVisibility.Public, bool force = false)
         {
             m_modPath = path;
             m_compile = compile;
@@ -160,7 +169,11 @@ namespace Phoenix.WorkshopTool
                         parameters[1].ParameterType == typeof(string) &&
                         parameters[2].ParameterType == typeof(string) &&
                         parameters[3].ParameterType == typeof(ulong?) &&
+#if SE
+                        parameters[4].ParameterType == typeof(VRage.GameServices.MyPublishedFileVisibility) &&
+#else
                         parameters[4].ParameterType == typeof(SteamSDK.PublishedFileVisibility) &&
+#endif
                         parameters[5].ParameterType == typeof(string[]) &&
                         parameters[6].ParameterType == typeof(string[])))
                     {

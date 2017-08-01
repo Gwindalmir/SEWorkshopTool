@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VRage;
 using VRage.FileSystem;
 #if SE
 using MySubscribedItem = Sandbox.Engine.Networking.MySteamWorkshop.SubscribedItem;
@@ -15,6 +16,9 @@ namespace Phoenix.WorkshopTool
 {
     class WorkshopHelper
     {
+#if SE
+        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
+#endif
         public static MySubscribedItem GetSubscribedItem(ulong modid)
         {
             MySubscribedItem item = new MySubscribedItem();
