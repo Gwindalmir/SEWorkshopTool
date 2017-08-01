@@ -111,19 +111,19 @@ namespace Phoenix.WorkshopTool
                 if (_compileMethod == null)
                 {
                     _compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
-                    MyDebug.AssertDebug(_compileMethod != null);
+                    MyDebug.AssertRelease(_compileMethod != null);
 
                     if (_compileMethod != null)
                     {
                         var parameters = _compileMethod.GetParameters();
 #if SE
-                        MyDebug.AssertDebug(parameters.Count() == 2);
-                        MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
-                        MyDebug.AssertDebug(parameters[1].ParameterType == typeof(MyModContext));
+                        MyDebug.AssertRelease(parameters.Count() == 2);
+                        MyDebug.AssertRelease(parameters[0].ParameterType == typeof(string));
+                        MyDebug.AssertRelease(parameters[1].ParameterType == typeof(MyModContext));
                         if (!(parameters.Count() == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(MyModContext)))
 #else
-                        MyDebug.AssertDebug(parameters.Count() == 1);
-                        MyDebug.AssertDebug(parameters[0].ParameterType == typeof(MyModContext));
+                        MyDebug.AssertRelease(parameters.Count() == 1);
+                        MyDebug.AssertRelease(parameters[0].ParameterType == typeof(MyModContext));
                         if (!(parameters.Count() == 1 && parameters[0].ParameterType == typeof(MyModContext)))
 #endif
                         {
@@ -137,19 +137,23 @@ namespace Phoenix.WorkshopTool
             if (!m_dryrun)
             {
                 _publishMethod = typeof(MySteamWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
-                MyDebug.AssertDebug(_publishMethod != null);
+                MyDebug.AssertRelease(_publishMethod != null);
 
                 if (_publishMethod != null)
                 {
                     var parameters = _publishMethod.GetParameters();
-                    MyDebug.AssertDebug(parameters.Count() == 7);
-                    MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
-                    MyDebug.AssertDebug(parameters[1].ParameterType == typeof(string));
-                    MyDebug.AssertDebug(parameters[2].ParameterType == typeof(string));
-                    MyDebug.AssertDebug(parameters[3].ParameterType == typeof(ulong?));
-                    MyDebug.AssertDebug(parameters[4].ParameterType == typeof(SteamSDK.PublishedFileVisibility));
-                    MyDebug.AssertDebug(parameters[5].ParameterType == typeof(string[]));
-                    MyDebug.AssertDebug(parameters[6].ParameterType == typeof(string[]));
+                    MyDebug.AssertRelease(parameters.Count() == 7);
+                    MyDebug.AssertRelease(parameters[0].ParameterType == typeof(string));
+                    MyDebug.AssertRelease(parameters[1].ParameterType == typeof(string));
+                    MyDebug.AssertRelease(parameters[2].ParameterType == typeof(string));
+                    MyDebug.AssertRelease(parameters[3].ParameterType == typeof(ulong?));
+#if SE
+                    MyDebug.AssertRelease(parameters[4].ParameterType == typeof(VRage.GameServices.MyPublishedFileVisibility));
+#else
+                    MyDebug.AssertRelease(parameters[4].ParameterType == typeof(SteamSDK.PublishedFileVisibility));
+#endif
+                    MyDebug.AssertRelease(parameters[5].ParameterType == typeof(string[]));
+                    MyDebug.AssertRelease(parameters[6].ParameterType == typeof(string[]));
 
                     if (!(parameters.Count() == 7 &&
                         parameters[0].ParameterType == typeof(string) &&
@@ -302,7 +306,7 @@ namespace Phoenix.WorkshopTool
                     title = item.Title;
 
                 // Check if the mod owner in the sbmi matches steam owner
-                MyDebug.AssertDebug(item.SteamIDOwner == MySteam.UserId);
+                MyDebug.AssertRelease(item.SteamIDOwner == MySteam.UserId);
                 if(item.SteamIDOwner != MySteam.UserId)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", item.SteamIDOwner, MySteam.UserId));
@@ -334,7 +338,7 @@ namespace Phoenix.WorkshopTool
                         m_ignoredExtensions
                     });
 
-                    MyDebug.AssertDebug(ret is ulong);
+                    MyDebug.AssertRelease(ret is ulong);
                     m_modId = (ulong)ret;
                 }
                 else
@@ -381,7 +385,7 @@ namespace Phoenix.WorkshopTool
             // 2) Verify the modtype matches what was listed in the workshop
             // TODO If type doesn't match, process as workshop type
             if (existingTags != null && existingTags.Length > 0)
-                MyDebug.AssertDebug(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
+                MyDebug.AssertRelease(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
 
 #if SE
             // 3a) check if user passed in the 'development' tag

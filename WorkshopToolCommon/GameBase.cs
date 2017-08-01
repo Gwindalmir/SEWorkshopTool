@@ -98,12 +98,12 @@ namespace Phoenix.WorkshopTool
                 {
                     // Init ModAPI
                     var initmethod = typeof(MySandboxGame).GetMethod("InitModAPI", BindingFlags.Instance | BindingFlags.NonPublic);
-                    MyDebug.AssertDebug(initmethod != null);
+                    MyDebug.AssertRelease(initmethod != null);
 
                     if (initmethod != null)
                     {
                         parameters = initmethod.GetParameters();
-                        MyDebug.AssertDebug(parameters.Count() == 0);
+                        MyDebug.AssertRelease(parameters.Count() == 0);
 
                         if(!(parameters.Count() == 0))
                             initmethod = null;
@@ -120,12 +120,12 @@ namespace Phoenix.WorkshopTool
                 var methodtoreplace = typeof(MySteamWorkshop).GetMethod("WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
                 var methodtoinject = typeof(InjectedMethod).GetMethod("WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
 
-                MyDebug.AssertDebug(methodtoreplace != null);
+                MyDebug.AssertRelease(methodtoreplace != null);
                 if (methodtoreplace != null)
                 {
                     parameters = methodtoreplace.GetParameters();
-                    MyDebug.AssertDebug(parameters.Count() == 1);
-                    MyDebug.AssertDebug(parameters[0].ParameterType == typeof(string));
+                    MyDebug.AssertRelease(parameters.Count() == 1);
+                    MyDebug.AssertRelease(parameters[0].ParameterType == typeof(string));
 
                     if (!(parameters.Count() == 1 && parameters[0].ParameterType == typeof(string)))
                         methodtoreplace = null;
@@ -154,8 +154,8 @@ namespace Phoenix.WorkshopTool
                 }
                 catch(AggregateException ex)
                 {
-                    MyDebug.AssertDebug(Task.IsFaulted);
-                    MyDebug.AssertDebug(ex.InnerException != null);
+                    MyDebug.AssertRelease(Task.IsFaulted);
+                    MyDebug.AssertRelease(ex.InnerException != null);
                     var exception = ex.InnerException;
                     MySandboxGame.Log.WriteLineAndConsole("An exception occurred: " + exception.Message);
                     MySandboxGame.Log.WriteLineAndConsole(exception.StackTrace);
@@ -216,12 +216,12 @@ namespace Phoenix.WorkshopTool
 
                 // Initializing the workshop means the categories are available
                 var initWorkshopMethod = m_game.GetType().GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
-                MyDebug.AssertDebug(initWorkshopMethod != null);
+                MyDebug.AssertRelease(initWorkshopMethod != null);
 
                 if (initWorkshopMethod != null)
                 {
                     var parameters = initWorkshopMethod.GetParameters();
-                    MyDebug.AssertDebug(parameters.Count() == 0);
+                    MyDebug.AssertRelease(parameters.Count() == 0);
                 }
 
                 if (initWorkshopMethod != null)
@@ -234,6 +234,7 @@ namespace Phoenix.WorkshopTool
                 // This shouldn't fail, but don't stop even if it does
                 MySandboxGame.Log.WriteLineAndConsole("An exception occured, ignoring: " + ex.Message);
             }
+
         }
 #endregion
 
