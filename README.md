@@ -64,6 +64,9 @@ For example: If a workshop mod contains the *Block* and *Script* categories, and
 To download a set of mods, use the **--download** argument. Then supply a list of workshop IDs with the **--mods** argument.  
 `SEWorkshopTool --download --mods 754173702 681276386`
 
+To download a collection or collections, use the **--download** argument. Then supply a list of workshop IDs with the **--collections** argument.  
+`SEWorkshopTool --download --collections 814381863
+
 If desired, you can also automatically extract the mods to your local *%appdata%\SpaceEngineers\Mods* directory with the **--extract** argument:  
 `SEWorkshopTool --extract --download --mods 754173702 681276386`
 
