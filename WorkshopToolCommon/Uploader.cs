@@ -262,7 +262,7 @@ namespace Phoenix.WorkshopTool
                     input.Close();
                     var ingamescript = MyScriptCompiler.Static.GetIngameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial");
                     var messages = new List<MyScriptCompiler.Message>();
-                    var assembly = MyScriptCompiler.Static.Compile(MyApiTarget.Ingame, null, ingamescript, messages).Result;
+                    var assembly = MyScriptCompiler.Static.Compile(MyApiTarget.Ingame, null, ingamescript, messages, null).Result;
 
                     if (messages.Count > 0)
                     {
