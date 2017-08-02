@@ -57,6 +57,21 @@ namespace Phoenix.WorkshopTool
             AppName = "MEWT";
             IsME = true;
 #endif
+            // Override the ExePath, so the game classes can initialize when the exe is outside the game directory
+            MyFileSystem.ExePath = new FileInfo(Assembly.GetAssembly(typeof(VRage.FastResourceLock)).Location).DirectoryName;
+        }
+
+        // Event handler for loading assemblies not in the same directory as the exe.
+        // This assumes the current directory contains the assemblies.
+        public static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            var assemblyname = new AssemblyName(args.Name).Name + ".dll";
+            var assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname);
+
+            if (!File.Exists(assemblyPath))
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname);
+
+            return Assembly.LoadFrom(assemblyPath);
         }
 
         public virtual int InitGame(string[] args)

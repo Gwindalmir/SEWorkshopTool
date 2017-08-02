@@ -11,6 +11,8 @@ namespace Phoenix.MEWorkshopTool
     {
         public static int Main(string[] args)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += GameBase.CurrentDomain_AssemblyResolve;
+
             var game = new MedievalGame();
             return game.InitGame(args);
         }
