@@ -58,9 +58,11 @@ namespace Phoenix.WorkshopTool
                 case WorkshopType.Blueprint:
                     downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Blueprints", local ? "local" : "workshop");
                     break;
+#if SE
                 case WorkshopType.IngameScript:
                     downloadPath = Path.Combine(MyFileSystem.UserDataPath, Sandbox.Game.Gui.MyGuiIngameScriptsPage.SCRIPTS_DIRECTORY, local ? "local" : "workshop");
                     break;
+#endif
                 case WorkshopType.World:
                 case WorkshopType.Scenario:
                     downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteam.UserId.ToString());

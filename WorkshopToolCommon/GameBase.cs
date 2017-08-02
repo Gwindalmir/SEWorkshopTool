@@ -410,6 +410,7 @@ namespace Phoenix.WorkshopTool
                                 success = true;
                         }
                     }
+#if SE
                     else if (type == WorkshopType.IngameScript)
                     {
                         var loopsuccess = false;
@@ -422,6 +423,7 @@ namespace Phoenix.WorkshopTool
                                 success = true;
                         }
                     }
+#endif
                     else if (type == WorkshopType.World || type == WorkshopType.Scenario)
                     {
                         var loopsuccess = false;
