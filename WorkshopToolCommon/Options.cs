@@ -63,5 +63,8 @@ namespace Phoenix.WorkshopTool
 #endif
         [OptionArray('t', "tags", HelpText = "List of workshop mod categories/tags to use (removes previous, default is keep existing)")]
         public string[] Tags { get; set; }
+
+        [OptionArray("collections", HelpText = "List of Workshop IDs of collections to download")]
+        public string[] Collections { get; set; }
     }
 }

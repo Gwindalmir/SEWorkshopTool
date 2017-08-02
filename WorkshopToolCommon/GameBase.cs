@@ -87,7 +87,8 @@ namespace Phoenix.WorkshopTool
                     options.IngameScripts == null &&
 #endif
                     options.Scenarios == null &&
-                    options.Worlds == null)
+                    options.Worlds == null &&
+                    options.Collections == null)
                 {
                     System.Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
                     return 1;
@@ -371,6 +372,22 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole("Beginning batch workshop download...");
                 MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
+                if (options.Collections?.Count() > 0)
+                {
+                    var items = new List<MySubscribedItem>();
+
+                    // get collection information
+                    options.Collections.ForEach(s => items.AddRange(WorkshopHelper.GetCollectionDetails(ulong.Parse(s))));
+
+                    options.ModPaths = CombineCollectionWithList(WorkshopType.Mod, items, options.ModPaths);
+                    options.Blueprints = CombineCollectionWithList(WorkshopType.Blueprint, items, options.Blueprints);
+#if SE
+                    options.IngameScripts = CombineCollectionWithList(WorkshopType.IngameScript, items, options.IngameScripts);
+#endif
+                    options.Worlds = CombineCollectionWithList(WorkshopType.World, items, options.Worlds);
+                    options.Scenarios = CombineCollectionWithList(WorkshopType.Scenario, items, options.Scenarios);
+                }
+
                 if (!ProcessItemsDownload(WorkshopType.Mod, options.ModPaths, options))
                     success = false;
                 if (!ProcessItemsDownload(WorkshopType.Blueprint, options.Blueprints, options))
@@ -529,5 +546,22 @@ namespace Phoenix.WorkshopTool
             return itemPaths;
         }
 #endregion Pathing
+        static string[] CombineCollectionWithList(WorkshopType type, List<MySubscribedItem> items, string[] existingitems)
+        {
+            var tempList = new List<string>();
+
+            // Check mods
+            items.Where(i => i.Tags.Contains(type.ToString(), StringComparer.InvariantCultureIgnoreCase))
+                                .ForEach(i => tempList.Add(i.PublishedFileId.ToString()));
+
+            if (tempList.Count > 0)
+            {
+                if(existingitems != null)
+                    tempList.AddArray(existingitems);
+
+                return tempList.ToArray();
+            }
+            return existingitems;
+        }
     }
 }
