@@ -19,9 +19,6 @@ namespace Phoenix.WorkshopTool
 {
     class WorkshopHelper
     {
-#if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-#endif
         static private Dictionary<uint, Action<bool, string>> m_callbacks = new Dictionary<uint, Action<bool, string>>();
         static string _requestURL = "https://api.steampowered.com/{0}/{1}/v{2:0000}/?format=xml";
 

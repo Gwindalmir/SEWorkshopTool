@@ -24,20 +24,12 @@ using MySubscribedItem = Sandbox.Engine.Networking.MySteamWorkshop.SubscribedIte
 using VRage;
 #endif
 
-#if SE
-using MySteamServiceBase = VRage.Steam.MySteamService;
-#else
 using MySteamServiceBase = Sandbox.MySteamService;
-#endif
 
 namespace Phoenix.WorkshopTool
 {
     abstract class GameBase
     {
-#if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-#endif
-
         protected MySandboxGame m_game = null;
         protected MyCommonProgramStartup m_startup;
         protected MySteamServiceBase m_steamService;
@@ -212,11 +204,8 @@ namespace Phoenix.WorkshopTool
         }
 
         protected abstract bool SetupBasicGameInfo();
-#if SE
-        protected abstract MySandboxGame InitGame();
-#else
         protected abstract MySandboxGame InitGame(VRageGameServices services);
-#endif
+
         // This is mostly copied from MyProgram.Main(), with UI stripped out.
         protected virtual void InitSandbox(string instancepath)
         {
@@ -229,15 +218,10 @@ namespace Phoenix.WorkshopTool
                 return;
 
             if (System.Diagnostics.Debugger.IsAttached)
-#if SE
-                m_startup.CheckSteamRunning();        // Just give the warning message box when debugging, ignore for release
-#else
                 m_startup.CheckSteamRunning(m_steamService);        // Just give the warning message box when debugging, ignore for release
-#endif
 
-#if !SE
             VRageGameServices services = new VRageGameServices(m_steamService);
-#endif
+
             if (!MySandboxGame.IsDedicated)
                 MyFileSystem.InitUserSpecific(m_steamService.UserId.ToString());
 
@@ -250,11 +234,7 @@ namespace Phoenix.WorkshopTool
                 MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");
 
                 // NOTE: an assert may be thrown in debug, about missing Tutorials.sbx. Ignore it.
-#if SE
-                m_game = InitGame();
-#else
                 m_game = InitGame(services);
-#endif
 
                 // Initializing the workshop means the categories are available
                 var initWorkshopMethod = m_game.GetType().GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);

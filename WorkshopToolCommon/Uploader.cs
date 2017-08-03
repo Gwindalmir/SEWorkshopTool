@@ -13,11 +13,7 @@ using VRage;
 using VRage.Game;
 using VRage.Scripting;
 using VRage.Utils;
-#if SE
-using PublishedFileVisibility = VRage.GameServices.MyPublishedFileVisibility;
-#else
 using PublishedFileVisibility = SteamSDK.PublishedFileVisibility;
-#endif
 
 namespace Phoenix.WorkshopTool
 {
@@ -35,9 +31,6 @@ namespace Phoenix.WorkshopTool
 
     class Uploader : IMod
     {
-#if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-#endif
         readonly string[] m_ignoredExtensions;
 
         string m_modPath;
@@ -156,11 +149,7 @@ namespace Phoenix.WorkshopTool
                     MyDebug.AssertRelease(parameters[1].ParameterType == typeof(string));
                     MyDebug.AssertRelease(parameters[2].ParameterType == typeof(string));
                     MyDebug.AssertRelease(parameters[3].ParameterType == typeof(ulong?));
-#if SE
-                    MyDebug.AssertRelease(parameters[4].ParameterType == typeof(VRage.GameServices.MyPublishedFileVisibility));
-#else
                     MyDebug.AssertRelease(parameters[4].ParameterType == typeof(SteamSDK.PublishedFileVisibility));
-#endif
                     MyDebug.AssertRelease(parameters[5].ParameterType == typeof(string[]));
                     MyDebug.AssertRelease(parameters[6].ParameterType == typeof(string[]));
 
@@ -169,11 +158,7 @@ namespace Phoenix.WorkshopTool
                         parameters[1].ParameterType == typeof(string) &&
                         parameters[2].ParameterType == typeof(string) &&
                         parameters[3].ParameterType == typeof(ulong?) &&
-#if SE
-                        parameters[4].ParameterType == typeof(VRage.GameServices.MyPublishedFileVisibility) &&
-#else
                         parameters[4].ParameterType == typeof(SteamSDK.PublishedFileVisibility) &&
-#endif
                         parameters[5].ParameterType == typeof(string[]) &&
                         parameters[6].ParameterType == typeof(string[])))
                     {
@@ -262,7 +247,7 @@ namespace Phoenix.WorkshopTool
                     input.Close();
                     var ingamescript = MyScriptCompiler.Static.GetIngameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial");
                     var messages = new List<MyScriptCompiler.Message>();
-                    var assembly = MyScriptCompiler.Static.Compile(MyApiTarget.Ingame, null, ingamescript, messages, null).Result;
+                    var assembly = MyScriptCompiler.Static.Compile(MyApiTarget.Ingame, null, ingamescript, messages).Result;
 
                     if (messages.Count > 0)
                     {

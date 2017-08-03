@@ -14,10 +14,6 @@ namespace Phoenix.WorkshopTool
 {
     class InjectedMethod
     {
-#if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-#endif
-
         private static readonly int m_bufferSize = 1 * 1024 * 1024; // buffer size for copying files
 
         // The keen original method has a dependency on the UI, for reporting feedback on mod progress.
