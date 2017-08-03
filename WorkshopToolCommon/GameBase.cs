@@ -65,11 +65,14 @@ namespace Phoenix.WorkshopTool
         // This assumes the current directory contains the assemblies.
         public static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
-            var assemblyname = new AssemblyName(args.Name).Name + ".dll";
-            var assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname);
+            var assemblyname = new AssemblyName(args.Name).Name;
+            var assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname + ".dll");
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname);
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname + ".dll");
+
+            if (!File.Exists(assemblyPath))
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ".dll");
 
             return Assembly.LoadFrom(assemblyPath);
         }
