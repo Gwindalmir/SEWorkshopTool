@@ -23,6 +23,7 @@ namespace Phoenix.WorkshopTool
         static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
 #endif
         static private Dictionary<uint, Action<bool, string>> m_callbacks = new Dictionary<uint, Action<bool, string>>();
+        static string _requestURL = "https://api.steampowered.com/{0}/{1}/v{2:0000}/?format=xml";
 
         public static MySubscribedItem GetSubscribedItem(ulong modid)
         {
@@ -79,10 +80,7 @@ namespace Phoenix.WorkshopTool
         #region Collections
         public static IEnumerable<MySubscribedItem> GetCollectionDetails(ulong modid)
         {
-            if (MySteam.API == null)
-                return null;
-
-            IEnumerable<MySubscribedItem> details = null;
+            IEnumerable<MySubscribedItem> details = new List<MySubscribedItem>();
 
             MyLog.Default.WriteLineAndConsole("Begin processing collections");
 
@@ -115,7 +113,7 @@ namespace Phoenix.WorkshopTool
             MyLog.Default.IncreaseIndent();
             try
             {
-                var request = WebRequest.Create(string.Format("https://api.steampowered.com/{0}/{1}/v{2:0000}/?format=xml", "ISteamRemoteStorage", "GetCollectionDetails", 1));
+                var request = WebRequest.Create(string.Format(_requestURL, "ISteamRemoteStorage", "GetCollectionDetails", 1));
                 request.Method = "POST";
                 request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
@@ -174,19 +172,31 @@ namespace Phoenix.WorkshopTool
                         reader.ReadToFollowing("publishedfileid");
                         ulong publishedFileId = Convert.ToUInt64(reader.ReadElementContentAsString());
 
-                        MyLog.Default.WriteLineAndConsole(string.Format("Collection {0} contains the following items:", publishedFileId.ToString()));
+                        reader.ReadToFollowing("result");
+                        xmlResult = reader.ReadElementContentAsInt();
 
-                        reader.ReadToFollowing("children");
-                        using (var sub = reader.ReadSubtree())
+                        if (xmlResult == 1 /* OK */)
                         {
-                            while (sub.ReadToFollowing("publishedfileid"))
-                            {
-                                var item = GetSubscribedItem(Convert.ToUInt64(sub.ReadElementContentAsString()));
-                                MyLog.Default.WriteLineAndConsole(string.Format("Id - {0}, title - {1}", item.PublishedFileId, item.Title));
-                                modsInCollection.Add(item);
-                            }
-                        }
+                            MyLog.Default.WriteLineAndConsole(string.Format("Collection {0} contains the following items:", publishedFileId.ToString()));
 
+                            reader.ReadToFollowing("children");
+                            using (var sub = reader.ReadSubtree())
+                            {
+                                while (sub.ReadToFollowing("publishedfileid"))
+                                {
+                                    var item = GetSubscribedItem(Convert.ToUInt64(sub.ReadElementContentAsString()));
+                                    MyLog.Default.WriteLineAndConsole(string.Format("Id - {0}, title - {1}", item.PublishedFileId, item.Title));
+                                    modsInCollection.Add(item);
+                                }
+                            }
+
+                            failure = false;
+                        }
+                        else
+                        {
+                            MyLog.Default.WriteLineAndConsole(string.Format("Item {0} returned the following error: {1}", publishedFileId.ToString(), (Result)xmlResult));
+                            failure = true;
+                        }
                     }
                 }
             }
@@ -202,7 +212,6 @@ namespace Phoenix.WorkshopTool
             }
             return failure;
         }
-
         #endregion Collections
     }
 }
