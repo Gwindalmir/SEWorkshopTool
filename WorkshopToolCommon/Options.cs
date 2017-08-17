@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if SE
+using PublishedFileVisibility = VRage.GameServices.MyPublishedFileVisibility;
+#else
 using PublishedFileVisibility = SteamSDK.PublishedFileVisibility;
+#endif
 
 namespace Phoenix.WorkshopTool
 {

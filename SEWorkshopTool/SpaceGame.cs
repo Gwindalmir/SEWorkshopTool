@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VRage;
 using VRage.FileSystem;
+using VRage.GameServices;
 using VRage.Utils;
 using VRageRender;
 
@@ -29,15 +30,15 @@ namespace Phoenix.SEWorkshopTool
             if (!m_startup.Check64Bit()) return false;
 
             m_steamService = new WorkshopTool.MySteamService(MySandboxGame.IsDedicated, AppId);
-
+            MyServiceManager.Instance.AddService<IMyGameService>(m_steamService);
             SpaceEngineersGame.SetupPerGameSettings();
 
             return true;
         }
 
-        protected override MySandboxGame InitGame(VRageGameServices services)
+        protected override MySandboxGame InitGame()
         {
-            return new SpaceEngineersGame(services, null);
+            return new SpaceEngineersGame(null);
         }
     }
 }

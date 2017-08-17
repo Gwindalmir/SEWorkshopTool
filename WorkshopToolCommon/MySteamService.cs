@@ -4,7 +4,11 @@ using System.Linq;
 using System.Text;
 using VRage.Utils;
 
+#if SE
+using MySteamServiceBase = VRage.Steam.MySteamService;
+#else
 using MySteamServiceBase = Sandbox.MySteamService;
+#endif
 
 namespace Phoenix.WorkshopTool
 {
@@ -21,27 +25,39 @@ namespace Phoenix.WorkshopTool
             // TODO: Add protection for this mess... somewhere
             SteamSDK.SteamServerAPI.Instance.Dispose();
             var steam = typeof(MySteamServiceBase);
+#if SE
+            steam.GetProperty("SteamServerAPI").GetSetMethod(true).Invoke(this, new object[] { null });
+            steam.GetField("m_gameServer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(this, null);
+#else
             steam.GetField("SteamServerAPI").SetValue(this, null);
+#endif
 
             steam.GetProperty("AppId").GetSetMethod(true).Invoke(this, new object[] { appId });
             if (isDedicated)
             {
+#if SE
+                steam.GetProperty("SteamServerAPI").GetSetMethod(true).Invoke(this, new object[] { null });
+                steam.GetField("m_gameServer").SetValue(this, new VRage.Steam.MySteamGameServer());
+#else
                 steam.GetField("SteamServerAPI").SetValue(this, SteamSDK.SteamServerAPI.Instance);
+#endif
             }
             else
             {
                 var SteamAPI = SteamSDK.SteamAPI.Instance;
-                steam.GetField(
 #if SE
-                    "SteamAPI"
+                steam.GetProperty("API").GetSetMethod(true).Invoke(this, new object[] { SteamSDK.SteamAPI.Instance });
 #else
-                    "m_steamAPI"
-#endif
-                    , System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                steam.GetField("m_steamAPI", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
                     .SetValue(this, SteamSDK.SteamAPI.Instance);
-
+#endif
                 steam.GetProperty("IsActive").GetSetMethod(true).Invoke(this, new object[] { 
+#if SE
+                    SteamSDK.SteamAPI.Instance.Init()
+#else
                     SteamSDK.SteamAPI.Instance != null
+#endif
                  });
 
 #if SE
@@ -56,8 +72,20 @@ namespace Phoenix.WorkshopTool
                     steam.GetProperty("UserUniverse").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetSteamUserUniverse() });
                     steam.GetProperty("BranchName").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.GetBranchName() });
                     SteamAPI.LoadStats();
+
+#if SE
+                    steam.GetProperty("InventoryAPI").GetSetMethod(true).Invoke(this, new object[] { new VRage.Steam.MySteamInventory() });
+
+                    steam.GetMethod("RegisterCallbacks",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                        .Invoke(this, null);
+#endif
                 }
             }
+
+#if SE
+            steam.GetProperty("Peer2Peer").GetSetMethod(true).Invoke(this, new object[] { new VRage.Steam.MySteamPeer2Peer() });
+#endif
         }
     }
 }
