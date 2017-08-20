@@ -398,7 +398,7 @@ namespace Phoenix.WorkshopTool
             // 2) Verify the modtype matches what was listed in the workshop
             // TODO If type doesn't match, process as workshop type
             if (existingTags != null && existingTags.Length > 0)
-                MyDebug.AssertRelease(existingTags.Contains(modtype), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
+                MyDebug.AssertRelease(existingTags.Contains(modtype, StringComparer.InvariantCultureIgnoreCase), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
 
 #if SE
             // 3a) check if user passed in the 'development' tag
