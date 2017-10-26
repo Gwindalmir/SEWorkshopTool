@@ -220,8 +220,12 @@ namespace Phoenix.WorkshopTool
         // This is mostly copied from MyProgram.Main(), with UI stripped out.
         protected virtual void InitSandbox(string instancepath)
         {
-            MyFakes.ENABLE_INFINARIO = false;
+            // Infinario was removed from SE in update 1.184.6, but is still in ME
+            var infinario = typeof(MyFakes).GetField("ENABLE_INFINARIO");
 
+            if (infinario != null)
+                infinario.SetValue(null, false);
+            
             if (m_game != null)
                 m_game.Exit();
 
