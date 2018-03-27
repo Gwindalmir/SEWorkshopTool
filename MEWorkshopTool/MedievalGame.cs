@@ -2,15 +2,8 @@
 using Phoenix.WorkshopTool;
 using Sandbox;
 using Sandbox.Game;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using VRage.FileSystem;
-using VRage.Utils;
-using VRageRender;
+using VRage;
+using VRage.GameServices;
 
 namespace Phoenix.MEWorkshopTool
 {
@@ -23,19 +16,19 @@ namespace Phoenix.MEWorkshopTool
 
             var appDataPath = m_startup.GetAppDataPath();
             MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", appDataPath);
-            MyInitializer.InitCheckSum();
 
             if (!m_startup.Check64Bit()) return false;
 
             m_steamService = new WorkshopTool.MySteamService(MySandboxGame.IsDedicated, AppId);
+            MyServiceManager.Instance.AddService<IMyGameService>(m_steamService);
             MyMedievalGame.SetupPerGameSettings();
 
             return true;
         }
 
-        protected override MySandboxGame InitGame(VRageGameServices services)
+        protected override MySandboxGame InitGame()
         {
-            return new MyMedievalGame(services, null);
+            return new MyMedievalGame(null);
         }
     }
 }

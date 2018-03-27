@@ -1,5 +1,4 @@
 ﻿using Sandbox.Engine.Networking;
-using SteamSDK;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,12 +6,14 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using VRage;
 using VRage.FileSystem;
-using VRage.Utils;
 #if SE
-using MySubscribedItem = Sandbox.Engine.Networking.MySteamWorkshop.SubscribedItem;
+using VRage;
+using VRage.Utils;
+using MySubscribedItem = Sandbox.Engine.Networking.MyWorkshop.SubscribedItem;
+#else
+using VRage.Library.Logging;
+using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 #endif
 
 namespace Phoenix.WorkshopTool
@@ -24,36 +25,6 @@ namespace Phoenix.WorkshopTool
 #endif
         static private Dictionary<uint, Action<bool, string>> m_callbacks = new Dictionary<uint, Action<bool, string>>();
         static string _requestURL = "https://api.steampowered.com/{0}/{1}/v{2:0000}/?format=xml";
-
-        public static MySubscribedItem GetSubscribedItem(ulong modid)
-        {
-            MySubscribedItem item = new MySubscribedItem();
-
-            if (MySteam.API == null)
-                return item;
-
-            using (var mrEvent = new ManualResetEvent(false))
-            {
-                MySteam.API.RemoteStorage.GetPublishedFileDetails(modid, 0, (ioFailure, result) =>
-                {
-                    if (!ioFailure && result.Result == SteamSDK.Result.OK)
-                    {
-                        item.Description = result.Description;
-                        item.Title = result.Title;
-                        item.UGCHandle = result.FileHandle;
-                        item.Tags = result.Tags.Split(',');
-                        item.SteamIDOwner = result.SteamIDOwner;
-                        item.TimeUpdated = result.TimeUpdated;
-                        item.PublishedFileId = result.PublishedFileId;
-                    }
-                    mrEvent.Set();
-                });
-
-                mrEvent.WaitOne();
-                mrEvent.Reset();
-            }
-            return item;
-        }
 
         public static string GetWorkshopItemPath(WorkshopType type, bool local = true)
         {
@@ -71,13 +42,13 @@ namespace Phoenix.WorkshopTool
 #endif
                 case WorkshopType.World:
                 case WorkshopType.Scenario:
-                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteam.UserId.ToString());
+                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteamService.Static.UserId.ToString());
                     break;
             }
             return downloadPath;
         }
 
-        #region Collections
+#region Collections
         public static IEnumerable<MySubscribedItem> GetCollectionDetails(ulong modid)
         {
             IEnumerable<MySubscribedItem> details = new List<MySubscribedItem>();
@@ -184,9 +155,26 @@ namespace Phoenix.WorkshopTool
                             {
                                 while (sub.ReadToFollowing("publishedfileid"))
                                 {
-                                    var item = GetSubscribedItem(Convert.ToUInt64(sub.ReadElementContentAsString()));
-                                    MyLog.Default.WriteLineAndConsole(string.Format("Id - {0}, title - {1}", item.PublishedFileId, item.Title));
-                                    modsInCollection.Add(item);
+                                    var results = new List<MySubscribedItem>();
+
+                                    // SE and ME have the argument flipped, why?
+#if SE
+                                    if (MyWorkshop.GetItemsBlocking(results, new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }))
+#else
+                                    if (MyWorkshop.GetItemsBlocking(new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }, results))
+#endif
+                                    {
+                                        var item = results[0];
+
+                                        MyLog.Default.WriteLineAndConsole(string.Format("Id - {0}, title - {1}",
+#if SE
+                                            item.PublishedFileId
+#else
+                                            item.Id
+#endif
+                                            , item.Title));
+                                        modsInCollection.Add(item);
+                                    }
                                 }
                             }
 
@@ -194,7 +182,7 @@ namespace Phoenix.WorkshopTool
                         }
                         else
                         {
-                            MyLog.Default.WriteLineAndConsole(string.Format("Item {0} returned the following error: {1}", publishedFileId.ToString(), (Result)xmlResult));
+                            MyLog.Default.WriteLineAndConsole(string.Format("Item {0} returned the following error: {1}", publishedFileId.ToString(), (Steamworks.EResult)xmlResult));
                             failure = true;
                         }
                     }
@@ -212,6 +200,6 @@ namespace Phoenix.WorkshopTool
             }
             return failure;
         }
-        #endregion Collections
+#endregion Collections
     }
 }

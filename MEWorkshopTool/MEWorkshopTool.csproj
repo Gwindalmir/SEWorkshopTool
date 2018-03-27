@@ -49,8 +49,8 @@
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\Sandbox.Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="SteamSDK">
-      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\SteamSDK.dll</HintPath>
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\Steamworks.NET.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -83,6 +83,10 @@
     </Reference>
     <Reference Include="VRage.Scripting">
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\VRage.Scripting.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRage.Steam">
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\VRage.Steam.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

@@ -1,21 +1,12 @@
 ﻿using CommandLine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-#if SE
-using PublishedFileVisibility = VRage.GameServices.MyPublishedFileVisibility;
-#else
-using PublishedFileVisibility = SteamSDK.PublishedFileVisibility;
-#endif
+using VRage.GameServices;
 
 namespace Phoenix.WorkshopTool
 {
     public sealed class Options
     {
-        [Option("visibility", DefaultValue = PublishedFileVisibility.Public, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
-        public PublishedFileVisibility Visibility { get; set; }
+        [Option("visibility", DefaultValue = MyPublishedFileVisibility.Public, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
+        public MyPublishedFileVisibility Visibility { get; set; }
 
         [Option("dev", DefaultValue = false, HelpText = "Set to true if the mod will have the 'development' tag when uploaded")]
         public bool Development { get; set; }

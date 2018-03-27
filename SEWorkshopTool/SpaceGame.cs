@@ -2,17 +2,8 @@
 using Sandbox;
 using Sandbox.Game;
 using SpaceEngineers.Game;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using VRage;
-using VRage.FileSystem;
 using VRage.GameServices;
-using VRage.Utils;
-using VRageRender;
 
 namespace Phoenix.SEWorkshopTool
 {

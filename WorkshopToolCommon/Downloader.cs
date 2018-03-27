@@ -1,19 +1,12 @@
 ﻿using Sandbox;
-using Sandbox.Engine.Networking;
-using Sandbox.Game.World;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using VRage.Compression;
-using VRage.Game;
-using VRage.Utils;
+using Sandbox.Engine.Networking;
 
-#if !SE
+#if SE
+using VRage.Compression;
+#else
 using VRage.Library.Compression;
 #endif
 
@@ -44,15 +37,15 @@ namespace Phoenix.WorkshopTool
         {
             string ext = ".sbm";
 
-            if (m_tags.Contains(MySteamWorkshop.WORKSHOP_MOD_TAG))
+            if (m_tags.Contains(MyWorkshop.WORKSHOP_MOD_TAG))
                 ext = ".sbm";
-            else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_BLUEPRINT_TAG))
+            else if (m_tags.Contains(MyWorkshop.WORKSHOP_BLUEPRINT_TAG))
                 ext = ".sbb";
             else if (m_tags.Contains(WorkshopType.IngameScript.ToString()))
                 ext = ".sbs";
-            else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_WORLD_TAG))
+            else if (m_tags.Contains(MyWorkshop.WORKSHOP_WORLD_TAG))
                 ext = ".sbw";
-            else if (m_tags.Contains(MySteamWorkshop.WORKSHOP_SCENARIO_TAG))
+            else if (m_tags.Contains(MyWorkshop.WORKSHOP_SCENARIO_TAG))
                 ext = ".sbs";
 
             var sanitizedTitle = Path.GetInvalidFileNameChars().Aggregate(Title, (current, c) => current.Replace(c.ToString(), "_"));
