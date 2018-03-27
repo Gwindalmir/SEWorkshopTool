@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Phoenix.WorkshopTool
+﻿namespace Phoenix.WorkshopTool
 {
     public static class Constants
     {
+        public const string Version = "0.5.3.*";
 #if SE
         public const string SEWT_Prefix = "[_SEWT_]";
 #else
