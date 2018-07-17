@@ -72,3 +72,15 @@ If desired, you can also automatically extract the mods to your local *%appdata%
 
 They will be extracted to their appropriate directory in the format: *[\_SEWT\_] &lt;Mod Title&gt; (&lt;WorkshopId&gt;)*
 
+## Other Operations
+New in 0.5.4:
+
+Now you can update the the preview image (thumb.png) separately, without reuploading the entire mod.
+This also works for updating tags as well.
+To update the thumbnail (any image steam supports, can be in *any* location):
+`SEWorkshopTool --mods FTL --thumb "path\to\filename"`
+
+To update the tags:
+`SEWorkshopTool --mods FTL --tags other`
+
+Notice the above commands do *not* contain **--upload** or **--download**.
