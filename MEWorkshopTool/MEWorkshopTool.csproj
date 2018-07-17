@@ -37,9 +37,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CommandLine">
-      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\CommandLine.dll</HintPath>
-    </Reference>
     <Reference Include="MedievalEngineers.Game">
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\MedievalEngineers.Game.dll</HintPath>
       <Private>False</Private>
@@ -97,6 +94,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser">
+      <Version>1.9.71</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="..\WorkshopToolCommon\WorkshopToolCommon.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
