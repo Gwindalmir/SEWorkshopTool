@@ -573,6 +573,9 @@ namespace Phoenix.WorkshopTool
             {
                 var dirs = Directory.EnumerateDirectories(Path.GetDirectoryName(path), Path.GetFileName(path));
                 
+                if(dirs.Count() == 0)
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Directory not found, skipping: {0}", path));
+
                 itemPaths.AddList(dirs
                     .Where(i => !(Path.GetFileName(i).StartsWith(".") ||                // Ignore directories starting with "." (eg. ".vs")
                                 Path.GetFileName(i).StartsWith(Constants.SEWT_Prefix))) // also ignore directories starting with "[_SEWT_]" (downloaded by this mod)
