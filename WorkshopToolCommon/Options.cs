@@ -5,8 +5,8 @@ namespace Phoenix.WorkshopTool
 {
     public sealed class Options
     {
-        [Option("visibility", DefaultValue = MyPublishedFileVisibility.Public, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
-        public MyPublishedFileVisibility Visibility { get; set; }
+        [Option("visibility", DefaultValue = null, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
+        public MyPublishedFileVisibility? Visibility { get; set; }
 
         [Option("dev", DefaultValue = false, HelpText = "Set to true if the mod will have the 'development' tag when uploaded")]
         public bool Development { get; set; }
@@ -57,5 +57,8 @@ namespace Phoenix.WorkshopTool
 
         [OptionArray("collections", HelpText = "List of Workshop IDs of collections to download")]
         public string[] Collections { get; set; }
+
+        [Option("thumb", HelpText = "Thumbnail to upload (doesn't re-upload mod)")]
+        public string Thumbnail { get; set; }
     }
 }

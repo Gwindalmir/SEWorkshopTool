@@ -137,28 +137,8 @@ namespace Phoenix.WorkshopTool
                         MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "InitModAPI"));
                 }
 
-#if SE
-                // Keen's code for WriteAndShareFileBlocking has a UI dependency
-                // This method need to be replaced with a custom one, which removes the unnecessary UI code.
-                var methodtoreplace = typeof(MyWorkshop).GetMethod("WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
-                var methodtoinject = typeof(InjectedMethod).GetMethod("WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
+                ReplaceMethods();
 
-                MyDebug.AssertRelease(methodtoreplace != null);
-                if (methodtoreplace != null)
-                {
-                    parameters = methodtoreplace.GetParameters();
-                    MyDebug.AssertRelease(parameters.Count() == 1);
-                    MyDebug.AssertRelease(parameters[0].ParameterType == typeof(string));
-
-                    if (!(parameters.Count() == 1 && parameters[0].ParameterType == typeof(string)))
-                        methodtoreplace = null;
-                }
-
-                if (methodtoreplace != null && methodtoinject != null)
-                    MethodUtil.ReplaceMethod(methodtoreplace, methodtoinject);
-                else
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "WriteAndShareFileBlocking"));
-#endif
                 System.Threading.Tasks.Task<bool> Task;
 
                 if (options.Download)
@@ -196,6 +176,59 @@ namespace Phoenix.WorkshopTool
             }
 
             return Cleanup();
+        }
+
+        void ReplaceMethods()
+        {
+#if SE
+            // Keen's code for WriteAndShareFileBlocking has a UI dependency
+            // This method need to be replaced with a custom one, which removes the unnecessary UI code.
+            ReplaceMethod(typeof(MyWorkshop), "WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
+#else
+            ReplaceMethod(typeof(VRage.Steam.MySteamWorkshopItemPublisher), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
+#endif
+        }
+
+        /// <summary>
+        /// Replaces a method with another one
+        /// </summary>
+        /// <param name="sourceType">Original type</param>
+        /// <param name="sourceMethod">Original method name</param>
+        /// <param name="destinationType">New type</param>
+        /// <param name="destinationMethod">New method name</param>
+        void ReplaceMethod(Type sourceType, string sourceMethod, BindingFlags sourceBinding, Type destinationType, string destinationMethod, BindingFlags destinationBinding)
+        {
+            ParameterInfo[] sourceParameters;
+            ParameterInfo[] destinationParameters;
+            // Keen's code for WriteAndShareFileBlocking has a UI dependency
+            // This method need to be replaced with a custom one, which removes the unnecessary UI code.
+            var methodtoreplace = sourceType.GetMethod(sourceMethod, sourceBinding);
+            var methodtoinject = destinationType.GetMethod(destinationMethod, destinationBinding);
+
+            MyDebug.AssertRelease(methodtoreplace != null);
+            if (methodtoreplace != null)
+            {
+                sourceParameters = methodtoreplace.GetParameters();
+                destinationParameters = methodtoinject.GetParameters();
+                MyDebug.AssertDebug(sourceParameters.Length == destinationParameters.Length);
+                bool valid = true;
+
+                // Verify signatures
+                for (var x = 0; x < Math.Min(destinationParameters.Length, sourceParameters.Length); x++)
+                {
+                    MyDebug.AssertDebug(destinationParameters[x].ParameterType == sourceParameters[x].ParameterType);
+                    if (destinationParameters[x].ParameterType != sourceParameters[x].ParameterType)
+                        valid = false;
+                }
+
+                if (sourceParameters.Length != destinationParameters.Length || !valid)
+                    methodtoreplace = null;
+            }
+
+            if (methodtoreplace != null && methodtoinject != null)
+                MethodUtil.ReplaceMethod(methodtoreplace, methodtoinject);
+            else
+                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, sourceMethod));
         }
 
         // Returns argument for chaining
@@ -322,12 +355,22 @@ namespace Phoenix.WorkshopTool
 
             return Task;
         }
+
         static bool ProcessItemsUpload(WorkshopType type, List<string> paths, Options options)
         {
             bool success = true;
             for (int idx = 0; idx < paths.Count; idx++)
             {
-                var mod = new Uploader(type, Path.GetFullPath(paths[idx]), options.Tags, options.ExcludeExtensions, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force);
+                var pathname = Path.GetFullPath(paths[idx]);
+                var tags = options.Tags;
+
+                // If user comma-separated the tags, split them
+                if(tags.Length == 1)
+                {
+                    tags = tags[0].Split(',', ';');
+                }
+
+                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail);
                 if (options.UpdateOnly && mod.ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -350,6 +393,7 @@ namespace Phoenix.WorkshopTool
                     else
                     {
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Not uploading: {0}", mod.Title));
+                        mod.UpdatePreviewFileOrTags();
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
                     }
                 }
@@ -358,6 +402,7 @@ namespace Phoenix.WorkshopTool
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Skipping {0}: {1}", type.ToString(), mod.Title));
                     success = false;
                 }
+
                 MySandboxGame.Log.WriteLineAndConsole(string.Empty);
             }
             return success;

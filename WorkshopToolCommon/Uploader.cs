@@ -47,11 +47,12 @@ namespace Phoenix.WorkshopTool
         bool m_dryrun;
         ulong m_modId = 0;
         string m_title;
-        MyPublishedFileVisibility m_visibility;
+        MyPublishedFileVisibility? m_visibility;
         WorkshopType m_type;
         string[] m_tags = new string[1];
         bool m_isDev = false;
         bool m_force;
+        string m_previewFilename;
 
         private static object _scriptManager;
         private static PublishItemBlocking _publishMethod;
@@ -69,7 +70,7 @@ namespace Phoenix.WorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility visibility = MyPublishedFileVisibility.Public, bool force = false)
+        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null)
         {
             m_modPath = path;
             m_compile = compile;
@@ -80,6 +81,7 @@ namespace Phoenix.WorkshopTool
             m_type = type;
             m_isDev = development;
             m_force = force;
+            m_previewFilename = previewFilename;
 
             if( tags != null )
                 m_tags = tags;
@@ -148,10 +150,11 @@ namespace Phoenix.WorkshopTool
 #endif
                 if (_compileMethod == null)
                 {
-                    var compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(MyModContext) }, null);
+                    var compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(string), typeof(MyModContext) }, null);
                     MyDebug.AssertDebug(compileMethod != null);
 
-                    _compileMethod = Delegate.CreateDelegate(typeof(LoadScripts), _scriptManager, compileMethod, false) as LoadScripts;
+                    if(compileMethod != null)
+                        _compileMethod = Delegate.CreateDelegate(typeof(LoadScripts), _scriptManager, compileMethod, false) as LoadScripts;
 
                     if (_compileMethod == null)
                     {
@@ -165,7 +168,8 @@ namespace Phoenix.WorkshopTool
                 var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
                 MyDebug.AssertDebug(publishMethod != null);
 
-                _publishMethod = Delegate.CreateDelegate(typeof(PublishItemBlocking), publishMethod, false) as PublishItemBlocking;
+                if (publishMethod != null)
+                    _publishMethod = Delegate.CreateDelegate(typeof(PublishItemBlocking), publishMethod, false) as PublishItemBlocking;
 
                 if (_publishMethod == null)
                 {
@@ -302,32 +306,8 @@ namespace Phoenix.WorkshopTool
             }
             else
             {
-                var title = m_title;
-                var results = new List<MySubscribedItem>();
-#if SE
-                if (MyWorkshop.GetItemsBlocking(results, new List<ulong>() { m_modId }))
-#else
-                if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
-#endif
-                {
-                    if (results.Count > 0)
-                        title = results[0].Title;
-
-                    // Check if the mod owner in the sbmi matches steam owner
-#if SE
-                    var owner = results[0].SteamIDOwner;
-#else
-                    var owner = results[0].OwnerId;
-#endif
-                    MyDebug.AssertDebug(owner == MySteam.UserId);
-                    if (owner != MySteam.UserId)
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MySteam.UserId));
-                        MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
-                        return false;
-                    }
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, title));
-                }
+                if(FillPropertiesFromPublished())
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, m_title));
             }
 
             // Process Tags
@@ -341,7 +321,7 @@ namespace Phoenix.WorkshopTool
             {
                 if (_publishMethod != null)
                 {
-                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility, m_tags, m_ignoredExtensions
+                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Public, m_tags, m_ignoredExtensions
 #if !SE
                         , m_ignoredPaths
 #endif
@@ -376,6 +356,39 @@ namespace Phoenix.WorkshopTool
             return true;
         }
 
+        bool FillPropertiesFromPublished()
+        {
+            var results = new List<MySubscribedItem>();
+#if SE
+            if (MyWorkshop.GetItemsBlocking(results, new List<ulong>() { m_modId }))
+#else
+            if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
+#endif
+            {
+                if (results.Count > 0)
+                    m_title = results[0].Title;
+
+                // Check if the mod owner in the sbmi matches steam owner
+#if SE
+                var owner = results[0].SteamIDOwner;
+#else
+                var owner = results[0].OwnerId;
+
+                if(m_visibility == null)
+                    m_visibility = results[0].Visibility;
+#endif
+
+                MyDebug.AssertDebug(owner == MySteam.UserId);
+                if (owner != MySteam.UserId)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MySteam.UserId));
+                    MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
+                    return false;
+                }
+            }
+            return true;
+        }
+
         void ProcessTags()
         {
             // TODO: This code could be better.
@@ -403,9 +416,9 @@ namespace Phoenix.WorkshopTool
             }
 #endif
             // 3b If tags contain mod type, remove it
-            if (m_tags.Contains(modtype))
+            if (m_tags.Contains(modtype, StringComparer.InvariantCultureIgnoreCase))
             {
-                m_tags = (from tag in m_tags where tag != modtype select tag).ToArray();
+                m_tags = (from tag in m_tags where string.Compare(tag, modtype, true) != 0 select tag).ToArray();
             }
 
             // 4)
@@ -447,7 +460,7 @@ namespace Phoenix.WorkshopTool
                                    where !(
                                         from tag in validTags
                                         select tag.Id
-                                   ).Contains(utag)
+                                   ).Contains(utag, StringComparer.InvariantCultureIgnoreCase)
                                    select utag;
 
                 if( invalidItems.Count() > 0 )
@@ -461,7 +474,21 @@ namespace Phoenix.WorkshopTool
                 // Now prepend the 'Type' tag
                 string[] newTags = new string[m_tags.Length + 1];
                 newTags[0] = m_type.ToString();
-                Array.Copy(m_tags, 0, newTags, 1, m_tags.Length);
+
+                var tags = from tag in validTags select tag.Id;
+
+                // Convert all tags to proper-case
+                for(var x = 0; x < m_tags.Length; x++)
+                {
+                    var tag = m_tags[x];
+                    var newtag = (from vtag in tags where (string.Compare(vtag, tag, true) == 0) select vtag).FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(newtag))
+                        newTags[x + 1] = newtag;
+                    else
+                        newTags[x + 1] = m_tags[x];
+                }
+
                 m_tags = newTags;
             }
 #if SE
@@ -506,6 +533,36 @@ namespace Phoenix.WorkshopTool
             }
 
             return null;
+        }
+
+        public bool UpdatePreviewFileOrTags()
+        {
+            ProcessTags();
+#if SE
+            if(InjectedMethod.UpdateModThumbnailTags(ModId, m_previewFilename, m_tags) != 0)
+            {
+                if(!string.IsNullOrEmpty(m_previewFilename))
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Updated thumbnail: {0}", Title));
+                return true;
+            }
+            return false;
+#else
+            FillPropertiesFromPublished();
+
+            var publisher = MySteam.CreateWorkshopPublisher();
+            publisher.Id = ModId;
+            publisher.Title = Title;
+            publisher.Visibility = m_visibility ?? MyPublishedFileVisibility.Public;
+            publisher.Thumbnail = m_previewFilename;
+            publisher.Tags = new List<string>(m_tags);
+            publisher.Publish();
+
+            if(!string.IsNullOrEmpty(m_previewFilename))
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updated thumbnail: {0}", Title));
+
+            return true;
+
+#endif
         }
     }
 }

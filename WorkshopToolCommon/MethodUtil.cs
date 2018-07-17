@@ -28,7 +28,7 @@ namespace Phoenix.WorkshopTool
                 {
                     long* inj = (long*)dest.MethodHandle.Value.ToPointer() + 1;
                     long* tar = (long*)source.MethodHandle.Value.ToPointer() + 1;
-        #if DEBUG
+        #if false   // dunno why this doesn't work
                     byte* injInst = (byte*)*inj;
                     byte* tarInst = (byte*)*tar;
 
