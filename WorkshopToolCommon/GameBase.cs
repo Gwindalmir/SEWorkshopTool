@@ -365,7 +365,7 @@ namespace Phoenix.WorkshopTool
                 var tags = options.Tags;
 
                 // If user comma-separated the tags, split them
-                if(tags.Length == 1)
+                if(tags != null && tags.Length == 1)
                 {
                     tags = tags[0].Split(',', ';');
                 }
