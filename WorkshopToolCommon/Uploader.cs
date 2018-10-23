@@ -9,14 +9,11 @@ using VRage;
 using VRage.Game;
 using VRage.GameServices;
 using VRage.Utils;
-
 #if SE
 using Sandbox.Game.World;
 using VRage.Scripting;
-using MySubscribedItem = Sandbox.Engine.Networking.MyWorkshop.SubscribedItem;
 #else
 using VRage.Session;
-using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 #endif
 
 namespace Phoenix.WorkshopTool
@@ -36,12 +33,8 @@ namespace Phoenix.WorkshopTool
     class Uploader : IMod
     {
         static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-#if SE
-        readonly string[] m_ignoredExtensions;
-#else
         readonly HashSet<string> m_ignoredExtensions = new HashSet<string>();
         readonly HashSet<string> m_ignoredPaths = new HashSet<string>();
-#endif
         string m_modPath;
         bool m_compile;
         bool m_dryrun;
@@ -58,11 +51,10 @@ namespace Phoenix.WorkshopTool
         private static PublishItemBlocking _publishMethod;
         private static LoadScripts _compileMethod;
 
+        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
 #if SE
-        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, string[] ignoredExtensions);
         private delegate void LoadScripts(string path, MyModContext mod = null);
 #else
-        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
         private delegate void LoadScripts(MyModContext mod = null);
 #endif
 
@@ -89,23 +81,6 @@ namespace Phoenix.WorkshopTool
             // This file list should match the PublishXXXAsync methods in MyWorkshop
             switch(m_type)
             {
-#if SE
-                case WorkshopType.Mod:
-                    m_ignoredExtensions = new string[] { ".sbmi" };
-                    break;
-                case WorkshopType.IngameScript:
-                    m_ignoredExtensions = new string[] { ".sbmi", ".png", ".jpg" };
-                    break;
-                case WorkshopType.World:
-                    m_ignoredExtensions = new string[] { ".xmlcache", ".png" };
-                    break;
-                case WorkshopType.Blueprint:
-                    m_ignoredExtensions = new string[] { };
-                    break;
-                case WorkshopType.Scenario:
-                    m_ignoredExtensions = new string[] { };
-                    break;
-#else
                 case WorkshopType.Mod:
                     m_ignoredPaths.Add("modinfo.sbmi");
                     break;
@@ -118,20 +93,12 @@ namespace Phoenix.WorkshopTool
                     break;
                 case WorkshopType.Scenario:
                     break;
-#endif
             }
 
             if ( ignoredExtensions != null )
             {
                 ignoredExtensions = ignoredExtensions.Select(s => "." + s.TrimStart(new[] { '.', '*' })).ToArray();
-#if SE
-                string[] allIgnoredExtensions = new string[m_ignoredExtensions.Length + ignoredExtensions.Length];
-                ignoredExtensions.CopyTo(allIgnoredExtensions, 0);
-                m_ignoredExtensions.CopyTo(allIgnoredExtensions, ignoredExtensions.Length);
-                m_ignoredExtensions = allIgnoredExtensions;
-#else
                 ignoredExtensions.ForEach(s => m_ignoredExtensions.Add(s));
-#endif
             }
 
             SetupReflection();
@@ -321,11 +288,7 @@ namespace Phoenix.WorkshopTool
             {
                 if (_publishMethod != null)
                 {
-                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Public, m_tags, m_ignoredExtensions
-#if !SE
-                        , m_ignoredPaths
-#endif
-                        );
+                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Public, m_tags, m_ignoredExtensions, m_ignoredPaths);
                 }
                 else
                 {
@@ -358,9 +321,9 @@ namespace Phoenix.WorkshopTool
 
         bool FillPropertiesFromPublished()
         {
-            var results = new List<MySubscribedItem>();
+            var results = new List<MyWorkshopItem>();
 #if SE
-            if (MyWorkshop.GetItemsBlocking(results, new List<ulong>() { m_modId }))
+            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
 #else
             if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
 #endif
@@ -369,14 +332,10 @@ namespace Phoenix.WorkshopTool
                     m_title = results[0].Title;
 
                 // Check if the mod owner in the sbmi matches steam owner
-#if SE
-                var owner = results[0].SteamIDOwner;
-#else
                 var owner = results[0].OwnerId;
 
                 if(m_visibility == null)
                     m_visibility = results[0].Visibility;
-#endif
 
                 MyDebug.AssertDebug(owner == MySteam.UserId);
                 if (owner != MySteam.UserId)
@@ -518,10 +477,10 @@ namespace Phoenix.WorkshopTool
 
         string[] GetTags()
         {
-            var results = new List<MySubscribedItem>();
+            var results = new List<MyWorkshopItem>();
 
 #if SE
-            if (MyWorkshop.GetItemsBlocking(results, new List<ulong>() { m_modId }))
+            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
 #else
             if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
 #endif
@@ -538,21 +497,12 @@ namespace Phoenix.WorkshopTool
         public bool UpdatePreviewFileOrTags()
         {
             ProcessTags();
-#if SE
-            if(InjectedMethod.UpdateModThumbnailTags(ModId, m_previewFilename, m_tags) != 0)
-            {
-                if(!string.IsNullOrEmpty(m_previewFilename))
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Updated thumbnail: {0}", Title));
-                return true;
-            }
-            return false;
-#else
             FillPropertiesFromPublished();
 
             var publisher = MySteam.CreateWorkshopPublisher();
             publisher.Id = ModId;
             publisher.Title = Title;
-            publisher.Visibility = m_visibility ?? MyPublishedFileVisibility.Public;
+            publisher.Visibility = m_visibility ?? MyPublishedFileVisibility.Private;
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
             publisher.Publish();
@@ -561,8 +511,6 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Updated thumbnail: {0}", Title));
 
             return true;
-
-#endif
         }
     }
 }

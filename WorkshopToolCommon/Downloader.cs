@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using System.Linq;
 using Sandbox.Engine.Networking;
+using VRage.FileSystem;
+using VRage.GameServices;
 
 #if SE
 using VRage.Compression;
@@ -15,6 +17,7 @@ namespace Phoenix.WorkshopTool
     class Downloader : IMod
     {
         string m_modPath;
+        string m_extractPath;
         ulong m_modId = 0;
         string m_title;
         string[] m_tags = new string[0];
@@ -23,40 +26,26 @@ namespace Phoenix.WorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Downloader(string path, ulong modid, string title, string[] tags)
+        public Downloader(string extractPath, MyWorkshopItem item)
         {
-            m_modId = modid;
-            m_title = title;
-            m_modPath = path;
-
-            if ( tags != null )
-                m_tags = tags;
+            m_modId = item.Id;
+            m_title = item.Title;
+            m_modPath = item.Folder;
+            m_extractPath = extractPath;
+            m_tags = item.Tags.ToArray();
         }
 
         public bool Extract()
         {
-            string ext = ".sbm";
-
-            if (m_tags.Contains(MyWorkshop.WORKSHOP_MOD_TAG))
-                ext = ".sbm";
-            else if (m_tags.Contains(MyWorkshop.WORKSHOP_BLUEPRINT_TAG))
-                ext = ".sbb";
-            else if (m_tags.Contains(WorkshopType.IngameScript.ToString()))
-                ext = ".sbs";
-            else if (m_tags.Contains(MyWorkshop.WORKSHOP_WORLD_TAG))
-                ext = ".sbw";
-            else if (m_tags.Contains(MyWorkshop.WORKSHOP_SCENARIO_TAG))
-                ext = ".sbs";
-
             var sanitizedTitle = Path.GetInvalidFileNameChars().Aggregate(Title, (current, c) => current.Replace(c.ToString(), "_"));
-            var source = Path.Combine(m_modPath, m_modId.ToString() + ext);
+            var dest = Path.Combine(m_extractPath, string.Format("{0} {1} ({2})", Constants.SEWT_Prefix, sanitizedTitle, m_modId.ToString()));
 
-            if ( !File.Exists(source) )
-                source = Path.Combine(m_modPath, @"..\workshop", m_modId.ToString() + ext);
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Extracting item: '{0}' to: \"{1}\"", m_title, dest));
+            if (Directory.Exists(m_modPath))
+                MyFileSystem.CopyAll(m_modPath, dest);
+            else
+                MyZipArchive.ExtractToDirectory(m_modPath, dest);
 
-            var dest = Path.Combine(m_modPath, string.Format("{0} {1} ({2})", Constants.SEWT_Prefix, sanitizedTitle, m_modId.ToString()));
-            MySandboxGame.Log.WriteLineAndConsole(string.Format("Extracting mod: '{0}' to: \"{1}\"", sanitizedTitle, dest));
-            MyZipArchive.ExtractToDirectory(source, dest);
             return true;
         }
     }

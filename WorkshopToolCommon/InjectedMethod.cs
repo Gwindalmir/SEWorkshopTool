@@ -15,7 +15,6 @@ namespace Phoenix.WorkshopTool
         static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
         delegate void SubmitItemUpdateResult(SubmitItemUpdateResult_t result, bool ioFailure);
 
-#if !SE
         private void UpdatePublishedItem()
         {
             dynamic thisobj = this;
@@ -47,7 +46,6 @@ namespace Phoenix.WorkshopTool
             var SubmitItemUpdateResultMethod = (SubmitItemUpdateResult)Delegate.CreateDelegate(typeof(SubmitItemUpdateResult), thisobj, SubmitItemUpdateResult);
             submitItemUpdateResult.Set(SteamUGC.SubmitItemUpdate(ugcUpdateHandleT, string.Empty), new CallResult<SubmitItemUpdateResult_t>.APIDispatchDelegate(SubmitItemUpdateResultMethod));
         }
-#endif
 
 #if SE
         private static readonly int m_bufferSize = 1 * 1024 * 1024; // buffer size for copying files

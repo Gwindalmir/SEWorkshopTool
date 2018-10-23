@@ -11,12 +11,11 @@ using VRage;
 using VRageRender;
 using VRage.FileSystem;
 using VRage.Utils;
+using VRage.GameServices;
 #if SE
 using ParallelTasks;
-using MySubscribedItem = Sandbox.Engine.Networking.MyWorkshop.SubscribedItem;
 #else
 using VRage.Library.Threading;
-using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 #endif
 
 using MySteamServiceBase = VRage.Steam.MySteamService;
@@ -180,13 +179,7 @@ namespace Phoenix.WorkshopTool
 
         void ReplaceMethods()
         {
-#if SE
-            // Keen's code for WriteAndShareFileBlocking has a UI dependency
-            // This method need to be replaced with a custom one, which removes the unnecessary UI code.
-            ReplaceMethod(typeof(MyWorkshop), "WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "WriteAndShareFileBlocking", BindingFlags.Static | BindingFlags.NonPublic);
-#else
             ReplaceMethod(typeof(VRage.Steam.MySteamWorkshopItemPublisher), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
-#endif
         }
 
         /// <summary>
@@ -200,13 +193,11 @@ namespace Phoenix.WorkshopTool
         {
             ParameterInfo[] sourceParameters;
             ParameterInfo[] destinationParameters;
-            // Keen's code for WriteAndShareFileBlocking has a UI dependency
-            // This method need to be replaced with a custom one, which removes the unnecessary UI code.
             var methodtoreplace = sourceType.GetMethod(sourceMethod, sourceBinding);
             var methodtoinject = destinationType.GetMethod(destinationMethod, destinationBinding);
 
             MyDebug.AssertRelease(methodtoreplace != null);
-            if (methodtoreplace != null)
+            if (methodtoreplace != null && methodtoreplace != null)
             {
                 sourceParameters = methodtoreplace.GetParameters();
                 destinationParameters = methodtoinject.GetParameters();
@@ -424,7 +415,7 @@ namespace Phoenix.WorkshopTool
 
                 if (options.Collections?.Count() > 0)
                 {
-                    var items = new List<MySubscribedItem>();
+                    var items = new List<MyWorkshopItem>();
 
                     // get collection information
                     options.Collections.ForEach(s => items.AddRange(WorkshopHelper.GetCollectionDetails(ulong.Parse(s))));
@@ -463,7 +454,7 @@ namespace Phoenix.WorkshopTool
             if (paths == null)
                 return true;
 
-            var items = new List<MySubscribedItem>();
+            var items = new List<MyWorkshopItem>();
             var modids = paths.Select(ulong.Parse);
 
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Processing {0}s...", type.ToString()));
@@ -471,7 +462,7 @@ namespace Phoenix.WorkshopTool
             var downloadPath = WorkshopHelper.GetWorkshopItemPath(type);
 
 #if SE
-            if (MyWorkshop.GetItemsBlocking(items, modids))
+            if (MyWorkshop.GetItemsBlockingUGC(modids, items))
 #else
             if (MyWorkshop.GetItemsBlocking(modids, items))
 #endif
@@ -479,7 +470,11 @@ namespace Phoenix.WorkshopTool
                 bool success = false;
                 if (type == WorkshopType.Mod)
                 {
+#if SE
+                    var result = MyWorkshop.DownloadModsBlockingUGC(items, null);
+#else
                     var result = MyWorkshop.DownloadModsBlocking(items);
+#endif
                     success = result.Success;
                 }
                 else
@@ -489,15 +484,13 @@ namespace Phoenix.WorkshopTool
                         var loopsuccess = false;
                         foreach (var item in items)
                         {
-                            loopsuccess = MyWorkshop.DownloadBlueprintBlocking(item);
-                            if (!loopsuccess)
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!",
 #if SE
-                                    item.PublishedFileId
+                            loopsuccess = MyWorkshop.DownloadBlueprintBlockingUGC(item);
 #else
-                                    item.Id
+                            loopsuccess = MyWorkshop.DownloadBlueprintBlocking(item);
 #endif
-                                    ));
+                            if (!loopsuccess)
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.Id));
                             else
                                 success = true;
                         }
@@ -510,13 +503,7 @@ namespace Phoenix.WorkshopTool
                         {
                             loopsuccess = MyWorkshop.DownloadScriptBlocking(item);
                             if (!loopsuccess)
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!",
-#if SE
-                                    item.PublishedFileId
-#else
-                                    item.Id
-#endif
-                                    ));
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.Id));
                             else
                                 success = true;
                         }
@@ -537,7 +524,7 @@ namespace Phoenix.WorkshopTool
                             loopsuccess = MyWorkshop.TryCreateWorldInstanceBlocking(item, pathinfo, out path, false);
                             if (!loopsuccess)
                             {
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.PublishedFileId));
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.Id));
                             }
                             else
                             {
@@ -565,22 +552,10 @@ namespace Phoenix.WorkshopTool
 
                 foreach (var item in items)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} '{1}' tags: {2}",
-#if SE
-                        item.PublishedFileId,
-#else
-                        item.Id,
-#endif
-                        item.Title, string.Join(", ", item.Tags)));
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} '{1}' tags: {2}", item.Id, item.Title, string.Join(", ", item.Tags)));
                     if (options.Extract)
                     {
-                        var mod = new Downloader(downloadPath,
-#if SE
-                        item.PublishedFileId,
-#else
-                        item.Id,
-#endif
-                            item.Title, item.Tags.ToArray());
+                        var mod = new Downloader(downloadPath, item);
                         mod.Extract();
                     }
                     MySandboxGame.Log.WriteLineAndConsole(string.Empty);
@@ -629,18 +604,14 @@ namespace Phoenix.WorkshopTool
             return itemPaths;
         }
 #endregion Pathing
-        static string[] CombineCollectionWithList(WorkshopType type, List<MySubscribedItem> items, string[] existingitems)
+        static string[] CombineCollectionWithList(WorkshopType type, List<MyWorkshopItem> items, string[] existingitems)
         {
             var tempList = new List<string>();
 
             // Check mods
             items.Where(i => i.Tags.Contains(type.ToString(), StringComparer.InvariantCultureIgnoreCase))
                                 .ForEach(i => tempList.Add(
-#if SE
-                                    i.PublishedFileId.ToString()
-#else
                                     i.Id.ToString()
-#endif
                                     ));
 
             if (tempList.Count > 0)

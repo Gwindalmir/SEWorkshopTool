@@ -7,13 +7,12 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using VRage.FileSystem;
+using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 #if SE
 using VRage;
 using VRage.Utils;
-using MySubscribedItem = Sandbox.Engine.Networking.MyWorkshop.SubscribedItem;
 #else
 using VRage.Library.Logging;
-using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 #endif
 
 namespace Phoenix.WorkshopTool
@@ -157,22 +156,16 @@ namespace Phoenix.WorkshopTool
                                 {
                                     var results = new List<MySubscribedItem>();
 
-                                    // SE and ME have the argument flipped, why?
+                                    // SE and ME have different methods, why?
 #if SE
-                                    if (MyWorkshop.GetItemsBlocking(results, new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }))
+                                    if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }, results))
 #else
                                     if (MyWorkshop.GetItemsBlocking(new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }, results))
 #endif
                                     {
                                         var item = results[0];
 
-                                        MyLog.Default.WriteLineAndConsole(string.Format("Id - {0}, title - {1}",
-#if SE
-                                            item.PublishedFileId
-#else
-                                            item.Id
-#endif
-                                            , item.Title));
+                                        MyLog.Default.WriteLineAndConsole(string.Format("Id - {0}, title - {1}", item.Id, item.Title));
                                         modsInCollection.Add(item);
                                     }
                                 }
