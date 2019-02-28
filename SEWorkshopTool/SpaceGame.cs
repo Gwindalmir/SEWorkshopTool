@@ -29,7 +29,7 @@ namespace Phoenix.SEWorkshopTool
 
         protected override MySandboxGame InitGame()
         {
-            return new SpaceEngineersGame(null);
+            return new SpaceEngineersGame(new string[] { });
         }
     }
 }
