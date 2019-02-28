@@ -83,4 +83,19 @@ To update the thumbnail (any image steam supports, can be in *any* location):
 To update the tags:
 `SEWorkshopTool --mods FTL --tags other`
 
+New in 0.6.0:
+
+You can delete your Steam cloud, both the entire cloud, and individual files.
+To see the contents (does **NOT** delete):
+`SEWorkshopTool --clearsteamcloud`
+
+To delete all contents (**CANNOT** be undone):
+`SEWorkshopTool --clearsteamcloud --force`
+
+To forget an individual file on the cloud, but keep the file locally (use filename queried above):
+`SEWorkshopTool --clearsteamcloud --deletecloudfile "filename"`
+
+To delete an individual file on the cloud AND locally (use filename queried above):
+`SEWorkshopTool --clearsteamcloud --deletecloudfile "filename" --force`
+
 Notice the above commands do *not* contain **--upload** or **--download**.
