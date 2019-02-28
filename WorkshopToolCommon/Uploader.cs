@@ -9,6 +9,7 @@ using VRage;
 using VRage.Game;
 using VRage.GameServices;
 using VRage.Utils;
+using System.Threading;
 #if SE
 using Sandbox.Game.World;
 using VRage.Scripting;
@@ -505,10 +506,34 @@ namespace Phoenix.WorkshopTool
             publisher.Visibility = m_visibility ?? MyPublishedFileVisibility.Private;
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
-            publisher.Publish();
 
-            if(!string.IsNullOrEmpty(m_previewFilename))
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updated thumbnail: {0}", Title));
+            AutoResetEvent resetEvent = new AutoResetEvent(false);
+            try
+            {
+                publisher.ItemPublished += ((result, id) =>
+                {
+                    if (result == MyGameServiceCallResult.OK)
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole("Published file update successful");
+
+                        if (!string.IsNullOrEmpty(m_previewFilename))
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Updated thumbnail: {0}", Title));
+                    }
+                    else
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Error during publishing: {0}", (object)result));
+                    resetEvent.Set();
+                });
+
+                publisher.Publish();
+
+                if (!resetEvent.WaitOne())
+                    return false;
+            }
+            finally
+            {
+                if (resetEvent != null)
+                    resetEvent.Dispose();
+            }
 
             return true;
         }
