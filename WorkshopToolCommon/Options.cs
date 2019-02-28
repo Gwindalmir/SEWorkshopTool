@@ -32,8 +32,7 @@ namespace Phoenix.WorkshopTool
         [OptionArray('x', "exclude", HelpText = "List of extensions to exclude from archiving for upload")]
         public string[] ExcludeExtensions { get; set; }
 
-        // Disable for now
-        //[Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
+        [Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
         public bool Force { get; set; }
 
         [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode)")]
@@ -60,5 +59,11 @@ namespace Phoenix.WorkshopTool
 
         [Option("thumb", HelpText = "Thumbnail to upload (doesn't re-upload mod)")]
         public string Thumbnail { get; set; }
+
+        [Option("clearsteamcloud", DefaultValue = false, HelpText = "Clear Steam Cloud (WARNING!). THIS WILL DELETE YOUR STEAM CLOUD FOR SE! Use with --force to actually delete.")]
+        public bool ClearSteamCloud { get; set; }
+
+        [OptionArray("deletecloudfile", HelpText = "Delete individual file or files from the Steam Cloud.")]
+        public string[] DeleteSteamCloudFiles { get; set; }
     }
 }

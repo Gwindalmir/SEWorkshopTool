@@ -84,8 +84,11 @@ namespace Phoenix.WorkshopTool
                     options.Worlds == null &&
                     options.Collections == null)
                 {
-                    System.Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
-                    return Cleanup(1);
+                    if (!options.ClearSteamCloud)
+                    {
+                        System.Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
+                        return Cleanup(1);
+                    }
                 }
 
                 try
@@ -142,6 +145,8 @@ namespace Phoenix.WorkshopTool
 
                 if (options.Download)
                     Task = DownloadMods(options);
+                else if (options.ClearSteamCloud)
+                    Task = ClearSteamCloud(options.DeleteSteamCloudFiles, options.Force);
                 else
                     Task = UploadMods(options);
 
@@ -232,7 +237,7 @@ namespace Phoenix.WorkshopTool
             return errorCode;
         }
 
-#region Sandbox stuff
+        #region Sandbox stuff
         private void CleanupSandbox()
         {
             m_steamService?.Dispose();
@@ -301,9 +306,64 @@ namespace Phoenix.WorkshopTool
             }
 
         }
-#endregion
+        #endregion
 
-#region Upload
+        #region Steam
+        private System.Threading.Tasks.Task<bool> ClearSteamCloud(string [] filesToDelete, bool force = false)
+        {
+            var Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(() =>
+            {
+#if SE
+                ulong totalBytes = 0;
+                ulong availableBytes = 0;
+
+                MyGameService.GetRemoteStorageQuota(out totalBytes, out availableBytes);
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Quota: total = {0}, available = {1}", totalBytes, availableBytes));
+
+                int totalCloudFiles = MyGameService.GetRemoteStorageFileCount();
+
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Listing cloud {0} files", totalCloudFiles));
+                MySandboxGame.Log.IncreaseIndent();
+                for (int i = 0; i < totalCloudFiles; ++i)
+                {
+                    int fileSize = 0;
+                    string fileName = MyGameService.GetRemoteStorageFileNameAndSize(i, out fileSize);
+                    bool persisted = MyGameService.IsRemoteStorageFilePersisted(fileName);
+                    bool forgot = false;
+
+                    // Here's how the if works: 
+                    // Delete if --force AND no files were manually specified
+                    // OR if the file specified matches the file on the cloud
+                    if ((force && filesToDelete == null) || (persisted && fileName.StartsWith("tmp") && fileName.EndsWith(".tmp")) ||
+                        (filesToDelete?.Length > 0 && filesToDelete.Contains(fileName, StringComparer.CurrentCultureIgnoreCase))) // dont sync useless temp files
+                    {
+                        forgot = MyGameService.RemoteStorageFileForget(fileName);
+
+                        // force actually deletes the file on local disk, don't do that unless --force specified
+                        if (force)
+                        {
+                            forgot = MyGameService.DeleteFromCloud(fileName);
+                            // Delete is immediate, and alters the count, so adjust for that
+                            totalCloudFiles--;
+                            i--;
+                        }
+                    }
+
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("'{0}', {1}B, {2}, {3}", fileName, fileSize, persisted, forgot));
+                }
+                MySandboxGame.Log.DecreaseIndent();
+
+                MyGameService.GetRemoteStorageQuota(out totalBytes, out availableBytes);
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Quota: total = {0}, available = {1}", totalBytes, availableBytes));
+
+#endif
+                return true;
+            });
+            return Task;
+        }
+        #endregion
+
+        #region Upload
         static System.Threading.Tasks.Task<bool> UploadMods(Options options)
         {
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
@@ -398,9 +458,9 @@ namespace Phoenix.WorkshopTool
             }
             return success;
         }
-#endregion  Upload
+        #endregion  Upload
 
-#region Download
+        #region Download
         static System.Threading.Tasks.Task<bool> DownloadMods(Options options)
         {
             // Get PublishItemBlocking internal method via reflection
@@ -563,9 +623,9 @@ namespace Phoenix.WorkshopTool
             }
             return true;
         }
-#endregion Download
+        #endregion Download
 
-#region Pathing
+        #region Pathing
         static string[] TestPathAndMakeAbsolute(WorkshopType type, string[] paths)
         {
             for (int idx = 0; paths != null && idx < paths.Length; idx++)
@@ -603,7 +663,8 @@ namespace Phoenix.WorkshopTool
             }
             return itemPaths;
         }
-#endregion Pathing
+        #endregion Pathing
+
         static string[] CombineCollectionWithList(WorkshopType type, List<MyWorkshopItem> items, string[] existingitems)
         {
             var tempList = new List<string>();
