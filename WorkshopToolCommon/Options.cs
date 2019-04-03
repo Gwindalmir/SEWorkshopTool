@@ -35,7 +35,7 @@ namespace Phoenix.WorkshopTool
         [Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
         public bool Force { get; set; }
 
-        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode)")]
+        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode). Use quotes if spaces.")]
         public string[] ModPaths { get; set; }
 
         [OptionArray('b', "blueprints", HelpText = "List of directories of blueprints to upload; or Workshop ID of blueprints to download (when in download mode)")]

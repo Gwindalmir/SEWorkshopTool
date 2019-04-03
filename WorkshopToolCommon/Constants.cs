@@ -8,6 +8,6 @@
 #else
         public const string SEWT_Prefix = "[_MEWT_]";
 #endif
-        public const string ERROR_Reflection = "WARNING: Could not reflect '{0}', some functions may not work";
+        public const string ERROR_Reflection = "WARNING: Could not reflect '{0}', some functions may not work. Has the game updated?";
     }
 }

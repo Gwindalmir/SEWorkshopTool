@@ -66,11 +66,15 @@ namespace Phoenix.WorkshopTool
         public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null)
         {
             m_modPath = path;
+            m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath);
+
+            // Fill defaults before assigning user-defined ones
+            FillPropertiesFromPublished();
+
             m_compile = compile;
             m_dryrun = dryrun;
             m_visibility = visibility;
             m_title = Path.GetFileName(path);
-            m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath);
             m_type = type;
             m_isDev = development;
             m_force = force;
@@ -131,18 +135,15 @@ namespace Phoenix.WorkshopTool
                 }
             }
 
-            if (!m_dryrun)
+            var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
+            MyDebug.AssertDebug(publishMethod != null);
+
+            if (publishMethod != null)
+                _publishMethod = Delegate.CreateDelegate(typeof(PublishItemBlocking), publishMethod, false) as PublishItemBlocking;
+
+            if (_publishMethod == null)
             {
-                var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
-                MyDebug.AssertDebug(publishMethod != null);
-
-                if (publishMethod != null)
-                    _publishMethod = Delegate.CreateDelegate(typeof(PublishItemBlocking), publishMethod, false) as PublishItemBlocking;
-
-                if (_publishMethod == null)
-                {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
-                }
+                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
             }
         }
 
@@ -274,8 +275,7 @@ namespace Phoenix.WorkshopTool
             }
             else
             {
-                if(FillPropertiesFromPublished())
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, m_title));
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, m_title));
             }
 
             // Process Tags
@@ -330,21 +330,26 @@ namespace Phoenix.WorkshopTool
 #endif
             {
                 if (results.Count > 0)
+                {
                     m_title = results[0].Title;
 
-                // Check if the mod owner in the sbmi matches steam owner
-                var owner = results[0].OwnerId;
+                    // Check if the mod owner in the sbmi matches steam owner
+                    var owner = results[0].OwnerId;
 
-                if(m_visibility == null)
-                    m_visibility = results[0].Visibility;
+                    if (m_visibility == null)
+                        m_visibility = results[0].Visibility;
 
-                MyDebug.AssertDebug(owner == MySteam.UserId);
-                if (owner != MySteam.UserId)
-                {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MySteam.UserId));
-                    MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
-                    return false;
+
+                    MyDebug.AssertDebug(owner == MySteam.UserId);
+                    if (owner != MySteam.UserId)
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MySteam.UserId));
+                        MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
+                        return false;
+                    }
+                    return true;
                 }
+                return false;
             }
             return true;
         }
@@ -498,7 +503,6 @@ namespace Phoenix.WorkshopTool
         public bool UpdatePreviewFileOrTags()
         {
             ProcessTags();
-            FillPropertiesFromPublished();
 
             var publisher = MySteam.CreateWorkshopPublisher();
             publisher.Id = ModId;
