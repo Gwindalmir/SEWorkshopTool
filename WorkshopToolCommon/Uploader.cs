@@ -36,6 +36,7 @@ namespace Phoenix.WorkshopTool
         static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
         readonly HashSet<string> m_ignoredExtensions = new HashSet<string>();
         readonly HashSet<string> m_ignoredPaths = new HashSet<string>();
+        uint[] m_dlcs;
         string m_modPath;
         bool m_compile;
         bool m_dryrun;
@@ -52,10 +53,11 @@ namespace Phoenix.WorkshopTool
         private static PublishItemBlocking _publishMethod;
         private static LoadScripts _compileMethod;
 
-        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
 #if SE
+        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null, uint[] requiredDLCs = null);
         private delegate void LoadScripts(string path, MyModContext mod = null);
 #else
+        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
         private delegate void LoadScripts(MyModContext mod = null);
 #endif
 
@@ -63,7 +65,7 @@ namespace Phoenix.WorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null)
+        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null)
         {
             m_modPath = path;
             m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath);
@@ -79,6 +81,9 @@ namespace Phoenix.WorkshopTool
             m_isDev = development;
             m_force = force;
             m_previewFilename = previewFilename;
+#if SE
+            m_dlcs = MapDLCStringsToInts(dlcs);
+#endif
 
             if( tags != null )
                 m_tags = tags;
@@ -106,8 +111,37 @@ namespace Phoenix.WorkshopTool
                 ignoredExtensions.ForEach(s => m_ignoredExtensions.Add(s));
             }
 
+            if (ignoredPaths != null)
+            {
+                ignoredPaths.ForEach(s => m_ignoredPaths.Add(s));
+            }
+
             SetupReflection();
         }
+
+#if SE
+        private uint[] MapDLCStringsToInts(string[] stringdlcs)
+        {
+            var dlcs = new HashSet<uint>();
+            foreach (var dlc in stringdlcs)
+            {
+                uint value;
+                if (uint.TryParse(dlc, out value))
+                {
+                    dlcs.Add(value);
+                }
+                else
+                {
+                    Sandbox.Game.MyDLCs.MyDLC dlcvalue;
+                    if (Sandbox.Game.MyDLCs.TryGetDLC(dlc, out dlcvalue))
+                        dlcs.Add(dlcvalue.AppId);
+                    else
+                        MySandboxGame.Log.WriteLineAndConsole($"Invalid DLC specified: {dlc}");
+                }
+            }
+            return dlcs.ToArray();
+        }
+#endif
 
         private void SetupReflection()
         {
@@ -281,6 +315,9 @@ namespace Phoenix.WorkshopTool
             // Process Tags
             ProcessTags();
 
+            if(m_dlcs?.Length > 0)
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Setting DLC requirement: {0}", string.Join(", ", m_dlcs)));
+
             if (m_dryrun)
             {
                 MySandboxGame.Log.WriteLineAndConsole("DRY-RUN; Publish skipped");
@@ -289,7 +326,7 @@ namespace Phoenix.WorkshopTool
             {
                 if (_publishMethod != null)
                 {
-                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Public, m_tags, m_ignoredExtensions, m_ignoredPaths);
+                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Public, m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs);
                 }
                 else
                 {
@@ -339,6 +376,7 @@ namespace Phoenix.WorkshopTool
                     if (m_visibility == null)
                         m_visibility = results[0].Visibility;
 
+                    m_dlcs = results[0].DLCs.ToArray();
 
                     MyDebug.AssertDebug(owner == MySteam.UserId);
                     if (owner != MySteam.UserId)
@@ -510,6 +548,7 @@ namespace Phoenix.WorkshopTool
             publisher.Visibility = m_visibility ?? MyPublishedFileVisibility.Private;
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
+            publisher.DLCs = new HashSet<uint>(m_dlcs);
 
             AutoResetEvent resetEvent = new AutoResetEvent(false);
             try
@@ -527,6 +566,9 @@ namespace Phoenix.WorkshopTool
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Error during publishing: {0}", (object)result));
                     resetEvent.Set();
                 });
+
+                if (m_dlcs?.Length > 0)
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Setting DLC requirement: {0}", string.Join(", ", m_dlcs)));
 
                 publisher.Publish();
 

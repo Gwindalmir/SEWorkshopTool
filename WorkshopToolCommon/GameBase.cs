@@ -84,7 +84,7 @@ namespace Phoenix.WorkshopTool
                     options.Worlds == null &&
                     options.Collections == null)
                 {
-                    if (!options.ClearSteamCloud)
+                    if (!options.ClearSteamCloud && !options.ListDLCs)
                     {
                         System.Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
                         return Cleanup(1);
@@ -114,7 +114,7 @@ namespace Phoenix.WorkshopTool
 
                     options.Upload = false;
                 }
-
+                
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
 
                 ParameterInfo[] parameters;
@@ -147,6 +147,8 @@ namespace Phoenix.WorkshopTool
                     Task = DownloadMods(options);
                 else if (options.ClearSteamCloud)
                     Task = ClearSteamCloud(options.DeleteSteamCloudFiles, options.Force);
+                else if (options.ListDLCs)
+                    Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(()=> { ListDLCs(); return true; });
                 else
                     Task = UploadMods(options);
 
@@ -421,7 +423,7 @@ namespace Phoenix.WorkshopTool
                     tags = tags[0].Split(',', ';');
                 }
 
-                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail);
+                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs);
                 if (options.UpdateOnly && mod.ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -664,6 +666,15 @@ namespace Phoenix.WorkshopTool
             return itemPaths;
         }
         #endregion Pathing
+
+        private void ListDLCs()
+        {
+            MySandboxGame.Log.WriteLineAndConsole("Valid DLC:");
+            foreach (var dlc in Sandbox.Game.MyDLCs.DLCs.Values)
+            {
+                MySandboxGame.Log.WriteLineAndConsole($"Name: {dlc.Name}, ID: {dlc.AppId}");
+            }
+        }
 
         static string[] CombineCollectionWithList(WorkshopType type, List<MyWorkshopItem> items, string[] existingitems)
         {

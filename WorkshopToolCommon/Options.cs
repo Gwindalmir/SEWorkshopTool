@@ -5,6 +5,8 @@ namespace Phoenix.WorkshopTool
 {
     public sealed class Options
     {
+        private const string OptionSet = "MainFunctions";
+
         [Option("visibility", DefaultValue = null, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
         public MyPublishedFileVisibility? Visibility { get; set; }
 
@@ -17,10 +19,10 @@ namespace Phoenix.WorkshopTool
         [Option('d', "dry-run", DefaultValue = false, HelpText = "Only run a test, do not actually upload. Useful with --compile")]
         public bool DryRun { get; set; }
 
-        [Option("download", DefaultValue = false, HelpText = "Download mods")]
+        [Option("download", DefaultValue = false, HelpText = "Download mods", MutuallyExclusiveSet = OptionSet)]
         public bool Download { get; set; }
 
-        [Option("upload", DefaultValue = false, HelpText = "Upload and publish mods")]
+        [Option("upload", DefaultValue = false, HelpText = "Upload and publish mods", MutuallyExclusiveSet = OptionSet)]
         public bool Upload { get; set; }
 
         [Option('e', "extract", DefaultValue = false, HelpText = "Extract downloaded mods (valid for download only)")]
@@ -29,13 +31,16 @@ namespace Phoenix.WorkshopTool
         [Option('u', "update-only", DefaultValue = false, HelpText = "Only update existing mods (don't upload new)")]
         public bool UpdateOnly { get; set; }
 
-        [OptionArray('x', "exclude", HelpText = "List of extensions to exclude from archiving for upload")]
+        [OptionArray('x', "exclude", HelpText = "List of extensions to exclude from upload")]
         public string[] ExcludeExtensions { get; set; }
+
+        [OptionArray("ignore", HelpText = "List of paths to exclude from upload")]
+        public string[] IgnorePaths { get; set; }
 
         [Option('f', "force", DefaultValue = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
         public bool Force { get; set; }
 
-        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode). Use quotes if spaces.")]
+        [OptionArray('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode), use quotes if spaces")]
         public string[] ModPaths { get; set; }
 
         [OptionArray('b', "blueprints", HelpText = "List of directories of blueprints to upload; or Workshop ID of blueprints to download (when in download mode)")]
@@ -60,10 +65,20 @@ namespace Phoenix.WorkshopTool
         [Option("thumb", HelpText = "Thumbnail to upload (doesn't re-upload mod)")]
         public string Thumbnail { get; set; }
 
-        [Option("clearsteamcloud", DefaultValue = false, HelpText = "Clear Steam Cloud (WARNING!). THIS WILL DELETE YOUR STEAM CLOUD FOR SE! Use with --force to actually delete.")]
+        [Option("clearsteamcloud", DefaultValue = false, HelpText = "Clear Steam Cloud (WARNING!). THIS WILL DELETE YOUR STEAM CLOUD FOR SE! Use with --force to actually delete.", MutuallyExclusiveSet = OptionSet)]
         public bool ClearSteamCloud { get; set; }
 
-        [OptionArray("deletecloudfile", HelpText = "Delete individual file or files from the Steam Cloud.")]
+        [OptionArray("deletecloudfile", HelpText = "Delete individual file or files from the Steam Cloud")]
         public string[] DeleteSteamCloudFiles { get; set; }
+
+#if SE
+        [Option("listdlc", HelpText = "List available DLCs", MutuallyExclusiveSet = OptionSet)]
+#endif
+        public bool ListDLCs { get; set; }
+
+#if SE
+        [OptionArray("dlc", HelpText = "Add DLC dependency to mod, accepts numeric ID or name")]
+#endif
+        public string[] DLCs { get; set; }
     }
 }
