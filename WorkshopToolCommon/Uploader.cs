@@ -123,6 +123,10 @@ namespace Phoenix.WorkshopTool
         private uint[] MapDLCStringsToInts(string[] stringdlcs)
         {
             var dlcs = new HashSet<uint>();
+
+            if (stringdlcs == null)
+                return dlcs.ToArray();
+
             foreach (var dlc in stringdlcs)
             {
                 uint value;
