@@ -2,6 +2,8 @@
 using Sandbox;
 using Sandbox.Game;
 using SpaceEngineers.Game;
+using System.Collections.Generic;
+using System.Reflection;
 using VRage;
 using VRage.GameServices;
 
@@ -15,6 +17,7 @@ namespace Phoenix.SEWorkshopTool
             m_startup = new MyCommonProgramStartup(new string[] { });
 
             var appDataPath = m_startup.GetAppDataPath();
+            VRage.Platform.Windows.MyVRageWindows.Init(MySandboxGame.Log, appDataPath);
             MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", appDataPath);
             MyInitializer.InitCheckSum();
 
@@ -23,7 +26,7 @@ namespace Phoenix.SEWorkshopTool
             m_steamService = new WorkshopTool.MySteamService(MySandboxGame.IsDedicated, AppId);
             MyServiceManager.Instance.AddService<IMyGameService>(m_steamService);
             SpaceEngineersGame.SetupPerGameSettings();
-
+            ManuallyAddDLCs();
             return true;
         }
 
@@ -31,5 +34,19 @@ namespace Phoenix.SEWorkshopTool
         {
             return new SpaceEngineersGame(new string[] { });
         }
+
+        // This is to manually add any DLC not added to MyDLCs.DLCs, so the lookup later can happen
+        private void ManuallyAddDLCs()
+        {
+            var dlcs = (Dictionary<uint, Sandbox.Game.MyDLCs.MyDLC>)(typeof(Sandbox.Game.MyDLCs).GetField("m_dlcs", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
+            var dlcsByName = (Dictionary<string, Sandbox.Game.MyDLCs.MyDLC>)(typeof(Sandbox.Game.MyDLCs).GetField("m_dlcsByName", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
+
+            if (dlcs != null && !dlcs.ContainsKey(Sandbox.Game.MyDLCs.MyDLC.StylePack.AppId))
+            {
+                dlcs[Sandbox.Game.MyDLCs.MyDLC.StylePack.AppId] = Sandbox.Game.MyDLCs.MyDLC.StylePack;
+                dlcsByName[Sandbox.Game.MyDLCs.MyDLC.StylePack.Name] = Sandbox.Game.MyDLCs.MyDLC.StylePack;
+            }
+        }
+
     }
 }
