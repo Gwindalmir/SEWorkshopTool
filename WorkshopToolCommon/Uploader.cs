@@ -89,12 +89,17 @@ namespace Phoenix.WorkshopTool
             m_type = type;
             m_isDev = development;
             m_force = force;
-            m_previewFilename = previewFilename;
-#if SE
-            m_dlcs = MapDLCStringsToInts(dlcs);
-#endif
 
-            if( tags != null )
+            if(previewFilename != null)
+                m_previewFilename = previewFilename;
+#if SE
+            var mappedlc = MapDLCStringsToInts(dlcs);
+
+            // If user specified "0" or "none" for DLCs, remove all of them
+            if (dlcs != null)
+                m_dlcs = mappedlc;
+#endif
+            if (tags != null)
                 m_tags = tags;
 
             // This file list should match the PublishXXXAsync methods in MyWorkshop
@@ -334,8 +339,7 @@ namespace Phoenix.WorkshopTool
             // Process Tags
             ProcessTags();
 
-            if(m_dlcs?.Length > 0)
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Setting DLC requirement: {0}", string.Join(", ", m_dlcs)));
+            PrintItemDetails();
 
             if (m_dryrun)
             {
@@ -385,6 +389,7 @@ namespace Phoenix.WorkshopTool
             if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
 #endif
             {
+                System.Threading.Thread.Sleep(1000); // Fix for DLC not being filled in
                 if (results.Count > 0)
                 {
                     m_title = results[0].Title;
@@ -535,7 +540,6 @@ namespace Phoenix.WorkshopTool
             m_tags = m_tags.Where(x => !string.IsNullOrEmpty(x)).ToArray();
 
             // Done
-            MySandboxGame.Log.WriteLineAndConsole(string.Format("Publishing with tags: {0}", string.Join(", ", m_tags)));
         }
 
         string[] GetTags()
@@ -550,6 +554,25 @@ namespace Phoenix.WorkshopTool
             {
                 if (results.Count > 0)
                     return results[0].Tags.ToArray();
+                else
+                    return null;
+            }
+
+            return null;
+        }
+
+        uint[] GetDLC()
+        {
+            var results = new List<MyWorkshopItem>();
+
+#if SE
+            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
+#else
+            if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
+#endif
+            {
+                if (results.Count > 0)
+                    return results[0].DLCs.ToArray();
                 else
                     return null;
             }
@@ -605,9 +628,8 @@ namespace Phoenix.WorkshopTool
                     resetEvent.Set();
                 });
 
-                if (m_dlcs?.Length > 0)
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Setting DLC requirement: {0}", string.Join(", ", m_dlcs)));
-
+                PrintItemDetails();
+                
                 publisher.Publish();
 
                 if (!resetEvent.WaitOne())
@@ -620,6 +642,15 @@ namespace Phoenix.WorkshopTool
             }
 
             return true;
+        }
+
+        void PrintItemDetails()
+        {
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Visibility: {0}", m_visibility));
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Tags: {0}", string.Join(", ", m_tags)));
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirement: {0}",
+                (m_dlcs?.Length > 0 ? string.Join(", ", m_dlcs.Select(i => Sandbox.Game.MyDLCs.DLCs[i].Name)) : "None")));
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Thumbnail: {0}", m_previewFilename ?? "No change"));
         }
     }
 }

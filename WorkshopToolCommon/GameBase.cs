@@ -92,6 +92,12 @@ namespace Phoenix.WorkshopTool
                     }
                 }
 
+                if(options.DLCs?.Length > 0 && 
+                    (options.DLCs.Contains("0") || options.DLCs.Contains("none", StringComparer.InvariantCultureIgnoreCase)))
+                {
+                    options.DLCs = new string[0];
+                }
+
                 // SE requires -appdata, but the commandline dll requires --appdata, so fix it
                 for (var idx = 0; idx < args.Length; idx++)
                     if (string.Compare(args[idx], "--appdata", StringComparison.InvariantCultureIgnoreCase) == 0)
@@ -553,6 +559,8 @@ namespace Phoenix.WorkshopTool
             if (MyWorkshop.GetItemsBlocking(modids, items))
 #endif
             {
+                System.Threading.Thread.Sleep(1000); // Fix for DLC not being filled in
+                
                 bool success = false;
                 if (type == WorkshopType.Mod)
                 {
@@ -638,7 +646,15 @@ namespace Phoenix.WorkshopTool
 
                 foreach (var item in items)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} '{1}' tags: {2}", item.Id, item.Title, string.Join(", ", item.Tags)));
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Downloading mod: {0}; {1}", item.Id, item.Title));
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Visibility: {0}", item.Visibility));
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Tags: {0}", string.Join(", ", string.Join(", ", item.Tags))));
+
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirement: {0}",
+                        (item.DLCs.Count > 0 ? string.Join(", ", item.DLCs.Select(i => Sandbox.Game.MyDLCs.DLCs[i].Name)) : "None")));
+
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Location: {0}", item.Folder));
+
                     if (options.Extract)
                     {
                         var mod = new Downloader(downloadPath, item);

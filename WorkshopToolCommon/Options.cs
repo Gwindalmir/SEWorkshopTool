@@ -77,7 +77,7 @@ namespace Phoenix.WorkshopTool
         public bool ListDLCs { get; set; }
 
 #if SE
-        [OptionArray("dlc", HelpText = "Add DLC dependency to mod, accepts numeric ID or name")]
+        [OptionArray("dlc", HelpText = "Add DLC dependency to mod, accepts numeric ID or name. Use 0 or None to remove all DLC.")]
 #endif
         public string[] DLCs { get; set; }
 

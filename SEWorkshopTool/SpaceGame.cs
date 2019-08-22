@@ -40,13 +40,30 @@ namespace Phoenix.SEWorkshopTool
         // This is to manually add any DLC not added to MyDLCs.DLCs, so the lookup later can happen
         private void ManuallyAddDLCs()
         {
+            var obj = typeof(Sandbox.Game.MyDLCs.MyDLC).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null,
+                new System.Type[] { typeof(uint), typeof(string), typeof(MyStringId), typeof(MyStringId), typeof(string), typeof(string), typeof(string) }, null);
+
+            // The 2013 First release is listed on steam as a valid DLC mods can have.
+            // But the game doesn't acknowledge it, so add it manually.
+            var SpaceEngineers2013DLC = obj.Invoke(new object[]
+            {
+                573900U,
+                "FirstRelease",
+                MyStringId.GetOrCompute("Space Engineers 2013"),
+                MyStringId.GetOrCompute("Space Engineers First Release"),
+                string.Empty,
+                string.Empty,
+                string.Empty
+            }) as Sandbox.Game.MyDLCs.MyDLC;
+
+
             var dlcs = (Dictionary<uint, Sandbox.Game.MyDLCs.MyDLC>)(typeof(Sandbox.Game.MyDLCs).GetField("m_dlcs", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
             var dlcsByName = (Dictionary<string, Sandbox.Game.MyDLCs.MyDLC>)(typeof(Sandbox.Game.MyDLCs).GetField("m_dlcsByName", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
 
-            if (dlcs != null && !dlcs.ContainsKey(Sandbox.Game.MyDLCs.MyDLC.StylePack.AppId))
+            if (dlcs != null && !dlcs.ContainsKey(SpaceEngineers2013DLC.AppId))
             {
-                dlcs[Sandbox.Game.MyDLCs.MyDLC.StylePack.AppId] = Sandbox.Game.MyDLCs.MyDLC.StylePack;
-                dlcsByName[Sandbox.Game.MyDLCs.MyDLC.StylePack.Name] = Sandbox.Game.MyDLCs.MyDLC.StylePack;
+                dlcs[SpaceEngineers2013DLC.AppId] = SpaceEngineers2013DLC;
+                dlcsByName[SpaceEngineers2013DLC.Name] = SpaceEngineers2013DLC;
             }
         }
 
