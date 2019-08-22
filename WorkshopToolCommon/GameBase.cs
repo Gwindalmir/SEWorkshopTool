@@ -415,6 +415,11 @@ namespace Phoenix.WorkshopTool
             for (int idx = 0; idx < paths.Count; idx++)
             {
                 var pathname = Path.GetFullPath(paths[idx]);
+
+                // Check if path is really a modid (this is kind of hacky right now)
+                if (!Directory.Exists(pathname) && ulong.TryParse(paths[idx], out var id))
+                    pathname = paths[idx];
+
                 var tags = options.Tags;
 
                 // If user comma-separated the tags, split them
@@ -634,7 +639,13 @@ namespace Phoenix.WorkshopTool
             {
                 // If the passed in path doesn't exist, and is relative, try to match it with the expected data directory
                 if (!Directory.Exists(paths[idx]) && !Path.IsPathRooted(paths[idx]))
-                    paths[idx] = Path.Combine(WorkshopHelper.GetWorkshopItemPath(type), paths[idx]);
+                {
+                    // Check if value is actually a mod id, and work remotely, if so.
+                    var newpath = Path.Combine(WorkshopHelper.GetWorkshopItemPath(type), paths[idx]);
+
+                    if (Directory.Exists(newpath))
+                        paths[idx] = newpath;
+                }
             }
             return paths;
         }
@@ -653,9 +664,17 @@ namespace Phoenix.WorkshopTool
 
             foreach (var path in paths)
             {
+                if (!Directory.Exists(Path.GetDirectoryName(path)) && ulong.TryParse(path, out ulong id))
+                {
+                    // Kind of hacky right now
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Detected ModID, and directory not found: {0}", path));
+                    itemPaths.Add(path);
+                    continue;
+                }
+
                 var dirs = Directory.EnumerateDirectories(Path.GetDirectoryName(path), Path.GetFileName(path));
-                
-                if(dirs.Count() == 0)
+
+                if (dirs.Count() == 0)
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Directory not found, skipping: {0}", path));
 
                 itemPaths.AddList(dirs

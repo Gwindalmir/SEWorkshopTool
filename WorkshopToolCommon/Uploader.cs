@@ -68,7 +68,11 @@ namespace Phoenix.WorkshopTool
         public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null)
         {
             m_modPath = path;
-            m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath);
+
+            if (ulong.TryParse(m_modPath, out ulong id))
+                m_modId = id;
+            else
+                m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath);
 
             // Fill defaults before assigning user-defined ones
             FillPropertiesFromPublished();
@@ -302,6 +306,12 @@ namespace Phoenix.WorkshopTool
             if( !Steamworks.SteamAPI.IsSteamRunning() )
             {
                 MySandboxGame.Log.WriteLineAndConsole("Cannot publish, Steam not detected!");
+                return false;
+            }
+
+            if(!Directory.Exists(m_modPath))
+            {
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Directory does not exist {0}. Wrong option?", m_modPath ?? string.Empty));
                 return false;
             }
 
