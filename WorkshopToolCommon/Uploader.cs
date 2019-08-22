@@ -79,8 +79,13 @@ namespace Phoenix.WorkshopTool
 
             m_compile = compile;
             m_dryrun = dryrun;
-            m_visibility = visibility;
-            m_title = Path.GetFileName(path);
+
+            if (visibility != null)
+                m_visibility = visibility;
+
+            if (string.IsNullOrEmpty(m_title))
+                m_title = Path.GetFileName(path);
+
             m_type = type;
             m_isDev = development;
             m_force = force;
@@ -340,7 +345,7 @@ namespace Phoenix.WorkshopTool
             {
                 if (_publishMethod != null)
                 {
-                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Public, m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs);
+                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Private, m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs);
                 }
                 else
                 {
@@ -552,6 +557,25 @@ namespace Phoenix.WorkshopTool
             return null;
         }
 
+        MyPublishedFileVisibility GetVisibility()
+        {
+            var results = new List<MyWorkshopItem>();
+
+#if SE
+            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
+#else
+            if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
+#endif
+            {
+                if (results.Count > 0)
+                    return results[0].Visibility;
+                else
+                    return MyPublishedFileVisibility.Private;
+            }
+
+            return MyPublishedFileVisibility.Private;
+        }
+
         public bool UpdatePreviewFileOrTags()
         {
             ProcessTags();
@@ -559,7 +583,7 @@ namespace Phoenix.WorkshopTool
             var publisher = MySteam.CreateWorkshopPublisher();
             publisher.Id = ModId;
             publisher.Title = Title;
-            publisher.Visibility = m_visibility ?? MyPublishedFileVisibility.Private;
+            publisher.Visibility = m_visibility ?? GetVisibility();
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
             publisher.DLCs = new HashSet<uint>(m_dlcs);
