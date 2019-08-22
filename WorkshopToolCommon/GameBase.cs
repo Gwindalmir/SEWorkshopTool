@@ -450,9 +450,17 @@ namespace Phoenix.WorkshopTool
                     }
                     else
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Not uploading: {0}", mod.Title));
-                        mod.UpdatePreviewFileOrTags();
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
+                        if (mod.ModId == 0)
+                        {
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Mod not published, skipping: {0}", mod.Title));
+                            success = false;
+                        }
+                        else
+                        {
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Not uploading: {0}", mod.Title));
+                            mod.UpdatePreviewFileOrTags();
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
+                        }
                     }
                 }
                 else
