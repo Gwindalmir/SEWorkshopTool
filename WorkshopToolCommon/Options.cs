@@ -80,5 +80,8 @@ namespace Phoenix.WorkshopTool
         [OptionArray("dlc", HelpText = "Add DLC dependency to mod, accepts numeric ID or name")]
 #endif
         public string[] DLCs { get; set; }
+
+        [Option("appdata", HelpText = "Specify custom AppData location (default is %AppData%\\SpaceEngineers)")]
+        public string AppData { get; set; }
     }
 }

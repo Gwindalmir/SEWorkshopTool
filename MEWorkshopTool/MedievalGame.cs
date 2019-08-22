@@ -12,7 +12,7 @@ namespace Phoenix.MEWorkshopTool
         protected override bool SetupBasicGameInfo()
         {
             MyMedievalGame.SetupBasicGameInfo();
-            m_startup = new MyCommonProgramStartup(new string[] { });
+            m_startup = new MyCommonProgramStartup(m_args);
 
             var appDataPath = m_startup.GetAppDataPath();
             MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", appDataPath);
@@ -28,7 +28,7 @@ namespace Phoenix.MEWorkshopTool
 
         protected override MySandboxGame InitGame()
         {
-            return new MyMedievalGame(null);
+            return new MyMedievalGame();
         }
     }
 }

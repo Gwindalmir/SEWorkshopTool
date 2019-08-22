@@ -15,7 +15,7 @@ namespace Phoenix.SEWorkshopTool
         protected override bool SetupBasicGameInfo()
         {
             SpaceEngineersGame.SetupBasicGameInfo();
-            m_startup = new MyCommonProgramStartup(new string[] { });
+            m_startup = new MyCommonProgramStartup(m_args);
 
             var appDataPath = m_startup.GetAppDataPath();
             VRage.Platform.Windows.MyVRageWindows.Init(MyPerGameSettings.BasicGameInfo.ApplicationName, MySandboxGame.Log, appDataPath, false);
@@ -34,7 +34,7 @@ namespace Phoenix.SEWorkshopTool
 
         protected override MySandboxGame InitGame()
         {
-            return new SpaceEngineersGame(new string[] { });
+            return new SpaceEngineersGame(m_args);
         }
 
         // This is to manually add any DLC not added to MyDLCs.DLCs, so the lookup later can happen

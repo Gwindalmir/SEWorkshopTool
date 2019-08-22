@@ -32,6 +32,7 @@ namespace Phoenix.WorkshopTool
         protected static readonly uint AppId = 244850;
         protected static readonly string AppName = "SEWT";
         protected static readonly bool IsME = false;
+        protected string[] m_args;
 
         static GameBase()
         {
@@ -91,10 +92,15 @@ namespace Phoenix.WorkshopTool
                     }
                 }
 
+                // SE requires -appdata, but the commandline dll requires --appdata, so fix it
+                for (var idx = 0; idx < args.Length; idx++)
+                    if (string.Compare(args[idx], "--appdata", StringComparison.InvariantCultureIgnoreCase) == 0)
+                        args[idx] = "-appdata";
+
                 try
                 {
                     // Initialize game code
-                    InitSandbox(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), IsME ? "MedievalEngineers": "SpaceEngineers"));
+                    InitSandbox(args);
                 }
                 catch(Exception ex)
                 {
@@ -252,8 +258,9 @@ namespace Phoenix.WorkshopTool
         protected abstract MySandboxGame InitGame();
 
         // This is mostly copied from MyProgram.Main(), with UI stripped out.
-        protected virtual void InitSandbox(string instancepath)
+        protected virtual void InitSandbox(string[] args)
         {
+            m_args = args;
             // Infinario was removed from SE in update 1.184.6, but is still in ME
             var infinario = typeof(MyFakes).GetField("ENABLE_INFINARIO");
 
@@ -655,7 +662,7 @@ namespace Phoenix.WorkshopTool
                     // Check if value is actually a mod id, and work remotely, if so.
                     var newpath = Path.Combine(WorkshopHelper.GetWorkshopItemPath(type), paths[idx]);
 
-                    if (Directory.Exists(newpath))
+                    if (Directory.Exists(newpath) || !ulong.TryParse(paths[idx], out var id))
                         paths[idx] = newpath;
                 }
             }
