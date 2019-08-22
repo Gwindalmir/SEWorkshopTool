@@ -266,6 +266,13 @@ namespace Phoenix.WorkshopTool
             if (!SetupBasicGameInfo())
                 return;
 
+            // Init null render so profiler-enabled builds don't crash
+            var render = new MyNullRender();
+            MyRenderProxy.Initialize(render);
+#if SE
+            EmptyKeys.UserInterface.Engine engine = (EmptyKeys.UserInterface.Engine)new VRage.UserInterface.MyEngine();
+#endif
+
             if (System.Diagnostics.Debugger.IsAttached)
                 m_startup.CheckSteamRunning();        // Just give the warning message box when debugging, ignore for release
 
@@ -276,9 +283,6 @@ namespace Phoenix.WorkshopTool
 
             try
             {
-                // Init null render so profiler-enabled builds don't crash
-                var render = new MyNullRender();
-                MyRenderProxy.Initialize(render);
 #if !SE
                 MyRenderProxy.GetRenderProfiler().SetAutocommit(false);
                 MyRenderProxy.GetRenderProfiler().InitMemoryHack("MainEntryPoint");

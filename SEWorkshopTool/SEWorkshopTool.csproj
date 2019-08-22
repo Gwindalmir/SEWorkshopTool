@@ -37,6 +37,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EmptyKeys.UserInterface.Core">
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\EmptyKeys.UserInterface.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\Sandbox.Common.dll</HintPath>
@@ -81,6 +85,7 @@
     </Reference>
     <Reference Include="VRage.Platform.Windows">
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Platform.Windows.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -101,10 +106,15 @@
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Steam.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VRage.UserInterface">
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.UserInterface.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpaceEngineersGame.cs" />
     <Compile Include="SpaceGame.cs" />
   </ItemGroup>
   <ItemGroup>

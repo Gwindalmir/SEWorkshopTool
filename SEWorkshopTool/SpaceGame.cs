@@ -1,11 +1,12 @@
 ﻿using Phoenix.WorkshopTool;
 using Sandbox;
 using Sandbox.Game;
-using SpaceEngineers.Game;
 using System.Collections.Generic;
 using System.Reflection;
 using VRage;
 using VRage.GameServices;
+using VRage.Utils;
+using VRageRender;
 
 namespace Phoenix.SEWorkshopTool
 {
@@ -17,8 +18,9 @@ namespace Phoenix.SEWorkshopTool
             m_startup = new MyCommonProgramStartup(new string[] { });
 
             var appDataPath = m_startup.GetAppDataPath();
-            VRage.Platform.Windows.MyVRageWindows.Init(MySandboxGame.Log, appDataPath);
-            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", appDataPath);
+            VRage.Platform.Windows.MyVRageWindows.Init(MyPerGameSettings.BasicGameInfo.ApplicationName, MySandboxGame.Log, appDataPath, false);
+            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.GetAppDataPath());
+            MyRenderProxy.Initialize((IMyRender)new MyNullRender());
             MyInitializer.InitCheckSum();
 
             if (!m_startup.Check64Bit()) return false;
