@@ -37,6 +37,8 @@ namespace Phoenix.WorkshopTool
         readonly HashSet<string> m_ignoredExtensions = new HashSet<string>();
         readonly HashSet<string> m_ignoredPaths = new HashSet<string>();
         uint[] m_dlcs;
+        ulong[] m_deps;
+        ulong[] m_depsToRemove;
         string m_modPath;
         bool m_compile;
         bool m_dryrun;
@@ -65,7 +67,7 @@ namespace Phoenix.WorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null)
+        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null, ulong[] deps = null)
         {
             m_modPath = path;
 
@@ -102,8 +104,17 @@ namespace Phoenix.WorkshopTool
             if (tags != null)
                 m_tags = tags;
 
+            if (deps != null)
+            {
+                // Any dependencies that existed, but weren't specified, will be removed
+                if (m_deps != null)
+                    m_depsToRemove = m_deps.Except(deps).ToArray();
+
+                m_deps = deps;
+            }
+
             // This file list should match the PublishXXXAsync methods in MyWorkshop
-            switch(m_type)
+            switch (m_type)
             {
                 case WorkshopType.Mod:
                     m_ignoredPaths.Add("modinfo.sbmi");
@@ -355,6 +366,9 @@ namespace Phoenix.WorkshopTool
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
                 }
+                
+                // SE libraries don't support updating dependencies, so we have to do that separately
+                WorkshopHelper.PublishDependencies(m_modId, m_deps, m_depsToRemove);
             }
             if (m_modId == 0)
             {
@@ -401,6 +415,7 @@ namespace Phoenix.WorkshopTool
                         m_visibility = results[0].Visibility;
 
                     m_dlcs = results[0].DLCs.ToArray();
+                    m_deps = results[0].Dependencies.ToArray();
 
                     MyDebug.AssertDebug(owner == MySteam.UserId);
                     if (owner != MySteam.UserId)
@@ -610,7 +625,8 @@ namespace Phoenix.WorkshopTool
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
             publisher.DLCs = new HashSet<uint>(m_dlcs);
-
+            publisher.Dependencies = new List<ulong>(m_deps);
+            
             AutoResetEvent resetEvent = new AutoResetEvent(false);
             try
             {
@@ -631,6 +647,7 @@ namespace Phoenix.WorkshopTool
                 PrintItemDetails();
                 
                 publisher.Publish();
+                WorkshopHelper.PublishDependencies(m_modId, m_deps, m_depsToRemove);
 
                 if (!resetEvent.WaitOne())
                     return false;
@@ -648,8 +665,20 @@ namespace Phoenix.WorkshopTool
         {
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Visibility: {0}", m_visibility));
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Tags: {0}", string.Join(", ", m_tags)));
-            MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirement: {0}",
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirements: {0}",
                 (m_dlcs?.Length > 0 ? string.Join(", ", m_dlcs.Select(i => Sandbox.Game.MyDLCs.DLCs[i].Name)) : "None")));
+
+            MySandboxGame.Log.WriteLineAndConsole(string.Format("Dependencies: {0}", (m_deps?.Length > 0 ? string.Empty : "None")));
+
+            if (m_deps?.Length > 0)
+            {
+                List<MyWorkshopItem> depItems = new List<MyWorkshopItem>();
+                if (MyWorkshop.GetItemsBlockingUGC(m_deps, depItems))
+                    depItems.ForEach(i => MySandboxGame.Log.WriteLineAndConsole(string.Format("{0,15} -> {1}",
+                        i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, Console.WindowWidth - 45)))));
+                else
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("     {0}", string.Join(", ", m_deps)));
+            }
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Thumbnail: {0}", m_previewFilename ?? "No change"));
         }
     }

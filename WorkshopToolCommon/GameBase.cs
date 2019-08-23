@@ -91,12 +91,15 @@ namespace Phoenix.WorkshopTool
                         return Cleanup(1);
                     }
                 }
-
+                
+                // If a "0" or "none" was specified for DLC, that means remove them all.
                 if(options.DLCs?.Length > 0 && 
                     (options.DLCs.Contains("0") || options.DLCs.Contains("none", StringComparer.InvariantCultureIgnoreCase)))
-                {
                     options.DLCs = new string[0];
-                }
+
+                // If a 0 was specified for dependencies, that means remove them all.
+                if (options.Dependencies?.Length > 0 && options.Dependencies.Contains((ulong)0))
+                    options.Dependencies = new ulong[0];
 
                 // SE requires -appdata, but the commandline dll requires --appdata, so fix it
                 for (var idx = 0; idx < args.Length; idx++)
@@ -445,7 +448,7 @@ namespace Phoenix.WorkshopTool
                     tags = tags[0].Split(',', ';');
                 }
 
-                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs);
+                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs, options.Dependencies);
                 if (options.UpdateOnly && mod.ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -650,8 +653,20 @@ namespace Phoenix.WorkshopTool
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Visibility: {0}", item.Visibility));
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Tags: {0}", string.Join(", ", string.Join(", ", item.Tags))));
 
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirement: {0}",
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirements: {0}",
                         (item.DLCs.Count > 0 ? string.Join(", ", item.DLCs.Select(i => Sandbox.Game.MyDLCs.DLCs[i].Name)) : "None")));
+
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Dependencies: {0}", (item.Dependencies.Count > 0 ? string.Empty : "None")));
+
+                    if (item.Dependencies.Count > 0)
+                    {
+                        List<MyWorkshopItem> depItems = new List<MyWorkshopItem>();
+                        if (MyWorkshop.GetItemsBlockingUGC(item.Dependencies, depItems))
+                            depItems.ForEach(i => MySandboxGame.Log.WriteLineAndConsole(string.Format("{0,15} -> {1}", 
+                                i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, Console.WindowWidth - 45)))));
+                        else
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("     {0}", string.Join(", ", item.Dependencies)));
+                    }
 
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Location: {0}", item.Folder));
 

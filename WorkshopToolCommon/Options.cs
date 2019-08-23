@@ -81,6 +81,9 @@ namespace Phoenix.WorkshopTool
 #endif
         public string[] DLCs { get; set; }
 
+        [OptionArray("dependencies", HelpText = "Specify dependencies to other mods (modids only). Use 0 to remove all.")]
+        public ulong[] Dependencies { get; set; }
+
         [Option("appdata", HelpText = "Specify custom AppData location (default is %AppData%\\SpaceEngineers)")]
         public string AppData { get; set; }
     }

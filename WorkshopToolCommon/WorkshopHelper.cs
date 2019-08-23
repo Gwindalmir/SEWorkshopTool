@@ -47,7 +47,13 @@ namespace Phoenix.WorkshopTool
             return downloadPath;
         }
 
-#region Collections
+        public static void PublishDependencies(ulong modId, ulong[] dependenciesToAdd, ulong[] dependenciesToRemove = null)
+        {
+            dependenciesToRemove?.ForEach(id => Steamworks.SteamUGC.RemoveDependency((Steamworks.PublishedFileId_t)modId, (Steamworks.PublishedFileId_t)id));
+            dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddDependency((Steamworks.PublishedFileId_t)modId, (Steamworks.PublishedFileId_t)id));
+        }
+
+        #region Collections
         public static IEnumerable<MySubscribedItem> GetCollectionDetails(ulong modid)
         {
             IEnumerable<MySubscribedItem> details = new List<MySubscribedItem>();
