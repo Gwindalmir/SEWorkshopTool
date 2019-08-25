@@ -46,6 +46,10 @@
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\Sandbox.Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Sandbox.Graphics">
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\Sandbox.Graphics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Steamworks.NET">
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\MedievalEngineers\Bin64\Steamworks.NET.dll</HintPath>
       <Private>False</Private>
@@ -94,6 +98,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="MEWT.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser">

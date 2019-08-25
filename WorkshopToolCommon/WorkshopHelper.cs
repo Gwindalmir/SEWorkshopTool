@@ -8,11 +8,10 @@ using System.Text;
 using System.Threading;
 using VRage.FileSystem;
 using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
+using Sandbox;
 #if SE
 using VRage;
 using VRage.Utils;
-#else
-using VRage.Library.Logging;
 #endif
 
 namespace Phoenix.WorkshopTool
@@ -58,7 +57,7 @@ namespace Phoenix.WorkshopTool
         {
             IEnumerable<MySubscribedItem> details = new List<MySubscribedItem>();
 
-            MyLog.Default.WriteLineAndConsole("Begin processing collections");
+            MySandboxGame.Log.WriteLineAndConsole("Begin processing collections");
 
             using (var mrEvent = new ManualResetEvent(false))
             {
@@ -75,7 +74,7 @@ namespace Phoenix.WorkshopTool
                 mrEvent.Reset();
             }
 
-            MyLog.Default.WriteLineAndConsole("End processing collections");
+            MySandboxGame.Log.WriteLineAndConsole("End processing collections");
 
             return details;
         }
@@ -86,7 +85,7 @@ namespace Phoenix.WorkshopTool
             string xml = "";
             var modsInCollection = new List<MySubscribedItem>();
             bool failure = false;
-            MyLog.Default.IncreaseIndent();
+            MySandboxGame.Log.IncreaseIndent();
             try
             {
                 var request = WebRequest.Create(string.Format(_requestURL, "ISteamRemoteStorage", "GetCollectionDetails", 1));
@@ -129,7 +128,7 @@ namespace Phoenix.WorkshopTool
                     var xmlResult = reader.ReadElementContentAsInt();
                     if (xmlResult != 1 /* OK */)
                     {
-                        MyLog.Default.WriteLine(string.Format("Failed to download collections: result = {0}", xmlResult));
+                        MySandboxGame.Log.WriteLine(string.Format("Failed to download collections: result = {0}", xmlResult));
                         failure = true;
                     }
 
@@ -138,7 +137,7 @@ namespace Phoenix.WorkshopTool
 
                     if (count != publishedFileIds.Count())
                     {
-                        MyLog.Default.WriteLine(string.Format("Failed to download collection details: Expected {0} results, got {1}", publishedFileIds.Count(), count));
+                        MySandboxGame.Log.WriteLine(string.Format("Failed to download collection details: Expected {0} results, got {1}", publishedFileIds.Count(), count));
                     }
 
                     var processed = new List<ulong>(publishedFileIds.Count());
@@ -153,7 +152,7 @@ namespace Phoenix.WorkshopTool
 
                         if (xmlResult == 1 /* OK */)
                         {
-                            MyLog.Default.WriteLineAndConsole(string.Format("Collection {0} contains the following items:", publishedFileId.ToString()));
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Collection {0} contains the following items:", publishedFileId.ToString()));
 
                             reader.ReadToFollowing("children");
                             using (var sub = reader.ReadSubtree())
@@ -171,7 +170,7 @@ namespace Phoenix.WorkshopTool
                                     {
                                         var item = results[0];
 
-                                        MyLog.Default.WriteLineAndConsole(string.Format("Id - {0}, title - {1}", item.Id, item.Title));
+                                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Id - {0}, title - {1}", item.Id, item.Title));
                                         modsInCollection.Add(item);
                                     }
                                 }
@@ -181,7 +180,7 @@ namespace Phoenix.WorkshopTool
                         }
                         else
                         {
-                            MyLog.Default.WriteLineAndConsole(string.Format("Item {0} returned the following error: {1}", publishedFileId.ToString(), (Steamworks.EResult)xmlResult));
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Item {0} returned the following error: {1}", publishedFileId.ToString(), (Steamworks.EResult)xmlResult));
                             failure = true;
                         }
                     }
@@ -189,12 +188,12 @@ namespace Phoenix.WorkshopTool
             }
             catch (Exception ex)
             {
-                MyLog.Default.WriteLine(ex);
+                MySandboxGame.Log.WriteLine(ex);
                 return false;
             }
             finally
             {
-                MyLog.Default.DecreaseIndent();
+                MySandboxGame.Log.DecreaseIndent();
                 callback(failure, modsInCollection);
             }
             return failure;

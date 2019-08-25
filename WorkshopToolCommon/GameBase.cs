@@ -14,21 +14,21 @@ using VRage.Utils;
 using VRage.GameServices;
 #if SE
 using ParallelTasks;
+using MySteamServiceBase = VRage.Steam.MySteamService;
 #else
 using VRage.Library.Threading;
 #endif
-
-using MySteamServiceBase = VRage.Steam.MySteamService;
 
 namespace Phoenix.WorkshopTool
 {
     abstract class GameBase
     {
+#if SE
         static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-
+#endif
         protected MySandboxGame m_game = null;
         protected MyCommonProgramStartup m_startup;
-        protected MySteamServiceBase m_steamService;
+        protected MySteamService m_steamService;
         protected static readonly uint AppId = 244850;
         protected static readonly string AppName = "SEWT";
         protected static readonly bool IsME = false;
@@ -36,16 +36,18 @@ namespace Phoenix.WorkshopTool
 
         static GameBase()
         {
+            var root = Path.Combine(Path.GetDirectoryName(typeof(FastResourceLock).Assembly.Location), "..");
+#if SE
             // Steam API doesn't initialize correctly if it can't find steam_appid.txt
             if (!File.Exists("steam_appid.txt"))
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(FastResourceLock).Assembly.Location) + "\\..");
-
-            var appid = File.ReadAllText($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}steam_appid.txt");
-            AppId = uint.Parse(appid);
-#if !SE
+                Directory.SetCurrentDirectory(root);
+#else
             AppName = "MEWT";
             IsME = true;
 #endif
+            var appid = File.ReadAllText(Path.Combine(root, "steam_appid.txt"));
+            AppId = uint.Parse(appid);
+
             // Override the ExePath, so the game classes can initialize when the exe is outside the game directory
             MyFileSystem.ExePath = new FileInfo(Assembly.GetAssembly(typeof(FastResourceLock)).Location).DirectoryName;
         }
@@ -62,6 +64,9 @@ namespace Phoenix.WorkshopTool
 
             if (!File.Exists(assemblyPath))
                 assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", "x64", assemblyname + ".dll");
+
+            if (!File.Exists(assemblyPath))
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ".dll");
 
             if (!File.Exists(assemblyPath))
                 assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ".dll");
@@ -132,6 +137,7 @@ namespace Phoenix.WorkshopTool
                 
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
 
+#if SE
                 ParameterInfo[] parameters;
                 if (options.Compile)
                 {
@@ -155,7 +161,7 @@ namespace Phoenix.WorkshopTool
                 }
 
                 ReplaceMethods();
-
+#endif
                 System.Threading.Tasks.Task<bool> Task;
 
                 if (options.Download)
@@ -248,19 +254,19 @@ namespace Phoenix.WorkshopTool
         private int Cleanup(int errorCode = 0)
         {
             CleanupSandbox();
-#if !SE
-            Environment.Exit(errorCode);
-#endif
             return errorCode;
         }
 
-        #region Sandbox stuff
+#region Sandbox stuff
         private void CleanupSandbox()
         {
             m_steamService?.Dispose();
             m_game?.Dispose();
             m_steamService = null;
             m_game = null;
+#if !SE
+            VRage.Logging.MyLog.Default.Dispose();
+#endif
         }
 
         protected abstract bool SetupBasicGameInfo();
@@ -287,12 +293,10 @@ namespace Phoenix.WorkshopTool
             MyRenderProxy.Initialize(render);
 #if SE
             EmptyKeys.UserInterface.Engine engine = (EmptyKeys.UserInterface.Engine)new VRage.UserInterface.MyEngine();
-#endif
 
             if (System.Diagnostics.Debugger.IsAttached)
                 m_startup.CheckSteamRunning();        // Just give the warning message box when debugging, ignore for release
 
-#if SE
             if (!MySandboxGame.IsDedicated)
                 MyFileSystem.InitUserSpecific(m_steamService.UserId.ToString());
 #endif
@@ -328,9 +332,9 @@ namespace Phoenix.WorkshopTool
             }
 
         }
-        #endregion
+#endregion
 
-        #region Steam
+#region Steam
         private System.Threading.Tasks.Task<bool> ClearSteamCloud(string [] filesToDelete, bool force = false)
         {
             var Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(() =>
@@ -383,9 +387,9 @@ namespace Phoenix.WorkshopTool
             });
             return Task;
         }
-        #endregion
+#endregion
 
-        #region Upload
+#region Upload
         static System.Threading.Tasks.Task<bool> UploadMods(Options options)
         {
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
@@ -438,7 +442,14 @@ namespace Phoenix.WorkshopTool
 
                 // Check if path is really a modid (this is kind of hacky right now)
                 if (!Directory.Exists(pathname) && ulong.TryParse(paths[idx], out var id))
+                {
+                    if (options.Compile)
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("'--compile' option not valid with a ModID: {0}", id));
+                        continue;
+                    }
                     pathname = paths[idx];
+                }
 
                 var tags = options.Tags;
 
@@ -493,9 +504,9 @@ namespace Phoenix.WorkshopTool
             }
             return success;
         }
-        #endregion  Upload
+#endregion  Upload
 
-        #region Download
+#region Download
         static System.Threading.Tasks.Task<bool> DownloadMods(Options options)
         {
             // Get PublishItemBlocking internal method via reflection
@@ -570,7 +581,7 @@ namespace Phoenix.WorkshopTool
 #if SE
                     var result = MyWorkshop.DownloadModsBlockingUGC(items, null);
 #else
-                    var result = MyWorkshop.DownloadModsBlocking(items);
+                    var result = MyWorkshop.DownloadModsBlocking(items, null);
 #endif
                     success = result.Success;
                 }
@@ -584,7 +595,7 @@ namespace Phoenix.WorkshopTool
 #if SE
                             loopsuccess = MyWorkshop.DownloadBlueprintBlockingUGC(item);
 #else
-                            loopsuccess = MyWorkshop.DownloadBlueprintBlocking(item);
+                            loopsuccess = MyWorkshop.DownloadBlueprintBlocking(item, null);
 #endif
                             if (!loopsuccess)
                                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.Id));
@@ -653,15 +664,20 @@ namespace Phoenix.WorkshopTool
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Visibility: {0}", item.Visibility));
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Tags: {0}", string.Join(", ", string.Join(", ", item.Tags))));
 
+#if SE
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirements: {0}",
                         (item.DLCs.Count > 0 ? string.Join(", ", item.DLCs.Select(i => Sandbox.Game.MyDLCs.DLCs[i].Name)) : "None")));
-
+#endif
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Dependencies: {0}", (item.Dependencies.Count > 0 ? string.Empty : "None")));
 
                     if (item.Dependencies.Count > 0)
                     {
                         List<MyWorkshopItem> depItems = new List<MyWorkshopItem>();
+#if SE
                         if (MyWorkshop.GetItemsBlockingUGC(item.Dependencies, depItems))
+#else
+                        if (MyWorkshop.GetItemsBlocking(item.Dependencies, depItems))
+#endif
                             depItems.ForEach(i => MySandboxGame.Log.WriteLineAndConsole(string.Format("{0,15} -> {1}", 
                                 i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, Console.WindowWidth - 45)))));
                         else
@@ -680,9 +696,9 @@ namespace Phoenix.WorkshopTool
             }
             return true;
         }
-        #endregion Download
+#endregion Download
 
-        #region Pathing
+#region Pathing
         static string[] TestPathAndMakeAbsolute(WorkshopType type, string[] paths)
         {
             for (int idx = 0; paths != null && idx < paths.Length; idx++)
@@ -727,22 +743,24 @@ namespace Phoenix.WorkshopTool
                 if (dirs.Count() == 0)
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Directory not found, skipping: {0}", path));
 
-                itemPaths.AddList(dirs
+                itemPaths.AddRange(dirs
                     .Where(i => !(Path.GetFileName(i).StartsWith(".") ||                // Ignore directories starting with "." (eg. ".vs")
                                 Path.GetFileName(i).StartsWith(Constants.SEWT_Prefix))) // also ignore directories starting with "[_SEWT_]" (downloaded by this mod)
                             .Select(i => i).ToList());
             }
             return itemPaths;
         }
-        #endregion Pathing
+#endregion Pathing
 
         private void ListDLCs()
         {
+#if SE
             MySandboxGame.Log.WriteLineAndConsole("Valid DLC:");
             foreach (var dlc in Sandbox.Game.MyDLCs.DLCs.Values)
             {
                 MySandboxGame.Log.WriteLineAndConsole($"Name: {dlc.Name}, ID: {dlc.AppId}");
             }
+#endif
         }
 
         static string[] CombineCollectionWithList(WorkshopType type, List<MyWorkshopItem> items, string[] existingitems)
@@ -758,7 +776,7 @@ namespace Phoenix.WorkshopTool
             if (tempList.Count > 0)
             {
                 if(existingitems != null)
-                    tempList.AddArray(existingitems);
+                    tempList = tempList.Union(existingitems).ToList();
 
                 return tempList.ToArray();
             }
