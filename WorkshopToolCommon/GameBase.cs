@@ -14,7 +14,6 @@ using VRage.Utils;
 using VRage.GameServices;
 #if SE
 using ParallelTasks;
-using MySteamServiceBase = VRage.Steam.MySteamService;
 #else
 using VRage.Library.Threading;
 #endif
@@ -23,12 +22,9 @@ namespace Phoenix.WorkshopTool
 {
     abstract class GameBase
     {
-#if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-#endif
         protected MySandboxGame m_game = null;
         protected MyCommonProgramStartup m_startup;
-        protected MySteamService m_steamService;
+        protected IMyGameService m_steamService;
         protected static readonly uint AppId = 244850;
         protected static readonly string AppName = "SEWT";
         protected static readonly bool IsME = false;
@@ -50,6 +46,11 @@ namespace Phoenix.WorkshopTool
 
             // Override the ExePath, so the game classes can initialize when the exe is outside the game directory
             MyFileSystem.ExePath = new FileInfo(Assembly.GetAssembly(typeof(FastResourceLock)).Location).DirectoryName;
+        }
+
+        public GameBase()
+        {
+            ReplaceMethod(typeof(Steamworks.SteamAPI), nameof(Steamworks.SteamAPI.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public, typeof(InjectedMethod), nameof(InjectedMethod.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public);
         }
 
         // Event handler for loading assemblies not in the same directory as the exe.
@@ -116,7 +117,7 @@ namespace Phoenix.WorkshopTool
                     // Initialize game code
                     InitSandbox(args);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("An exception occurred intializing game libraries: {0}", ex.Message));
                     MySandboxGame.Log.WriteLineAndConsole(ex.StackTrace);
@@ -260,7 +261,7 @@ namespace Phoenix.WorkshopTool
 #region Sandbox stuff
         private void CleanupSandbox()
         {
-            m_steamService?.Dispose();
+            m_steamService?.ShutDown();
             m_game?.Dispose();
             m_steamService = null;
             m_game = null;

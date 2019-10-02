@@ -1,7 +1,9 @@
 ﻿using Steamworks;
 using System;
 using VRage.GameServices;
+#if !SE
 using MySteamServiceBase = VRage.Steam.MySteamService;
+#endif
 
 namespace Phoenix.WorkshopTool
 {
@@ -10,6 +12,7 @@ namespace Phoenix.WorkshopTool
     /// outside of Steam, which causes this process to exit, and the game to launch instead with an arguments warning.
     /// We have to override the default behavior, then forcibly set the correct options.
     /// </summary>
+#if !SE
 #if !SE
     [VRage.Engine.System("Steam Game Services")]
 #endif
@@ -90,4 +93,5 @@ namespace Phoenix.WorkshopTool
             steam.GetProperty("Peer2Peer").GetSetMethod(true).Invoke(this, new object[] { new VRage.Steam.MySteamPeer2Peer() });
         }
     }
+#endif
 }

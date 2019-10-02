@@ -35,8 +35,8 @@ namespace Phoenix.MEWorkshopTool
             vrageCore.GetType().GetMethod("LoadMetadata", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(vrageCore, new[] { configuration });
             vrageCore.GetType().GetMethod("InitSystems", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(vrageCore, new object[] { configuration.SystemConfiguration, false });
 
-            m_steamService = new WorkshopTool.MySteamService();
-            m_steamService.Init(new VRage.Steam.MySteamService.Parameters() { Server = MySandboxGame.IsDedicated, AppId = AppId });
+            m_steamService = new MySteamService();
+            ((MySteamService)(m_steamService)).Init(new VRage.Steam.MySteamService.Parameters() { Server = MySandboxGame.IsDedicated, AppId = AppId });
 
             VRage.Logging.MyLog.Default = MySandboxGame.Log = new VRage.Logging.MyLog();
             MySandboxGame.Log.Init(MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool.log", null);

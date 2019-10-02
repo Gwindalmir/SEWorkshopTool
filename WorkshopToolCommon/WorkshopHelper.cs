@@ -9,9 +9,12 @@ using System.Threading;
 using VRage.FileSystem;
 using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 using Sandbox;
+using VRage.GameServices;
 #if SE
 using VRage;
 using VRage.Utils;
+#else
+using MySteam = VRage.GameServices.MyGameService;
 #endif
 
 namespace Phoenix.WorkshopTool
@@ -19,7 +22,7 @@ namespace Phoenix.WorkshopTool
     class WorkshopHelper
     {
 #if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
+        static IMyGameService MySteam { get => (IMyGameService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
 #endif
         static private Dictionary<uint, Action<bool, string>> m_callbacks = new Dictionary<uint, Action<bool, string>>();
         static string _requestURL = "https://api.steampowered.com/{0}/{1}/v{2:0000}/?format=xml";
@@ -40,7 +43,7 @@ namespace Phoenix.WorkshopTool
 #endif
                 case WorkshopType.World:
                 case WorkshopType.Scenario:
-                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteamService.Static.UserId.ToString());
+                    downloadPath = Path.Combine(MyFileSystem.UserDataPath, "Saves", MySteam.UserId.ToString());
                     break;
             }
             return downloadPath;

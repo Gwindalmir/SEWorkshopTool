@@ -7,20 +7,23 @@ using System.IO;
 using System.Threading;
 using VRage;
 using VRage.GameServices;
-
+#if SE
+using MySteam = Sandbox.Engine.Networking.MyGameService;
+#endif
 namespace Phoenix.WorkshopTool
 {
     class InjectedMethod
     {
 #if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
+        static IMyGameService MySteam { get => (IMyGameService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
 #endif
         delegate void SubmitItemUpdateResult(SubmitItemUpdateResult_t result, bool ioFailure);
 
         private void UpdatePublishedItem()
         {
+            // dynamic slows things down, but it saves coding time
             dynamic thisobj = this;
-            var steamService = (MySteamService)typeof(VRage.Steam.MySteamWorkshopItemPublisher).GetField("m_steamService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(thisobj);
+            var steamService = typeof(VRage.Steam.MySteamWorkshopItemPublisher).GetField("m_steamService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(thisobj);
             var steamUGC = typeof(VRage.Steam.MySteamWorkshopItemPublisher).GetProperty("SteamUGC", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(thisobj);
             var appid = (AppId_t)steamService.GetType().GetField("SteamAppId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(steamService);
             UGCUpdateHandle_t ugcUpdateHandleT = SteamUGC.StartItemUpdate(appid, (PublishedFileId_t)thisobj.Id);
@@ -145,15 +148,15 @@ namespace Phoenix.WorkshopTool
                 if (workshopId.HasValue && workshopId != 0)
                 {
                     MySandboxGame.Log.WriteLine("File appears to be published already. Attempting to update workshop file.");
-                    ulong updateHandle = MySteamService.Static.CreatePublishedFileUpdateRequest(workshopId.Value);
+                    ulong updateHandle = MySteam.CreatePublishedFileUpdateRequest(workshopId.Value);
 
                     if(thumbnailFilename != null)
-                        MySteamService.Static.UpdatePublishedFilePreviewFile(updateHandle, steamPreviewFileName);
+                        MySteam.UpdatePublishedFilePreviewFile(updateHandle, steamPreviewFileName);
 
                     if (tags != null)
-                        MySteamService.Static.UpdatePublishedFileTags(updateHandle, tags);
+                        MySteam.UpdatePublishedFileTags(updateHandle, tags);
 
-                    MySteamService.Static.CommitPublishedFileUpdate(updateHandle, delegate (bool ioFailure, MyRemoteStorageUpdatePublishedFileResult data)
+                    MySteam.CommitPublishedFileUpdate(updateHandle, delegate (bool ioFailure, MyRemoteStorageUpdatePublishedFileResult data)
                     {
                         publishResult = data.Result;
                         bool success = !ioFailure && data.Result == MyGameServiceCallResult.OK;
@@ -175,10 +178,15 @@ namespace Phoenix.WorkshopTool
             // Erasing temporary file. No need for it to take up cloud storage anymore.
             MySandboxGame.Log.WriteLine("Deleting cloud files - START");
             if(steamPreviewFileName != null)
-                MySteamService.Static.FileDelete(steamPreviewFileName);
+                MySteam.FileDelete(steamPreviewFileName);
             MySandboxGame.Log.WriteLine("Deleting cloud files - END");
 #endif
             return workshopId.Value;
+        }
+
+        public static bool RestartAppIfNecessary(AppId_t unOwnAppID)
+        {
+            return false;
         }
     }
 }

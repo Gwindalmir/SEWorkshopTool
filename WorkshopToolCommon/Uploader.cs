@@ -35,9 +35,6 @@ namespace Phoenix.WorkshopTool
 
     class Uploader : IMod
     {
-#if SE
-        static MySteamService MySteam { get => (MySteamService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
-#endif
         readonly HashSet<string> m_ignoredExtensions = new HashSet<string>();
         readonly HashSet<string> m_ignoredPaths = new HashSet<string>();
         uint[] m_dlcs;
@@ -60,7 +57,7 @@ namespace Phoenix.WorkshopTool
         private static LoadScripts _compileMethod;
 
 #if SE
-        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null, uint[] requiredDLCs = null);
+        private delegate MyWorkshopItemPublisher PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null, uint[] requiredDLCs = null);
         private delegate void LoadScripts(string path, MyModContext mod = null);
 #else
         private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
@@ -387,9 +384,10 @@ namespace Phoenix.WorkshopTool
                 {
                     m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Private, m_tags, m_ignoredExtensions, m_ignoredPaths
 #if SE
-                        , m_dlcs
-#endif
+                        , m_dlcs).Id;
+#else
                         );
+#endif
                 }
                 else
                 {
@@ -410,7 +408,7 @@ namespace Phoenix.WorkshopTool
                 if (newMod)
                 {
 #if SE
-                    if (MyWorkshop.GenerateModInfo(m_modPath, m_modId, MySteam.UserId))
+                    if (MyWorkshop.GenerateModInfo(m_modPath, m_modId, MyGameService.UserId))
 #else
                     if (MyWorkshop.UpdateModMetadata(m_modPath, m_modId, MySteam.UserId))
 #endif
@@ -452,10 +450,10 @@ namespace Phoenix.WorkshopTool
 #endif
                     m_deps = results[0].Dependencies.ToArray();
 
-                    MyDebug.AssertDebug(owner == MySteam.UserId);
-                    if (owner != MySteam.UserId)
+                    MyDebug.AssertDebug(owner == MyGameService.UserId);
+                    if (owner != MyGameService.UserId)
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MySteam.UserId));
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MyGameService.UserId));
                         MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
                         return false;
                     }
@@ -650,7 +648,7 @@ namespace Phoenix.WorkshopTool
         {
             ProcessTags();
 
-            var publisher = MySteam.CreateWorkshopPublisher();
+            var publisher = MyGameService.CreateWorkshopPublisher();
             publisher.Id = ModId;
             publisher.Title = Title;
             publisher.Visibility = m_visibility ?? GetVisibility();

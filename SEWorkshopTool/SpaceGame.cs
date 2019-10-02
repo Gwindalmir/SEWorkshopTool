@@ -25,8 +25,9 @@ namespace Phoenix.SEWorkshopTool
 
             if (!m_startup.Check64Bit()) return false;
 
-            m_steamService = new WorkshopTool.MySteamService(MySandboxGame.IsDedicated, AppId);
-            MyServiceManager.Instance.AddService<IMyGameService>(m_steamService);
+            m_steamService = VRage.Steam.MySteamGameService.Create(MySandboxGame.IsDedicated, AppId);
+            MyServiceManager.Instance.AddService(m_steamService);
+            MyServiceManager.Instance.AddService(VRage.Steam.MySteamUgcService.Create(AppId, m_steamService));
             SpaceEngineersGame.SetupPerGameSettings();
             ManuallyAddDLCs();
             return true;
