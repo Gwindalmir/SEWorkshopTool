@@ -658,6 +658,8 @@ namespace Phoenix.WorkshopTool
             publisher.Tags = new List<string>(m_tags);
 #if SE
             publisher.DLCs = new HashSet<uint>(m_dlcs);
+#else
+            publisher.Folder = m_modPath;
 #endif
             publisher.Dependencies = new List<ulong>(m_deps);
             
