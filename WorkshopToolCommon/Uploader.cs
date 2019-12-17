@@ -55,6 +55,7 @@ namespace Phoenix.WorkshopTool
         private static object _scriptManager;
         private static PublishItemBlocking _publishMethod;
         private static LoadScripts _compileMethod;
+        private static HashSet<string> _globalIgnoredExtensions;
 
 #if SE
         private delegate MyWorkshopItemPublisher PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null, uint[] requiredDLCs = null);
@@ -219,6 +220,8 @@ namespace Phoenix.WorkshopTool
             {
                 MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
             }
+
+            _globalIgnoredExtensions = (HashSet<string>)typeof(MyWorkshop).GetField("m_ignoredExecutableExtensions", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
         }
 
         /// <summary>
@@ -368,6 +371,9 @@ namespace Phoenix.WorkshopTool
             {
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, m_title));
             }
+
+            // Add the global game filter for file extensions
+            _globalIgnoredExtensions?.ForEach(s => m_ignoredExtensions.Add(s));
 
             // Process Tags
             ProcessTags();
