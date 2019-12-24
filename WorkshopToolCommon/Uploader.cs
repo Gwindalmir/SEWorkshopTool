@@ -57,6 +57,14 @@ namespace Phoenix.WorkshopTool
         private static LoadScripts _compileMethod;
         private static HashSet<string> _globalIgnoredExtensions;
 
+        // Static delegate instance of ref-getter method, statically initialized.
+        // Requires an 'OfInterestClass' instance argument to be provided by caller.
+        static MethodUtil.RefGetter<MyWorkshop, bool> __refget_m_publishSuccess;
+        // Default returns true, as a reflection error doesn't necessarily mean the publish failed.
+        // Check log file for error.
+        // This is a dynamic getter for the MyWorkshop private field
+        private static bool PublishSuccess => __refget_m_publishSuccess != null ?__refget_m_publishSuccess(null) : true;
+
 #if SE
         private delegate MyWorkshopItemPublisher PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null, uint[] requiredDLCs = null);
         private delegate void LoadScripts(string path, MyModContext mod = null);
@@ -222,6 +230,17 @@ namespace Phoenix.WorkshopTool
             }
 
             _globalIgnoredExtensions = (HashSet<string>)typeof(MyWorkshop).GetField("m_ignoredExecutableExtensions", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
+
+            try
+            {
+                if (__refget_m_publishSuccess == null)
+                    __refget_m_publishSuccess = MethodUtil.create_refgetter<MyWorkshop, bool>("m_publishSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+            }
+            catch (Exception ex)
+            {
+                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "m_publishSuccess"));
+                MySandboxGame.Log.WriteLine(ex.Message);
+            }
         }
 
         /// <summary>
@@ -403,7 +422,7 @@ namespace Phoenix.WorkshopTool
                 // SE libraries don't support updating dependencies, so we have to do that separately
                 WorkshopHelper.PublishDependencies(m_modId, m_deps, m_depsToRemove);
             }
-            if (m_modId == 0)
+            if (m_modId == 0 || !PublishSuccess)
             {
                 MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
                 return false;
