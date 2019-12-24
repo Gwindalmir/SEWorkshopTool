@@ -137,7 +137,7 @@ namespace Phoenix.WorkshopTool
                 }
                 
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
-                MySandboxGame.Log.WriteLineToConsole($"Log file: {MySandboxGame.Log.GetFilePath()}");
+                MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}");
 
 #if SE
                 ParameterInfo[] parameters;
@@ -256,7 +256,7 @@ namespace Phoenix.WorkshopTool
         private int Cleanup(int errorCode = 0)
         {
             if (errorCode != 0)
-                MySandboxGame.Log.WriteLineToConsole("Check the log file above for error details.");
+                MySandboxGame.Log.WriteLineAndConsole("Check the log file above for error details.");
 
             CleanupSandbox();
             return errorCode;
