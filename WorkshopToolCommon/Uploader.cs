@@ -56,6 +56,7 @@ namespace Phoenix.WorkshopTool
         private static PublishItemBlocking _publishMethod;
         private static LoadScripts _compileMethod;
         private static HashSet<string> _globalIgnoredExtensions;
+        private static string[] _previewFileNames;
 
         // Static delegate instance of ref-getter method, statically initialized.
         // Requires an 'OfInterestClass' instance argument to be provided by caller.
@@ -229,7 +230,14 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
             }
 
-            _globalIgnoredExtensions = (HashSet<string>)typeof(MyWorkshop).GetField("m_ignoredExecutableExtensions", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
+            if (_globalIgnoredExtensions == null)
+                _globalIgnoredExtensions = (HashSet<string>)typeof(MyWorkshop).GetField("m_ignoredExecutableExtensions", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
+
+            if (_previewFileNames == null)
+                _previewFileNames = (string[])typeof(MyWorkshop).GetField("m_previewFileNames", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
+
+            if (_previewFileNames == null)
+                _previewFileNames = new string[] { "thumb.png", "thumb.jpg" };
 
             try
             {
@@ -720,6 +728,36 @@ namespace Phoenix.WorkshopTool
             return true;
         }
 
+        bool ValidateThumbnail()
+        {
+            const int MAX_SIZE = 1048576;
+
+            // Check preview thumbnail size, must be < 1MB
+            var previewFilename = m_previewFilename;
+
+            if (!File.Exists(m_previewFilename))
+            {
+                foreach(var filename in _previewFileNames)
+                {
+                    var pathname = Path.Combine(m_modPath, filename);
+
+                    if (File.Exists(pathname))
+                        previewFilename = pathname;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(previewFilename))
+            {
+                var fileinfo = new FileInfo(previewFilename);
+                if (fileinfo.Length >= MAX_SIZE)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole($"Thumbnail too large: Must be less than {MAX_SIZE} bytes; Size: {fileinfo.Length} bytes");
+                    return false;
+                }
+            }
+            return true;
+        }
+
         void PrintItemDetails()
         {
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Visibility: {0}", m_visibility));
@@ -744,6 +782,7 @@ namespace Phoenix.WorkshopTool
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("     {0}", string.Join(", ", m_deps)));
             }
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Thumbnail: {0}", m_previewFilename ?? "No change"));
+            ValidateThumbnail();
         }
     }
 }
