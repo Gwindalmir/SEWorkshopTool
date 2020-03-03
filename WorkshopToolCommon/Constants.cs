@@ -2,7 +2,7 @@
 {
     public static class Constants
     {
-        public const string Version = "0.7.2.*";
+        public const string Version = "0.7.3.*";
 #if SE
         public const string SEWT_Prefix = "[_SEWT_]";
 #else
