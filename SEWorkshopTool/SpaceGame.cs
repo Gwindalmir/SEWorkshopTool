@@ -19,10 +19,11 @@ namespace Phoenix.SEWorkshopTool
 
             var appDataPath = m_startup.GetAppDataPath();
             VRage.Platform.Windows.MyVRageWindows.Init(MyPerGameSettings.BasicGameInfo.ApplicationName, MySandboxGame.Log, appDataPath, false);
-            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.GetAppDataPath());
+            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.System.GetAppDataPath());
             MyRenderProxy.Initialize((IMyRender)new MyNullRender());
             MyInitializer.InitCheckSum();
 
+            if (m_startup.PerformColdStart()) return false;
             if (!m_startup.Check64Bit()) return false;
 
             m_steamService = VRage.Steam.MySteamGameService.Create(MySandboxGame.IsDedicated, AppId);
@@ -42,7 +43,13 @@ namespace Phoenix.SEWorkshopTool
         private void ManuallyAddDLCs()
         {
             var obj = typeof(Sandbox.Game.MyDLCs.MyDLC).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null,
-                new System.Type[] { typeof(uint), typeof(string), typeof(MyStringId), typeof(MyStringId), typeof(string), typeof(string), typeof(string) }, null);
+                new System.Type[] { typeof(uint), typeof(string), typeof(MyStringId), typeof(MyStringId), typeof(string), typeof(string), typeof(string), typeof(string) }, null);
+
+            if (obj == null)
+            {
+                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "MyDLC.ctor"));
+                return;
+            }
 
             // The 2013 First release is listed on steam as a valid DLC mods can have.
             // But the game doesn't acknowledge it, so add it manually.
@@ -52,6 +59,7 @@ namespace Phoenix.SEWorkshopTool
                 "FirstRelease",
                 MyStringId.GetOrCompute("Space Engineers 2013"),
                 MyStringId.GetOrCompute("Space Engineers First Release"),
+                string.Empty,
                 string.Empty,
                 string.Empty,
                 string.Empty

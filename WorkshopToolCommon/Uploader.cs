@@ -764,7 +764,11 @@ namespace Phoenix.WorkshopTool
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Tags: {0}", string.Join(", ", m_tags)));
 #if SE
             MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirements: {0}",
-                (m_dlcs?.Length > 0 ? string.Join(", ", m_dlcs.Select(i => Sandbox.Game.MyDLCs.DLCs[i].Name)) : "None")));
+                (m_dlcs?.Length > 0 ? string.Join(", ", m_dlcs.Select(i =>
+                {
+                    try { return Sandbox.Game.MyDLCs.DLCs[i].Name; }
+                    catch { return $"Unknown({i})"; }
+                })) : "None")));
 #endif
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Dependencies: {0}", (m_deps?.Length > 0 ? string.Empty : "None")));
 

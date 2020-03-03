@@ -10,7 +10,7 @@ namespace Phoenix.SEWorkshopTool
 
         // This method must be overriden to avoid the render thread from being created.
         // Otherwise it will just crash, since we don't have a render component.
-        protected override void InitiliazeRender(IntPtr windowHandle)
+        protected override void InitializeRender(IntPtr windowHandle)
         {
             // do nothing
         }

@@ -265,10 +265,19 @@ namespace Phoenix.WorkshopTool
 #region Sandbox stuff
         private void CleanupSandbox()
         {
-            m_steamService?.ShutDown();
-            m_game?.Dispose();
-            m_steamService = null;
-            m_game = null;
+            try
+            {
+                m_steamService?.ShutDown();
+                m_game?.Dispose();
+                m_steamService = null;
+                m_game = null;
+            }
+            catch(Exception ex)
+            {
+                // Don't spam console with annoying cleanup error
+                MySandboxGame.Log.WriteLine(ex.Message);
+                MySandboxGame.Log.WriteLine(ex.StackTrace);
+            }
 #if !SE
             VRage.Logging.MyLog.Default.Dispose();
 #endif
@@ -671,7 +680,11 @@ namespace Phoenix.WorkshopTool
 
 #if SE
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirements: {0}",
-                        (item.DLCs.Count > 0 ? string.Join(", ", item.DLCs.Select(i => Sandbox.Game.MyDLCs.DLCs[i].Name)) : "None")));
+                        (item.DLCs.Count > 0 ? string.Join(", ", item.DLCs.Select(i =>
+                        {
+                            try { return Sandbox.Game.MyDLCs.DLCs[i].Name; }
+                            catch { return $"Unknown({i})"; }
+                        })) : "None")));
 #endif
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("Dependencies: {0}", (item.Dependencies.Count > 0 ? string.Empty : "None")));
 
