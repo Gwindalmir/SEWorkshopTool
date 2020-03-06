@@ -81,6 +81,11 @@ namespace Phoenix.WorkshopTool
 #endif
         public string[] DLCs { get; set; }
 
+#if false
+        [Option("modio", HelpText = "Use mod.io instead of Steam.")]
+#endif
+        public bool ModIO { get; set; } = false;
+
         [OptionArray("dependencies", HelpText = "Specify dependencies to other mods (modids only). Use 0 to remove all.")]
         public ulong[] Dependencies { get; set; }
 

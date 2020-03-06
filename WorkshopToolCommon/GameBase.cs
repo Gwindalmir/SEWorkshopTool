@@ -29,6 +29,7 @@ namespace Phoenix.WorkshopTool
         protected static readonly string AppName = "SEWT";
         protected static readonly bool IsME = false;
         protected string[] m_args;
+        protected bool m_useModIO = false;
 
         static GameBase()
         {
@@ -57,22 +58,32 @@ namespace Phoenix.WorkshopTool
         // This assumes the current directory contains the assemblies.
         public static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
+            return Assembly.LoadFrom(AssemblyResolver(sender, args, ".dll"));
+        }
+
+        public static Assembly CurrentDomain_ReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            return Assembly.ReflectionOnlyLoadFrom(AssemblyResolver(sender, args, ".exe"));
+        }
+
+        private static string AssemblyResolver(object sender, ResolveEventArgs args, string ext)
+        {
             var assemblyname = new AssemblyName(args.Name).Name;
-            var assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname + ".dll");
+            var assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname + ext);
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname + ".dll");
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname + ext);
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", "x64", assemblyname + ".dll");
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", "x64", assemblyname + ext);
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ".dll");
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ext);
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ".dll");
+                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ext);
 
-            return Assembly.LoadFrom(assemblyPath);
+            return assemblyPath;
         }
 
         public virtual int InitGame(string[] args)
@@ -112,6 +123,7 @@ namespace Phoenix.WorkshopTool
                     if (string.Compare(args[idx], "--appdata", StringComparison.InvariantCultureIgnoreCase) == 0)
                         args[idx] = "-appdata";
 
+                m_useModIO = options.ModIO;
                 try
                 {
                     // Initialize game code
@@ -178,9 +190,9 @@ namespace Phoenix.WorkshopTool
                 try
                 {
                     // Wait for file transfers to finish (separate thread)
-                    while (!Task.Wait(500))
+                    while (!Task.Wait(100))
                     {
-                        SteamAPI.RunCallbacks();
+                        MyGameService.Update();
                     }
                 }
                 catch(AggregateException ex)
@@ -210,6 +222,9 @@ namespace Phoenix.WorkshopTool
         void ReplaceMethods()
         {
             ReplaceMethod(typeof(VRage.Steam.MySteamWorkshopItemPublisher), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
+#if SE
+            ReplaceMethod(typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo"), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
+#endif
         }
 
         /// <summary>

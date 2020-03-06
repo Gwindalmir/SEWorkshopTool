@@ -83,6 +83,9 @@
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Library.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VRage.Mod.Io">
+      <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Mod.Io.dll</HintPath>
+    </Reference>
     <Reference Include="VRage.Platform.Windows">
       <HintPath>..\..\..\Program Files\Steam\SteamApps\common\SpaceEngineers\Bin64\VRage.Platform.Windows.dll</HintPath>
       <Private>False</Private>

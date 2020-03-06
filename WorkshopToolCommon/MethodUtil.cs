@@ -125,7 +125,8 @@ namespace Phoenix.WorkshopTool
                 return false;
             }
             Type returnX = GetMethodReturnType(x), returnY = GetMethodReturnType(y);
-            if (returnX != returnY)
+            // Handle case of return type being private, so 'object' has to be a substitute
+            if (returnX != returnY && !returnX.IsSubclassOf(returnY))
             {
                 return false;
             }

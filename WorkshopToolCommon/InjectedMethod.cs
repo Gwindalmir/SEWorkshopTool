@@ -8,6 +8,7 @@ using System.Threading;
 using VRage;
 using VRage.GameServices;
 #if SE
+using VRage.Http;
 using MySteam = Sandbox.Engine.Networking.MyGameService;
 #endif
 namespace Phoenix.WorkshopTool
@@ -188,5 +189,59 @@ namespace Phoenix.WorkshopTool
         {
             return false;
         }
+
+#if SE
+        // Vanilla method fails to URLEncode the ticket data, triggering error 422
+        private static /*MyModIo.MyRequestSetup*/ object CreateRequest(
+          string function,
+          HttpMethod method,
+          string contentType,
+          params string[] p)
+        {
+            var clsMyModIo = typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo");
+            var clsMyRequestSetup = clsMyModIo?.GetNestedType("MyRequestSetup", System.Reflection.BindingFlags.NonPublic);
+
+            if (clsMyRequestSetup != null)
+            {
+                var mtdGetUrl = clsMyModIo.GetMethod("GetUrl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                var mtdAddAuthorizationHeader = clsMyModIo.GetMethod("AddAuthorizationHeader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+                var request = Activator.CreateInstance(clsMyRequestSetup, true);
+                var parameters = request.GetType().GetField("Parameters", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                parameters.SetValue(request, new List<HttpData>()
+                {
+                    new HttpData("Accept", (object) "application/json", HttpDataType.HttpHeader)
+                });
+
+                // Fix data to be urlencoded
+                if (contentType == "application/x-www-form-urlencoded")
+                {
+                    var httpparams = parameters.GetValue(request) as List<HttpData>;
+                    for (var idx = 0; idx < p.Length; idx++)
+                    {
+                        var param = p[idx].Split(new[] { '=' }, 2);
+                        param[1] = System.Net.WebUtility.UrlEncode(param[1]);
+                        p[idx] = string.Join("=", param[0], param[1]);
+
+                        httpparams.Add(new HttpData(param[0], param[1], HttpDataType.RequestBody));
+                    }
+                }
+
+                request.GetType().GetField("Url", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                    .SetValue(request, (string)mtdGetUrl.Invoke(null, new object[] { function, p }));
+                request.GetType().GetField("Method", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                    .SetValue(request, method);
+
+                if (contentType != null)
+                    (parameters.GetValue(request) as List<HttpData>)
+                        .Add(new HttpData("Content-Type", (object)contentType, HttpDataType.HttpHeader));
+
+                mtdAddAuthorizationHeader.Invoke(null, new[] { request });
+                return request;
+            }
+
+            return null;
+        }
+#endif
     }
 }
