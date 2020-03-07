@@ -360,6 +360,7 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole("An exception occured, ignoring: " + ex.Message);
             }
 
+            AuthenticateWorkshop();
         }
 #endregion
 
@@ -784,6 +785,10 @@ namespace Phoenix.WorkshopTool
             return itemPaths;
         }
 #endregion Pathing
+
+        protected virtual void AuthenticateWorkshop()
+        {
+        }
 
         private void ListDLCs()
         {

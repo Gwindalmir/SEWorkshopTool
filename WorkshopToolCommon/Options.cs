@@ -81,7 +81,7 @@ namespace Phoenix.WorkshopTool
 #endif
         public string[] DLCs { get; set; }
 
-#if false
+#if SE
         [Option("modio", HelpText = "Use mod.io instead of Steam.")]
 #endif
         public bool ModIO { get; set; } = false;

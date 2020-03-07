@@ -484,7 +484,7 @@ namespace Phoenix.WorkshopTool
                     m_deps = results[0].Dependencies.ToArray();
 
                     MyDebug.AssertDebug(owner == MyGameService.UserId);
-                    if (owner != MyGameService.UserId)
+                    if (owner != MyGameService.UserId && MyGameService.WorkshopService.ServiceName == "Steam")
                     {
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MyGameService.UserId));
                         MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
