@@ -484,7 +484,11 @@ namespace Phoenix.WorkshopTool
                     m_deps = results[0].Dependencies.ToArray();
 
                     MyDebug.AssertDebug(owner == MyGameService.UserId);
-                    if (owner != MyGameService.UserId && MyGameService.WorkshopService.ServiceName == "Steam")
+                    if (owner != MyGameService.UserId
+#if SE
+                        && MyGameService.WorkshopService.ServiceName == "Steam"
+#endif
+                        )
                     {
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MyGameService.UserId));
                         MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
@@ -544,21 +548,21 @@ namespace Phoenix.WorkshopTool
                 switch(m_type)
                 {
                     case WorkshopType.Mod:
-                        validTags.AddArray(MyWorkshop.ModCategories);
+                        MyWorkshop.ModCategories.ForEach(c => validTags.Add(c));
                         // Mods have extra tags not in this list
                         validTags.Add(new MyWorkshop.Category() { Id = "campaign" });
                         break;
                     case WorkshopType.Blueprint:
-                        validTags.AddArray(MyWorkshop.BlueprintCategories);
+                        MyWorkshop.BlueprintCategories.ForEach(c => validTags.Add(c));
                         // Blueprints have extra tags not in this list
                         validTags.Add(new MyWorkshop.Category() { Id = "large_grid" });
                         validTags.Add(new MyWorkshop.Category() { Id = "small_grid" });
                         break;
                     case WorkshopType.Scenario:
-                        validTags.AddArray(MyWorkshop.ScenarioCategories);
+                        MyWorkshop.ScenarioCategories.ForEach(c => validTags.Add(c));
                         break;
                     case WorkshopType.World:
-                        validTags.AddArray(MyWorkshop.WorldCategories);
+                        MyWorkshop.WorldCategories.ForEach(c => validTags.Add(c));
                         break;
                     case WorkshopType.IngameScript:
                         //tags = new MyWorkshop.Category[0];     // There are none currently
