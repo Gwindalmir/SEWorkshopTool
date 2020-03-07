@@ -539,20 +539,26 @@ namespace Phoenix.WorkshopTool
             else
             {
                 // 4b) Verify passed in tags are valid for this mod type
-                MyWorkshop.Category[] validTags = new MyWorkshop.Category[0];
+                // 'obsolete' tag is always available
+                var validTags = new List<MyWorkshop.Category>() { new MyWorkshop.Category() { Id = "obsolete" } };
                 switch(m_type)
                 {
                     case WorkshopType.Mod:
-                        validTags = MyWorkshop.ModCategories;
+                        validTags.AddArray(MyWorkshop.ModCategories);
+                        // Mods have extra tags not in this list
+                        validTags.Add(new MyWorkshop.Category() { Id = "campaign" });
                         break;
                     case WorkshopType.Blueprint:
-                        validTags = MyWorkshop.BlueprintCategories;
+                        validTags.AddArray(MyWorkshop.BlueprintCategories);
+                        // Blueprints have extra tags not in this list
+                        validTags.Add(new MyWorkshop.Category() { Id = "large_grid" });
+                        validTags.Add(new MyWorkshop.Category() { Id = "small_grid" });
                         break;
                     case WorkshopType.Scenario:
-                        validTags = MyWorkshop.ScenarioCategories;
+                        validTags.AddArray(MyWorkshop.ScenarioCategories);
                         break;
                     case WorkshopType.World:
-                        validTags = MyWorkshop.WorldCategories;
+                        validTags.AddArray(MyWorkshop.WorldCategories);
                         break;
                     case WorkshopType.IngameScript:
                         //tags = new MyWorkshop.Category[0];     // There are none currently
