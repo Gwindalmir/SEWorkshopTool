@@ -73,59 +73,7 @@ If desired, you can also automatically extract the mods to your local *%appdata%
 They will be extracted to their appropriate directory in the format: *[\_SEWT\_] &lt;Mod Title&gt; (&lt;WorkshopId&gt;)*
 
 ## Other Operations
-### New in 0.5.4:
-
-Now you can update the the preview image (thumb.png) separately, without reuploading the entire mod.
-This also works for updating tags as well.
-To update the thumbnail (any image steam supports, can be in *any* location):
-`SEWorkshopTool --mods FTL --thumb "path\to\filename"`
-
-To update the tags:
-`SEWorkshopTool --mods FTL --tags other`
-
-### New in 0.6.0:
-
-You can delete your Steam cloud, both the entire cloud, and individual files.
-To see the contents (does **NOT** delete):
-`SEWorkshopTool --clearsteamcloud`
-
-To delete all contents (**CANNOT** be undone):
-`SEWorkshopTool --clearsteamcloud --force`
-
-To forget an individual file on the cloud, but keep the file locally (use filename queried above):
-`SEWorkshopTool --clearsteamcloud --deletecloudfile "filename"`
-
-To delete an individual file on the cloud AND locally (use filename queried above):
-`SEWorkshopTool --clearsteamcloud --deletecloudfile "filename" --force`
-
-Notice the above commands do *not* contain **--upload** or **--download**.
-
-### New in 0.6.1:
-
-You can add DLC as a requirement for workshop items.
-
-To see the list of DLC:
-`SEWorkshopTool.exe --listdlc`
-
-To set a mod as requiring the Style Pack DLC:
-`SEWorkshopTool --mods FTL --dlc StylePack`
-or
-`SEWorkshopTool --mods FTL --dlc 1084680`
-
-Notice that either the string name, or the AppID of the DLC can be specified.
-
-### New in 0.7.1:
-
-You can add other workshop items as a requirement for your items now.
-This operates similar to the DLC requirement feature.
-
-To set a mod as requiring another mod:
-`SEWorkshopTool --mods FTL --dependencies 1992410560`
-
-Notice that the workshop id *must* be used here. You cannot specify local mods.
-
 ### New in 0.7.4:
-
 Mod.io support, for uploading or downloading mods used by the XBox version.
 
 ** THIS IS EXPERIMENTAL AND BUGGY **
@@ -145,3 +93,50 @@ If so, add the following to SEWorkshopTool.exe.config, just below :
 To switch to mod.io, use the --modio option, in combination with all the other commands.
 For example, to upload a large ship blueprint named "My First Ship":
 `SEWorkshopTool.exe --modio --upload --blueprints "My First Ship" --tags ship,large_grid`
+
+### New in 0.7.1:
+You can add other workshop items as a requirement for your items now.
+This operates similar to the DLC requirement feature.
+
+To set a mod as requiring another mod:
+`SEWorkshopTool --mods FTL --dependencies 1992410560`
+
+Notice that the workshop id *must* be used here. You cannot specify local mods.
+
+### New in 0.6.1:
+You can add DLC as a requirement for workshop items.
+
+To see the list of DLC:
+`SEWorkshopTool.exe --listdlc`
+
+To set a mod as requiring the Style Pack DLC:
+`SEWorkshopTool --mods FTL --dlc StylePack`
+or
+`SEWorkshopTool --mods FTL --dlc 1084680`
+
+Notice that either the string name, or the AppID of the DLC can be specified.
+
+### New in 0.6.0:
+You can delete your Steam cloud, both the entire cloud, and individual files.
+To see the contents (does **NOT** delete):
+`SEWorkshopTool --clearsteamcloud`
+
+To delete all contents (**CANNOT** be undone):
+`SEWorkshopTool --clearsteamcloud --force`
+
+To forget an individual file on the cloud, but keep the file locally (use filename queried above):
+`SEWorkshopTool --clearsteamcloud --deletecloudfile "filename"`
+
+To delete an individual file on the cloud AND locally (use filename queried above):
+`SEWorkshopTool --clearsteamcloud --deletecloudfile "filename" --force`
+
+Notice the above commands do *not* contain **--upload** or **--download**.
+
+### New in 0.5.4:
+Now you can update the the preview image (thumb.png) separately, without reuploading the entire mod.
+This also works for updating tags as well.
+To update the thumbnail (any image steam supports, can be in *any* location):
+`SEWorkshopTool --mods FTL --thumb "path\to\filename"`
+
+To update the tags:
+`SEWorkshopTool --mods FTL --tags other`
