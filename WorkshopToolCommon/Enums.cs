@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Phoenix.WorkshopTool
 {
-    public enum MyPublishedFileVisibility
+    public enum PublishedFileVisibility
     {
         Public = 0,
         FriendsOnly = 1,

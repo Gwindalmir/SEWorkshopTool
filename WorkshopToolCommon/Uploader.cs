@@ -45,7 +45,7 @@ namespace Phoenix.WorkshopTool
         bool m_dryrun;
         ulong m_modId = 0;
         string m_title;
-        MyPublishedFileVisibility? m_visibility;
+        PublishedFileVisibility? m_visibility;
         WorkshopType m_type;
         string[] m_tags = new string[1];
         bool m_isDev = false;
@@ -78,7 +78,7 @@ namespace Phoenix.WorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, MyPublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null, ulong[] deps = null)
+        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, PublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null, ulong[] deps = null)
         {
             m_modPath = path;
 
@@ -415,7 +415,7 @@ namespace Phoenix.WorkshopTool
             {
                 if (_publishMethod != null)
                 {
-                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, m_visibility ?? MyPublishedFileVisibility.Private, m_tags, m_ignoredExtensions, m_ignoredPaths
+                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths
 #if SE
                         , m_dlcs).Id;
 #else
@@ -476,7 +476,7 @@ namespace Phoenix.WorkshopTool
                     var owner = results[0].OwnerId;
 
                     if (m_visibility == null)
-                        m_visibility = (MyPublishedFileVisibility)(int)results[0].Visibility;
+                        m_visibility = (PublishedFileVisibility)(int)results[0].Visibility;
 
 #if SE
                     m_dlcs = results[0].DLCs.ToArray();
@@ -668,7 +668,7 @@ namespace Phoenix.WorkshopTool
             return null;
         }
 
-        MyPublishedFileVisibility GetVisibility()
+        PublishedFileVisibility GetVisibility()
         {
             var results = new List<MyWorkshopItem>();
 
@@ -679,12 +679,12 @@ namespace Phoenix.WorkshopTool
 #endif
             {
                 if (results.Count > 0)
-                    return (MyPublishedFileVisibility)(int)results[0].Visibility;
+                    return (PublishedFileVisibility)(int)results[0].Visibility;
                 else
-                    return MyPublishedFileVisibility.Private;
+                    return PublishedFileVisibility.Private;
             }
 
-            return MyPublishedFileVisibility.Private;
+            return PublishedFileVisibility.Private;
         }
 
         public bool UpdatePreviewFileOrTags()
@@ -694,7 +694,7 @@ namespace Phoenix.WorkshopTool
             var publisher = MyGameService.CreateWorkshopPublisher();
             publisher.Id = ModId;
             publisher.Title = Title;
-            publisher.Visibility = (VRage.GameServices.MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
+            publisher.Visibility = (MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
 #if SE
