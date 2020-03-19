@@ -476,7 +476,7 @@ namespace Phoenix.WorkshopTool
                     var owner = results[0].OwnerId;
 
                     if (m_visibility == null)
-                        m_visibility = results[0].Visibility;
+                        m_visibility = (MyPublishedFileVisibility)(int)results[0].Visibility;
 
 #if SE
                     m_dlcs = results[0].DLCs.ToArray();
@@ -679,7 +679,7 @@ namespace Phoenix.WorkshopTool
 #endif
             {
                 if (results.Count > 0)
-                    return results[0].Visibility;
+                    return (MyPublishedFileVisibility)(int)results[0].Visibility;
                 else
                     return MyPublishedFileVisibility.Private;
             }
@@ -694,7 +694,7 @@ namespace Phoenix.WorkshopTool
             var publisher = MyGameService.CreateWorkshopPublisher();
             publisher.Id = ModId;
             publisher.Title = Title;
-            publisher.Visibility = m_visibility ?? GetVisibility();
+            publisher.Visibility = (VRage.GameServices.MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
 #if SE

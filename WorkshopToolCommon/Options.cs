@@ -7,10 +7,10 @@ namespace Phoenix.WorkshopTool
     {
         private const string OptionSet = "MainFunctions";
 
-        [Option("visibility", DefaultValue = null, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private")]
+        [Option("visibility", DefaultValue = null, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private, Unlisted")]
         public MyPublishedFileVisibility? Visibility { get; set; }
 
-        [Option("dev", DefaultValue = false, HelpText = "Set to true if the mod will have the 'development' tag when uploaded")]
+        [Option("dev", DefaultValue = false, HelpText = "Set to true if the mod will have the 'development' tag when uploaded (deprecated)")]
         public bool Development { get; set; }
 
         [Option('c', "compile", DefaultValue = false, HelpText = "Compile the mod before uploading. Will not upload if compilation fails.")]

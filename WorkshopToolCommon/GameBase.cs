@@ -222,6 +222,8 @@ namespace Phoenix.WorkshopTool
         void ReplaceMethods()
         {
             ReplaceMethod(typeof(VRage.Steam.MySteamWorkshopItemPublisher), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
+            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToService), BindingFlags.Static | BindingFlags.Public, typeof(WorkshopTool.MySteamHelper), nameof(WorkshopTool.MySteamHelper.ToService));
+            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToSteam), BindingFlags.Static | BindingFlags.Public, typeof(WorkshopTool.MySteamHelper), nameof(WorkshopTool.MySteamHelper.ToSteam));
 #if SE
             ReplaceMethod(typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo"), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
 #endif
@@ -234,12 +236,12 @@ namespace Phoenix.WorkshopTool
         /// <param name="sourceMethod">Original method name</param>
         /// <param name="destinationType">New type</param>
         /// <param name="destinationMethod">New method name</param>
-        void ReplaceMethod(Type sourceType, string sourceMethod, BindingFlags sourceBinding, Type destinationType, string destinationMethod, BindingFlags destinationBinding)
+        void ReplaceMethod(Type sourceType, string sourceMethod, BindingFlags sourceBinding, Type destinationType, string destinationMethod, BindingFlags? destinationBinding = null)
         {
             ParameterInfo[] sourceParameters;
             ParameterInfo[] destinationParameters;
             var methodtoreplace = sourceType.GetMethod(sourceMethod, sourceBinding);
-            var methodtoinject = destinationType.GetMethod(destinationMethod, destinationBinding);
+            var methodtoinject = destinationType.GetMethod(destinationMethod, destinationBinding ?? sourceBinding);
 
             MyDebug.AssertRelease(methodtoreplace != null);
             if (methodtoreplace != null && methodtoreplace != null)

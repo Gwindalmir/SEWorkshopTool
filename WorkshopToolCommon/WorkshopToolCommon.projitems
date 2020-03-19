@@ -6,11 +6,13 @@
     <SharedGUID>f854b41f-d141-467d-a009-74bb31e7a873</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Phoenix.WorkshopToolCommon</Import_RootNamespace>
+    <Import_RootNamespace>Phoenix.WorkshopTool</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Downloader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IMod.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InjectedMethod.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MethodUtil.cs" />
