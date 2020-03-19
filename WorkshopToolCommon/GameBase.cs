@@ -51,7 +51,7 @@ namespace Phoenix.WorkshopTool
 
         public GameBase()
         {
-            ReplaceMethod(typeof(Steamworks.SteamAPI), nameof(Steamworks.SteamAPI.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public, typeof(InjectedMethod), nameof(InjectedMethod.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public);
+            ReplaceMethod(typeof(SteamAPI), nameof(SteamAPI.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public, typeof(InjectedMethod), nameof(InjectedMethod.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public);
         }
 
         // Event handler for loading assemblies not in the same directory as the exe.
@@ -104,7 +104,7 @@ namespace Phoenix.WorkshopTool
                 {
                     if (!options.ClearSteamCloud && !options.ListDLCs)
                     {
-                        System.Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
+                        Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
                         return Cleanup(1);
                     }
                 }
@@ -222,8 +222,8 @@ namespace Phoenix.WorkshopTool
         void ReplaceMethods()
         {
             ReplaceMethod(typeof(VRage.Steam.MySteamWorkshopItemPublisher), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
-            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToService), BindingFlags.Static | BindingFlags.Public, typeof(WorkshopTool.MySteamHelper), nameof(WorkshopTool.MySteamHelper.ToService));
-            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToSteam), BindingFlags.Static | BindingFlags.Public, typeof(WorkshopTool.MySteamHelper), nameof(WorkshopTool.MySteamHelper.ToSteam));
+            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToService), BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToService));
+            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToSteam), BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToSteam));
 #if SE
             ReplaceMethod(typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo"), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
 #endif
@@ -328,7 +328,7 @@ namespace Phoenix.WorkshopTool
             if (System.Diagnostics.Debugger.IsAttached)
                 m_startup.CheckSteamRunning();        // Just give the warning message box when debugging, ignore for release
 
-            if (!MySandboxGame.IsDedicated)
+            if (!Sandbox.Engine.Platform.Game.IsDedicated)
                 MyFileSystem.InitUserSpecific(m_steamService.UserId.ToString());
 #endif
 

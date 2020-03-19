@@ -64,7 +64,7 @@ namespace Phoenix.SEWorkshopTool
             var assemblyname = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MySandboxGame).Assembly.Location), "SpaceEngineers.exe");
             if (Assembly.ReflectionOnlyLoadFrom(assemblyname) is Assembly asm)
             {
-                if(asm.GetType("SpaceEngineers.MyProgram", false) is System.Type program)
+                if(asm.GetType("SpaceEngineers.MyProgram", false) is Type program)
                 {
                     ModIO_GameName = program.GetField("MODIO_GAME_NAME", BindingFlags.NonPublic | BindingFlags.Static)?.GetRawConstantValue() as string;
                     ModIO_TestGameID = program.GetField("MODIO_TEST_GAMEID", BindingFlags.NonPublic | BindingFlags.Static)?.GetRawConstantValue() as string;
@@ -165,8 +165,8 @@ namespace Phoenix.SEWorkshopTool
         // This is to manually add any DLC not added to MyDLCs.DLCs, so the lookup later can happen
         private void ManuallyAddDLCs()
         {
-            var obj = typeof(Sandbox.Game.MyDLCs.MyDLC).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null,
-                new System.Type[] { typeof(uint), typeof(string), typeof(MyStringId), typeof(MyStringId), typeof(string), typeof(string), typeof(string), typeof(string) }, null);
+            var obj = typeof(MyDLCs.MyDLC).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null,
+                new Type[] { typeof(uint), typeof(string), typeof(MyStringId), typeof(MyStringId), typeof(string), typeof(string), typeof(string), typeof(string) }, null);
 
             if (obj == null)
             {
@@ -186,11 +186,11 @@ namespace Phoenix.SEWorkshopTool
                 string.Empty,
                 string.Empty,
                 string.Empty
-            }) as Sandbox.Game.MyDLCs.MyDLC;
+            }) as MyDLCs.MyDLC;
 
 
-            var dlcs = (Dictionary<uint, Sandbox.Game.MyDLCs.MyDLC>)(typeof(Sandbox.Game.MyDLCs).GetField("m_dlcs", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
-            var dlcsByName = (Dictionary<string, Sandbox.Game.MyDLCs.MyDLC>)(typeof(Sandbox.Game.MyDLCs).GetField("m_dlcsByName", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
+            var dlcs = (Dictionary<uint, MyDLCs.MyDLC>)(typeof(MyDLCs).GetField("m_dlcs", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
+            var dlcsByName = (Dictionary<string, MyDLCs.MyDLC>)(typeof(MyDLCs).GetField("m_dlcsByName", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
 
             if (dlcs != null && !dlcs.ContainsKey(SpaceEngineers2013DLC.AppId))
             {

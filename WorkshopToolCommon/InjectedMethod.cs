@@ -16,7 +16,7 @@ namespace Phoenix.WorkshopTool
     class InjectedMethod
     {
 #if SE
-        static IMyGameService MySteam { get => (IMyGameService)MyServiceManager.Instance.GetService<VRage.GameServices.IMyGameService>(); }
+        static IMyGameService MySteam { get => (IMyGameService)MyServiceManager.Instance.GetService<IMyGameService>(); }
 #endif
         delegate void SubmitItemUpdateResult(SubmitItemUpdateResult_t result, bool ioFailure);
 
