@@ -8,6 +8,29 @@ using VRage.GameServices;
 
 namespace Phoenix.WorkshopTool
 {
+#if SE
+    static class MyDebug
+    {
+        [DebuggerStepThrough]
+        public static void AssertDebug(bool condition, string message = null)
+        {
+            VRage.MyDebug.Assert(condition, message);
+        }
+
+        [DebuggerStepThrough]
+        public static void AssertRelease(bool condition, string message = null)
+        {
+            VRage.MyDebug.AssertRelease(condition, message);
+        }
+
+        [DebuggerStepThrough]
+        public static void FailRelease(string message = null)
+        {
+            VRage.MyDebug.FailRelease(message);
+        }
+    }
+#endif
+
     public static class MySteamHelper
     {
         public static ERemoteStoragePublishedFileVisibility ToSteam(
