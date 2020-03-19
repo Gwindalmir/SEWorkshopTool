@@ -76,7 +76,7 @@ They will be extracted to their appropriate directory in the format: *[\_SEWT\_]
 ### New in 0.7.4:
 Mod.io support, for uploading or downloading mods used by the XBox version.
 
-** THIS IS EXPERIMENTAL AND BUGGY **
+**THIS IS EXPERIMENTAL AND BUGGY**
 
 It can only upload and download mods. It cannot update tags. Thumbnail editing is untested.
 Authentication is required, this is done via email. SEWT does not ask for your account password!
