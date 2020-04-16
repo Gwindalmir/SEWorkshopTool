@@ -2,17 +2,18 @@
 # Lines starting with # are comments.
 # Blank lines are ignored.
 
+# Files are ignored as paths
+Thumb.db
+
 # Directories are ignored as paths
 bin/
 obj/
 Properties/
 
 # Lines that start with . are ignored as extensions
+.db
+
+# Unless the line exists as a file, directory, or contains a / or \, then it is ignored as path
 .gitignore
-
-# Unless the line contains a / or \, then it is ignored as path
-.vs/
-.git/
-
-# Files are ignored as paths
-Thumb.db
+.vs
+.git
