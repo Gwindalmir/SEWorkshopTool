@@ -1,0 +1,18 @@
+# Put this file inside your mod's root folder, i.e. %appdata%\SpaceEngineers\Mods\MyMod\
+# Lines starting with # are comments.
+# Blank lines are ignored.
+
+# Directories are ignored as paths
+bin/
+obj/
+Properties/
+
+# Lines that start with . are ignored as extensions
+.gitignore
+
+# Unless the line contains a / or \, then it is ignored as path
+.vs/
+.git/
+
+# Files are ignored as paths
+Thumb.db
