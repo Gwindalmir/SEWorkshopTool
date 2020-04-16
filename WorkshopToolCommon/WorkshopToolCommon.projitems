@@ -13,6 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Downloader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IgnoreFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IMod.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InjectedMethod.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MethodUtil.cs" />

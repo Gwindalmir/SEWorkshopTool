@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Steamworks;
-using VRage;
 using VRageRender;
 using VRage.FileSystem;
 using VRage.Utils;
 using VRage.GameServices;
+using System.Diagnostics;
 #if SE
 using ParallelTasks;
 #else
@@ -52,6 +52,12 @@ namespace Phoenix.WorkshopTool
         public GameBase()
         {
             ReplaceMethod(typeof(SteamAPI), nameof(SteamAPI.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public, typeof(InjectedMethod), nameof(InjectedMethod.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public);
+
+            Type[] copyAllBaseTypes = { typeof(string), typeof(string) };
+            ReplaceMethod(typeof(VRage.FileSystem.MyFileSystem), nameof(VRage.FileSystem.MyFileSystem.CopyAll), BindingFlags.Static | BindingFlags.Public, typeof(GameBase), nameof(GameBase.CopyAll), types: copyAllBaseTypes);
+
+            Type[] copyAllConditionalTypes = { typeof(string), typeof(string), typeof(Predicate<string>) };
+            ReplaceMethod(typeof(VRage.FileSystem.MyFileSystem), nameof(VRage.FileSystem.MyFileSystem.CopyAll), BindingFlags.Static | BindingFlags.Public, typeof(GameBase), nameof(GameBase.CopyAllConditional), types: copyAllConditionalTypes);
         }
 
         // Event handler for loading assemblies not in the same directory as the exe.
@@ -86,12 +92,22 @@ namespace Phoenix.WorkshopTool
             return assemblyPath;
         }
 
+        private void HandleInputError()
+        {
+            Console.WriteLine("You have an error in one or more of your arguments.");
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine("Press any key to exit.");
+            }
+            Console.ReadKey();
+        }
+
         public virtual int InitGame(string[] args)
         {
             var options = new Options();
             var parser = new CommandLine.Parser(with => with.HelpWriter = Console.Error);
 
-            if (parser.ParseArgumentsStrict(args, options, () => Environment.Exit(1)))
+            if (parser.ParseArgumentsStrict(args, options, HandleInputError))
             {
                 if (options.ModPaths == null &&
                     options.Blueprints == null &&
@@ -236,11 +252,15 @@ namespace Phoenix.WorkshopTool
         /// <param name="sourceMethod">Original method name</param>
         /// <param name="destinationType">New type</param>
         /// <param name="destinationMethod">New method name</param>
-        void ReplaceMethod(Type sourceType, string sourceMethod, BindingFlags sourceBinding, Type destinationType, string destinationMethod, BindingFlags? destinationBinding = null)
+        void ReplaceMethod(Type sourceType, string sourceMethod, BindingFlags sourceBinding, Type destinationType, string destinationMethod, BindingFlags? destinationBinding = null, Type[] types = null)
         {
             ParameterInfo[] sourceParameters;
             ParameterInfo[] destinationParameters;
-            var methodtoreplace = sourceType.GetMethod(sourceMethod, sourceBinding);
+            MethodInfo methodtoreplace = null;
+            if (types == null)
+                methodtoreplace = sourceType.GetMethod(sourceMethod, sourceBinding);
+            else
+                methodtoreplace = sourceType.GetMethod(sourceMethod, types);
             var methodtoinject = destinationType.GetMethod(destinationMethod, destinationBinding ?? sourceBinding);
 
             MyDebug.AssertRelease(methodtoreplace != null);
@@ -821,6 +841,51 @@ namespace Phoenix.WorkshopTool
                 return tempList.ToArray();
             }
             return existingitems;
+        }
+
+        public static void CopyAll(string source, string target)
+        {
+            CopyAllConditional(source, target, (string s) => true);
+        }
+
+        public static void CopyAllConditional(string source, string target, Predicate<string> condition)
+        {
+            if (!Directory.Exists(target))
+                Directory.CreateDirectory(target);
+
+            foreach (string file in Directory.EnumerateFiles(source, "*.*", SearchOption.AllDirectories))
+            {
+                if (condition(file))
+                {
+                    string fileName = Path.GetFileName(file);
+                    string fileDirectory = Path.GetDirectoryName(file);
+                    string relativePath = GetRelativePath(source, fileDirectory);
+                    if (!string.IsNullOrWhiteSpace(relativePath))
+                    {
+                        Directory.CreateDirectory(Path.Combine(target, relativePath));
+                        File.Copy(file, Path.Combine(target, relativePath, fileName));
+                    }
+                    else
+                    {
+                        File.Copy(file, Path.Combine(target, fileName));
+                    }
+                }
+            }
+        }
+
+        private static string GetRelativePath(string relative_to, string path)
+        {
+            if (relative_to.EndsWith("\\"))
+                relative_to = relative_to.Remove(relative_to.Length - 1);
+
+            if (relative_to.Equals(path, StringComparison.InvariantCultureIgnoreCase))
+                return string.Empty;
+
+            string relativePath = path.Remove(0, relative_to.Length);
+            if (relativePath.StartsWith("\\"))
+                relativePath = relativePath.Remove(0, 1);
+
+            return relativePath;
         }
     }
 }

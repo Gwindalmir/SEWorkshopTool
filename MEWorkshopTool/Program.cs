@@ -1,5 +1,6 @@
 ﻿using Phoenix.WorkshopTool;
 using System;
+using System.Diagnostics;
 
 namespace Phoenix.MEWorkshopTool
 {
@@ -9,8 +10,23 @@ namespace Phoenix.MEWorkshopTool
         {
             AppDomain.CurrentDomain.AssemblyResolve += GameBase.CurrentDomain_AssemblyResolve;
 
+            if (args != null)
+            {
+                foreach (string arg in args)
+                {
+                    if (arg == "--vrage-error-log-upload")
+                        return 0;
+                }
+            }
+
             var game = new MedievalGame();
-            return game.InitGame(args);
+            int resultCode = game.InitGame(args);
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadKey();
+            }
+            return resultCode;
         }
     }
 }
