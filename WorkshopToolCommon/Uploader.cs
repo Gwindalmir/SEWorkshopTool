@@ -156,6 +156,12 @@ namespace Phoenix.WorkshopTool
                 ignoredPaths.ForEach(s => m_ignoredPaths.Add(s));
             }
 
+            if (IgnoreFile.TryLoadIgnoreFile(Path.Combine(m_modPath, ".wtignore"), out var extensionsToIgnore, out var pathsToIgnore))
+            {
+                extensionsToIgnore.ForEach(s => m_ignoredExtensions.Add(s));
+                pathsToIgnore.ForEach(s => m_ignoredPaths.Add(s));
+            }
+
             SetupReflection();
         }
 
