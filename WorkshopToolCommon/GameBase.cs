@@ -98,8 +98,8 @@ namespace Phoenix.WorkshopTool
             if (Debugger.IsAttached)
             {
                 Console.WriteLine("Press any key to exit.");
+                Console.ReadKey();
             }
-            Console.ReadKey();
         }
 
         public virtual int InitGame(string[] args)
