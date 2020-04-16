@@ -64,10 +64,12 @@ namespace Phoenix.WorkshopTool
                         try
                         {
                             IgnoreDirectoryRecursively(modPath, linePath, ignoredPaths);
-
                         }
                         catch
                         {
+                            // This try-catch is here to catch general IO failures and preventing the tool from crashing.
+                            // These can be things like access denied, hard drive dead, etc.
+                            // If files don't exist, they wont get copied either by the uploader.
                         }
                     }
                 }
@@ -89,6 +91,9 @@ namespace Phoenix.WorkshopTool
                         }
                         catch
                         {
+                            // This try-catch is here to catch general IO failures and preventing the tool from crashing.
+                            // These can be things like access denied, hard drive dead, etc.
+                            // If files don't exist, they wont get copied either by the uploader.
                         }
                     }
                 }
