@@ -73,6 +73,10 @@ If desired, you can also automatically extract the mods to your local *%appdata%
 They will be extracted to their appropriate directory in the format: *[\_SEWT\_] &lt;Mod Title&gt; (&lt;WorkshopId&gt;)*
 
 ## Other Operations
+### New in 0.7.5:
+Support for .gitignore style ignore list (but simpler). This file is .wtignore, and can be placed either in your mod directory, or in the parent Mods\ directory, ie. *%appdata%\SpaceEngineers\Mods*.
+An example file is included with the release zip, just copy it to one of the directories above and edit to taste. Further documentation is in the file itself.
+
 ### New in 0.7.4:
 Mod.io support, for uploading or downloading mods used by the XBox version.
 
