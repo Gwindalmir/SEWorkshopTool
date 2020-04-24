@@ -12,6 +12,7 @@ using VRage.FileSystem;
 using VRage.Utils;
 using VRage.GameServices;
 using System.Diagnostics;
+using VRage;
 #if SE
 using ParallelTasks;
 #else
@@ -863,11 +864,11 @@ namespace Phoenix.WorkshopTool
                     if (!string.IsNullOrWhiteSpace(relativePath))
                     {
                         Directory.CreateDirectory(Path.Combine(target, relativePath));
-                        File.Copy(file, Path.Combine(target, relativePath, fileName));
+                        File.Copy(file, Path.Combine(target, relativePath, fileName), true);
                     }
                     else
                     {
-                        File.Copy(file, Path.Combine(target, fileName));
+                        File.Copy(file, Path.Combine(target, fileName), true);
                     }
                 }
             }
