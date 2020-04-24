@@ -156,7 +156,14 @@ namespace Phoenix.WorkshopTool
                 ignoredPaths.ForEach(s => m_ignoredPaths.Add(s));
             }
 
-            if (IgnoreFile.TryLoadIgnoreFile(Path.Combine(m_modPath, ".wtignore"), out var extensionsToIgnore, out var pathsToIgnore))
+            // Start with the parent file, if it exists. This is at %AppData%\SpaceEngineers\Mods.
+            if (IgnoreFile.TryLoadIgnoreFile(Path.Combine(m_modPath, "..", ".wtignore"), Path.GetFileName(m_modPath), out var extensionsToIgnore, out var pathsToIgnore))
+            {
+                extensionsToIgnore.ForEach(s => m_ignoredExtensions.Add(s));
+                pathsToIgnore.ForEach(s => m_ignoredPaths.Add(s));
+            }
+
+            if (IgnoreFile.TryLoadIgnoreFile(Path.Combine(m_modPath, ".wtignore"), out extensionsToIgnore, out pathsToIgnore))
             {
                 extensionsToIgnore.ForEach(s => m_ignoredExtensions.Add(s));
                 pathsToIgnore.ForEach(s => m_ignoredPaths.Add(s));

@@ -1,17 +1,24 @@
 # Put this file inside your mod's root folder, i.e. %appdata%\SpaceEngineers\Mods\MyMod\
+# It can also apply to all mods if placed in the Mods folder itself, i.e. %appdata%\SpaceEngineers\Mods\
 # Lines starting with # are comments.
 # Blank lines are ignored.
 
 # Files are ignored as paths
 Thumb.db
 
-# Directories are ignored as paths
-bin/
-obj/
-Properties/
+# Directories are ignored as paths (along with contents)
+/Screenshots/
+
+# Wildcard directories are found and ignored recursively (does not support multi-level search pattern).
+*/bin/
+*/obj/
+*/Properties/
 
 # Lines that start with . are ignored as extensions
 .db
+
+# Lines that start with *. are treated as extensions also (alias for .ext)
+*.blend
 
 # Unless the line exists as a file, directory, or contains a / or \, then it is ignored as path
 .gitignore
