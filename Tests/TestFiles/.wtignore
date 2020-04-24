@@ -1,0 +1,21 @@
+# Put this file inside your mod's root folder, i.e. %appdata%\SpaceEngineers\Mods\MyMod\
+# Lines starting with # are comments.
+# Blank lines are ignored.
+
+# Files are ignored as paths
+Thumb.db
+
+# Directories are ignored as paths (along with contents)
+DirectoryToIgnore/
+
+# Wildcard directories are found and ignored recursively (does not support multi-level search pattern).
+*/WildcardIgnoredDirectory/
+
+# Lines that start with . are ignored as extensions
+.diff
+
+# Lines that start with *. are treated as extensions as well (alias for .ext)
+*.wild
+
+# Unless the line exists as a file, directory, or contains a / or \, then it is ignored as path
+.IgnoredAsFile

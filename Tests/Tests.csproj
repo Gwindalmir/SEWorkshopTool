@@ -21,7 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MEWorkshopTool\MEWorkshopTool.csproj" />
+    <ProjectReference Include="..\MEWorkshopTool\MEWorkshopTool.csproj">
+      <Aliases>me</Aliases>
+    </ProjectReference>
     <ProjectReference Include="..\SEWorkshopTool\SEWorkshopTool.csproj" />
   </ItemGroup>
 

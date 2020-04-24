@@ -1,10 +1,12 @@
-﻿using NUnit.Framework;
+﻿extern alias me;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using MEWorkshopTool = me::Phoenix.MEWorkshopTool;
 
 namespace Phoenix.WorkshopTool.Tests
 {
