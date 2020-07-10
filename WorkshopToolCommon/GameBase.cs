@@ -148,14 +148,13 @@ namespace Phoenix.WorkshopTool
                 }
                 catch (Exception ex)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("An exception occurred intializing game libraries: {0}", ex.Message));
-                    MySandboxGame.Log.WriteLineAndConsole(ex.StackTrace);
+                    ex.Log("ERROR: An exception occurred intializing game libraries: ");
                     return Cleanup(2);
                 }
 
                 if (!SteamAPI.IsSteamRunning())
                 {
-                    MySandboxGame.Log.WriteLineAndConsole("* Steam not detected. Is Steam UAC elevated? *");
+                    MySandboxGame.Log.WriteLineAndConsole("ERROR: * Steam not detected. Is Steam running and not as Admin? *");
                     MySandboxGame.Log.WriteLineAndConsole("* Only compile testing is available. *");
                     MySandboxGame.Log.WriteLineAndConsole("");
 
@@ -166,7 +165,9 @@ namespace Phoenix.WorkshopTool
                 }
                 
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
+                MySandboxGame.Log.WriteLineToConsole(string.Empty);
                 MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}");
+                MySandboxGame.Log.WriteLineToConsole(string.Empty);
 
 #if SE
                 ParameterInfo[] parameters;
@@ -216,15 +217,12 @@ namespace Phoenix.WorkshopTool
                 {
                     MyDebug.AssertRelease(Task.IsFaulted);
                     MyDebug.AssertRelease(ex.InnerException != null);
-                    var exception = ex.InnerException;
-                    MySandboxGame.Log.WriteLineAndConsole("An exception occurred: " + exception.Message);
-                    MySandboxGame.Log.WriteLineAndConsole(exception.StackTrace);
+                    ex.InnerException.Log();
                     return Cleanup(4);
                 }
                 catch(Exception ex)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole("An exception occurred: " + ex.Message);
-                    MySandboxGame.Log.WriteLineAndConsole(ex.StackTrace);
+                    ex.Log();
                     return Cleanup(5);
                 }
 
@@ -380,7 +378,7 @@ namespace Phoenix.WorkshopTool
             catch (Exception ex)
             {
                 // This shouldn't fail, but don't stop even if it does
-                MySandboxGame.Log.WriteLineAndConsole("An exception occured, ignoring: " + ex.Message);
+                ex.Log("WARNING: An exception occured, ignoring: ");
             }
 
             AuthenticateWorkshop();

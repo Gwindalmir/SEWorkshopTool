@@ -1,10 +1,16 @@
-﻿using Steamworks;
+﻿using Sandbox;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using VRage;
 using VRage.GameServices;
+#if SE
+using VRage.Utils;
+#else
+using VRage.Logging;
+#endif
 
 namespace Phoenix.WorkshopTool
 {
@@ -63,6 +69,31 @@ namespace Phoenix.WorkshopTool
                 default:
                     return (MyPublishedFileVisibility)(int)visibility;
             }
+        }
+    }
+
+    public static class LoggingHelper
+    {
+        /// <summary>
+        /// Logs an exception.
+        /// </summary>
+        /// <param name="ex">Exception to log.</param>
+        /// <param name="customMessage">Message text to log, exception message will be appended.</param>
+        public static void Log(this Exception ex, string customMessage = "ERROR: An exception occurred: ")
+        {
+            MySandboxGame.Log.WriteLineAndConsole(customMessage + ex.Message);
+            MySandboxGame.Log.WriteLineToConsole("Check the log file for details.");
+            MySandboxGame.Log.WriteLine(ex.StackTrace);
+        }
+
+        /// <summary>
+        /// This is a log wrapper for ME.
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="msg"></param>
+        public static void WriteLineToConsole(this MyLog log, string msg)
+        {
+            log.WriteLineAndConsole(msg);
         }
     }
 }
