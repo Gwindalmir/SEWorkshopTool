@@ -522,6 +522,12 @@ namespace Phoenix.WorkshopTool
 
                 if (mod.Compile())
                 {
+                    if (!SteamAPI.IsSteamRunning())
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole("Cannot publish, Steam not detected!");
+                        return false;
+                    }
+
                     if (options.Upload)
                     {
                         if (mod.Publish())

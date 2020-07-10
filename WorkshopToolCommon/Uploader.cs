@@ -389,12 +389,6 @@ namespace Phoenix.WorkshopTool
         {
             bool newMod = false;
 
-            if( !Steamworks.SteamAPI.IsSteamRunning() )
-            {
-                MySandboxGame.Log.WriteLineAndConsole("Cannot publish, Steam not detected!");
-                return false;
-            }
-
             if(!Directory.Exists(m_modPath))
             {
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Directory does not exist {0}. Wrong option?", m_modPath ?? string.Empty));
