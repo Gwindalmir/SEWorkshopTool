@@ -4,6 +4,7 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using VRage;
 using VRage.GameServices;
@@ -19,13 +20,21 @@ namespace Phoenix.WorkshopTool
         static IMyGameService MySteam { get => (IMyGameService)MyServiceManager.Instance.GetService<IMyGameService>(); }
 #endif
         delegate void SubmitItemUpdateResult(SubmitItemUpdateResult_t result, bool ioFailure);
+#if SE
+        static readonly Assembly steamAssembly = typeof(VRage.Steam.MySteamGameService).Assembly;
+        public static readonly Type MySteamWorkshopItemPublisherType = steamAssembly.GetType("VRage.Steam.MySteamWorkshopItemPublisher");
+        public static readonly Type MySteamHelperType = steamAssembly.GetType("VRage.Steam.MySteamHelper");
+#else
+        public static readonly Type MySteamWorkshopItemPublisherType = typeof(VRage.Steam.MySteamWorkshopItemPublisher);
+        public static readonly Type MySteamHelperType = typeof(VRage.Steam.MySteamHelper);
+#endif
 
         private void UpdatePublishedItem()
         {
             // dynamic slows things down, but it saves coding time
             dynamic thisobj = this;
-            var steamService = typeof(VRage.Steam.MySteamWorkshopItemPublisher).GetField("m_steamService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(thisobj);
-            var steamUGC = typeof(VRage.Steam.MySteamWorkshopItemPublisher).GetProperty("SteamUGC", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(thisobj);
+            var steamService = MySteamWorkshopItemPublisherType.GetField("m_steamService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(thisobj);
+            var steamUGC = MySteamWorkshopItemPublisherType.GetProperty("SteamUGC", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(thisobj);
             var appid = (AppId_t)steamService.GetType().GetField("SteamAppId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(steamService);
             UGCUpdateHandle_t ugcUpdateHandleT = SteamUGC.StartItemUpdate(appid, (PublishedFileId_t)thisobj.Id);
 
@@ -35,7 +44,7 @@ namespace Phoenix.WorkshopTool
             if (thisobj.Tags != null)
                 SteamUGC.SetItemTags(ugcUpdateHandleT, (IList<string>)thisobj.Tags);
 
-            SteamUGC.SetItemVisibility(ugcUpdateHandleT, VRage.Steam.MySteamHelper.ToSteam(thisobj.Visibility));
+            SteamUGC.SetItemVisibility(ugcUpdateHandleT, (ERemoteStoragePublishedFileVisibility)MySteamHelperType.GetMethod("ToSteam", BindingFlags.Public | BindingFlags.Static).Invoke(null, new[] { thisobj.Visibility }));
 
             if (!string.IsNullOrWhiteSpace(thisobj.Description))
                 SteamUGC.SetItemDescription(ugcUpdateHandleT, thisobj.Description);
@@ -46,8 +55,8 @@ namespace Phoenix.WorkshopTool
             if (thisobj.Metadata != null)
                 SteamUGC.SetItemMetadata(ugcUpdateHandleT, MyModMetadataLoader.Serialize((ModMetadataFile)thisobj.Metadata));
 
-            dynamic submitItemUpdateResult = typeof(VRage.Steam.MySteamWorkshopItemPublisher).GetField("m_submitItemUpdateResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(thisobj);
-            var SubmitItemUpdateResult = typeof(VRage.Steam.MySteamWorkshopItemPublisher).GetMethod("SubmitItemUpdateResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            dynamic submitItemUpdateResult = MySteamWorkshopItemPublisherType.GetField("m_submitItemUpdateResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(thisobj);
+            var SubmitItemUpdateResult = MySteamWorkshopItemPublisherType.GetMethod("SubmitItemUpdateResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             
             var SubmitItemUpdateResultMethod = (SubmitItemUpdateResult)Delegate.CreateDelegate(typeof(SubmitItemUpdateResult), thisobj, SubmitItemUpdateResult);
             submitItemUpdateResult.Set(SteamUGC.SubmitItemUpdate(ugcUpdateHandleT, string.Empty), new CallResult<SubmitItemUpdateResult_t>.APIDispatchDelegate(SubmitItemUpdateResultMethod));

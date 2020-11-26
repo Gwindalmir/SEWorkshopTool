@@ -351,9 +351,11 @@ namespace Phoenix.WorkshopTool
                     var input = new StreamReader(Path.Combine(m_modPath, "Script.cs"));
                     var program = input.ReadToEnd();
                     input.Close();
-                    var ingamescript = MyScriptCompiler.Static.GetIngameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial");
-                    var messages = new List<MyScriptCompiler.Message>();
-                    var assembly = MyScriptCompiler.Static.Compile(MyApiTarget.Ingame, null, ingamescript, messages, null).Result;
+                    var scripts = new List<Script>();
+                    scripts.Add(MyScriptCompiler.Static.GetIngameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial"));
+
+                    var messages = new List<Message>();
+                    var assembly = MyVRage.Platform.Scripting.CompileIngameScriptAsync(Path.Combine(VRage.FileSystem.MyFileSystem.UserDataPath, "SEWT-Script" + Path.GetFileName(m_modPath)), program, out messages, "SEWT Compiled PB Script", "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name).Result;
 
                     if (messages.Count > 0)
                     {
@@ -363,7 +365,7 @@ namespace Phoenix.WorkshopTool
                         {
                             MySandboxGame.Log.WriteLineAndConsole(msg.Text);
 
-                            if (msg.Severity > TErrorSeverity.Warning)
+                            if (msg.IsError)
                                 errors++;
                         }
                         if (errors > 0)

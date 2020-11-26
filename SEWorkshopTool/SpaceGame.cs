@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Reflection;
 using VRage;
 using VRage.GameServices;
+using VRage.Scripting;
 using VRage.Utils;
 using VRageRender;
 
@@ -32,6 +33,7 @@ namespace Phoenix.SEWorkshopTool
 
             var appDataPath = m_startup.GetAppDataPath();
             VRage.Platform.Windows.MyVRageWindows.Init(MyPerGameSettings.BasicGameInfo.ApplicationName, MySandboxGame.Log, appDataPath, false);
+            MyVRage.Platform.InitScripting(MyVRageScripting.Create());
             MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.System.GetAppDataPath());
             MyRenderProxy.Initialize((IMyRender)new MyNullRender());
             MyInitializer.InitCheckSum();

@@ -240,9 +240,9 @@ namespace Phoenix.WorkshopTool
 
         void ReplaceMethods()
         {
-            ReplaceMethod(typeof(VRage.Steam.MySteamWorkshopItemPublisher), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
-            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToService), BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToService));
-            ReplaceMethod(typeof(VRage.Steam.MySteamHelper), nameof(VRage.Steam.MySteamHelper.ToSteam), BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToSteam));
+            ReplaceMethod(InjectedMethod.MySteamWorkshopItemPublisherType, "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
+            ReplaceMethod(InjectedMethod.MySteamHelperType, "ToService", BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToService));
+            ReplaceMethod(InjectedMethod.MySteamHelperType, "ToSteam", BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToSteam));
 #if SE
             ReplaceMethod(typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo"), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
 #endif
