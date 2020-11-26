@@ -43,8 +43,12 @@ namespace Phoenix.WorkshopTool
             AppName = "MEWT";
             IsME = true;
 #endif
-            var appid = File.ReadAllText(Path.Combine(root, "steam_appid.txt"));
-            AppId = uint.Parse(appid);
+            // If the file can't be found, assume it's SE
+            if (File.Exists("steam_appid.txt"))
+            {
+                var appid = File.ReadAllText(Path.Combine(root, "steam_appid.txt"));
+                AppId = uint.Parse(appid);
+            }
 
             // Override the ExePath, so the game classes can initialize when the exe is outside the game directory
             MyFileSystem.ExePath = new FileInfo(Assembly.GetAssembly(typeof(FastResourceLock)).Location).DirectoryName;
