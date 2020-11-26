@@ -82,6 +82,17 @@ namespace Phoenix.WorkshopTool.Tests
 
         [Test]
         [Explicit]
+        public void UpdateTags()
+        {
+            var args = new List<string>(new[] { "--update-only", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod,Other" });
+            args.AddRange(_extraArguments);
+
+            var exitCode = LaunchMain(args.ToArray());
+            Assert.That(exitCode, Is.EqualTo(0));
+        }
+
+        [Test]
+        [Explicit]
         public void UploadMod()
         {
             var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod" });
@@ -93,9 +104,9 @@ namespace Phoenix.WorkshopTool.Tests
 
         [Test]
         [Explicit]
-        public void UpdateTags()
+        public void CompileMod()
         {
-            var args = new List<string>(new[] { "--update-only", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod,Other" });
+            var args = new List<string>(new[] { "--upload", "--compile", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--dry-run" });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());

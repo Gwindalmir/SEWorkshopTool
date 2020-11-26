@@ -13,6 +13,7 @@
     <Parameter name="SE.Install" value="D:\Program Files\Steam\SteamApps\common\SpaceEngineers" />
     <Parameter name="SE.ModIDToDownload" value="637504549" />
     <Parameter name="SE.ModNameToUpload" value="test-dev" />
+    <Parameter name="SE.ScriptNameToUpload" value="Test Script" />
     <!-- <Parameter name="SE.AppData" value="" /> -->
 
     <Parameter name="ME.Install" value="D:\Program Files\Steam\SteamApps\common\MedievalEngineers" />
