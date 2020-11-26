@@ -417,6 +417,7 @@ namespace Phoenix.WorkshopTool
             if (m_dryrun)
             {
                 MySandboxGame.Log.WriteLineAndConsole("DRY-RUN; Publish skipped");
+                return true;
             }
             else
             {
