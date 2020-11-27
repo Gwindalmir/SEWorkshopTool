@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -107,6 +108,30 @@ namespace Phoenix.WorkshopTool.Tests
         public void CompileMod()
         {
             var args = new List<string>(new[] { "--upload", "--compile", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--dry-run" });
+            args.AddRange(_extraArguments);
+
+            var exitCode = LaunchMain(args.ToArray());
+            Assert.That(exitCode, Is.EqualTo(0));
+        }
+
+        [Test]
+        [Explicit]
+        public void UploadModWithDescription()
+        {
+            var filename = Path.Combine(TestContext.CurrentContext.WorkDirectory, "..", "..", "..", TestContext.Parameters[$"{_parameterPrefix}.ModDescriptionFile"]);
+            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--description", filename });
+            args.AddRange(_extraArguments);
+
+            var exitCode = LaunchMain(args.ToArray());
+            Assert.That(exitCode, Is.EqualTo(0));
+        }
+
+        // This requires an actual change to push, otherwise there's no changelog posted.
+        [Test]
+        [Explicit]
+        public void UploadModWithChangelog()
+        {
+            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--message", $"SEWT Unit Test: {DateTime.Now.ToShortTimeString()}" });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());

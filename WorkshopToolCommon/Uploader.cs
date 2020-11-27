@@ -45,6 +45,8 @@ namespace Phoenix.WorkshopTool
         bool m_dryrun;
         ulong m_modId = 0;
         string m_title;
+        string m_description;
+        string m_changelog;
         PublishedFileVisibility? m_visibility;
         WorkshopType m_type;
         string[] m_tags = new string[1];
@@ -78,7 +80,7 @@ namespace Phoenix.WorkshopTool
         public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, PublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null, ulong[] deps = null)
+        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, PublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null, ulong[] deps = null, string description = null, string changelog = null)
         {
             m_modPath = path;
 
@@ -102,6 +104,9 @@ namespace Phoenix.WorkshopTool
 
             if (string.IsNullOrEmpty(m_title))
                 m_title = Path.GetFileName(path);
+
+            m_description = description;
+            m_changelog = changelog;
 
             m_type = type;
             m_isDev = development;
@@ -425,7 +430,8 @@ namespace Phoenix.WorkshopTool
             {
                 if (_publishMethod != null)
                 {
-                    m_modId = _publishMethod(m_modPath, m_title, null, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths
+                    InjectedMethod.ChangeLog = m_changelog;
+                    m_modId = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths
 #if SE
                         , m_dlcs).Id;
 #else
@@ -780,8 +786,16 @@ namespace Phoenix.WorkshopTool
 
         void PrintItemDetails()
         {
+            const int MAX_LENGTH = 40;
+
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Visibility: {0}", m_visibility));
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Tags: {0}", string.Join(", ", m_tags)));
+
+            if (!string.IsNullOrEmpty(m_description))
+                MySandboxGame.Log.WriteLineAndConsole($"Description: {m_description.Substring(0, Math.Min(m_description.Length, MAX_LENGTH))}{(m_description.Length > MAX_LENGTH ? "..." : "")}");
+
+            if (!string.IsNullOrEmpty(m_changelog))
+                MySandboxGame.Log.WriteLineAndConsole($"Changelog: {m_changelog.Substring(0, Math.Min(m_changelog.Length, MAX_LENGTH))}{(m_changelog.Length > MAX_LENGTH ? "..." : "")}");
 #if SE
             MySandboxGame.Log.WriteLineAndConsole(string.Format("DLC requirements: {0}",
                 (m_dlcs?.Length > 0 ? string.Join(", ", m_dlcs.Select(i =>

@@ -89,7 +89,13 @@ namespace Phoenix.WorkshopTool
         [OptionArray("dependencies", HelpText = "Specify dependencies to other mods (modids only). Use 0 to remove all.")]
         public ulong[] Dependencies { get; set; }
 
-        [Option("appdata", HelpText = "Specify custom AppData location (default is %AppData%\\SpaceEngineers)")]
+        [Option("appdata", DefaultValue = "%AppData%\\SpaceEngineers", HelpText = "Specify custom AppData location")]
         public string AppData { get; set; }
+
+        [Option("description", HelpText = "File containing the description to set for workshop item")]
+        public string DescriptionFile { get; set; }
+
+        [Option("message", HelpText = "Changelog message (requires actual content update)")]
+        public string Changelog { get; set; }
     }
 }

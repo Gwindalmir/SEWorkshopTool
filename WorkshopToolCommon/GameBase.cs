@@ -195,9 +195,9 @@ namespace Phoenix.WorkshopTool
                     else
                         MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "InitModAPI"));
                 }
-
-                ReplaceMethods();
 #endif
+                ReplaceMethods();
+
                 System.Threading.Tasks.Task<bool> Task;
 
                 if (options.Download)
@@ -240,11 +240,14 @@ namespace Phoenix.WorkshopTool
 
         void ReplaceMethods()
         {
+#if SE
             ReplaceMethod(InjectedMethod.MySteamWorkshopItemPublisherType, "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
             ReplaceMethod(InjectedMethod.MySteamHelperType, "ToService", BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToService));
             ReplaceMethod(InjectedMethod.MySteamHelperType, "ToSteam", BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToSteam));
-#if SE
             ReplaceMethod(typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo"), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
+
+#else
+            ReplaceMethod(InjectedMethod.MySteamWorkshopItemPublisherType, "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.Public, typeof(InjectedMethod), "UpdatePublishedItem");
 #endif
         }
 
@@ -267,7 +270,7 @@ namespace Phoenix.WorkshopTool
             var methodtoinject = destinationType.GetMethod(destinationMethod, destinationBinding ?? sourceBinding);
 
             MyDebug.AssertRelease(methodtoreplace != null);
-            if (methodtoreplace != null && methodtoreplace != null)
+            if (methodtoreplace != null && methodtoinject != null)
             {
                 sourceParameters = methodtoreplace.GetParameters();
                 destinationParameters = methodtoinject.GetParameters();
@@ -514,7 +517,29 @@ namespace Phoenix.WorkshopTool
                     tags = tags[0].Split(',', ';');
                 }
 
-                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs, options.Dependencies);
+                string description = null;
+
+                // Read the description filename, if set
+                if (!string.IsNullOrEmpty(options.DescriptionFile))
+                {
+                    if (File.Exists(options.DescriptionFile))
+                        description = File.ReadAllText(options.DescriptionFile);
+                    else
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Unable to set description, file does not exist: {0}", options.DescriptionFile));
+                }
+
+                // Read the changelog from a file, if detected
+                var changelog = options.Changelog;
+                if (!string.IsNullOrEmpty(options.Changelog))
+                {
+                    if (File.Exists(options.Changelog))
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Reading changelog from file: {0}", options.Changelog));
+                        changelog = File.ReadAllText(options.Changelog);
+                    }                    
+                }
+
+                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs, options.Dependencies, description, options.Changelog);
                 if (options.UpdateOnly && mod.ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));

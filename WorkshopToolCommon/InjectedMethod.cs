@@ -28,11 +28,23 @@ namespace Phoenix.WorkshopTool
         public static readonly Type MySteamWorkshopItemPublisherType = typeof(VRage.Steam.MySteamWorkshopItemPublisher);
         public static readonly Type MySteamHelperType = typeof(VRage.Steam.MySteamHelper);
 #endif
+        // THIS IS A HACK TO GET A CHANGELOG TO THIS CODE
+        public static string ChangeLog = null;
 
+#if SE
         private void UpdatePublishedItem()
+#else
+        public bool UpdatePublishedItem(VRage.Steam.MySteamWorkshopItemPublisher.PublishFields fieldsToPublish, string changeNotes = "")
+#endif
         {
             // dynamic slows things down, but it saves coding time
             dynamic thisobj = this;
+
+#if !SE
+            if (thisobj.Id == 0)
+                return false;
+#endif
+
             var steamService = MySteamWorkshopItemPublisherType.GetField("m_steamService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(thisobj);
             var steamUGC = MySteamWorkshopItemPublisherType.GetProperty("SteamUGC", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(thisobj);
             var appid = (AppId_t)steamService.GetType().GetField("SteamAppId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(steamService);
@@ -59,7 +71,11 @@ namespace Phoenix.WorkshopTool
             var SubmitItemUpdateResult = MySteamWorkshopItemPublisherType.GetMethod("SubmitItemUpdateResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             
             var SubmitItemUpdateResultMethod = (SubmitItemUpdateResult)Delegate.CreateDelegate(typeof(SubmitItemUpdateResult), thisobj, SubmitItemUpdateResult);
-            submitItemUpdateResult.Set(SteamUGC.SubmitItemUpdate(ugcUpdateHandleT, string.Empty), new CallResult<SubmitItemUpdateResult_t>.APIDispatchDelegate(SubmitItemUpdateResultMethod));
+            submitItemUpdateResult.Set(SteamUGC.SubmitItemUpdate(ugcUpdateHandleT, ChangeLog), new CallResult<SubmitItemUpdateResult_t>.APIDispatchDelegate(SubmitItemUpdateResultMethod));
+
+#if !SE
+            return true;
+#endif
         }
 
 #if SE
