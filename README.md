@@ -73,6 +73,28 @@ If desired, you can also automatically extract the mods to your local *%appdata%
 They will be extracted to their appropriate directory in the format: *[\_SEWT\_] &lt;Mod Title&gt; (&lt;WorkshopId&gt;)*
 
 ## Other Operations
+### New in 0.7.8:
+You can now set workshop item descriptions and changelogs.
+The description and changelog can both be set by specifying a filename containing the text you want to use.
+
+To set the entire workshop description content:
+`SEWorkshopTool --upload --mods FTL --description filename_of_workshop_description.txt`
+
+Setting the changelog for this *specific* operation is similiar:
+`SEWorkshopTool --upload --mods FTL --message filename_of_change_notes.txt`
+
+If your changelog is short, you can specify the entire message as the argument, instead of a filename:
+`SEWorkshopTool --upload --mods FTL --message "Made a fix for the latest SE version."`
+
+You can, of course, specify both at once.
+
+Notes:
+The changelog option first checks if the supplied argument is an existing file. If it is, it reads the contents. If not, it simply uses the argument as-is as the changelog note.
+Be sure to check the output for the message that will be sent to Steam (the log will show a shortened version, but the entire content will be sent to steam).
+It's important to surround the message with double-quotes.
+
+Steam limits the workshop description to 8k bytes. Note, for unicode, that means 4k characters.
+
 ### New in 0.7.5:
 Support for .gitignore style ignore list (but simpler). This file is .wtignore, and can be placed either in your mod directory, or in the parent Mods\ directory, ie. *%appdata%\SpaceEngineers\Mods*.
 An example file is included with the release zip, just copy it to one of the directories above and edit to taste. Further documentation is in the file itself.
