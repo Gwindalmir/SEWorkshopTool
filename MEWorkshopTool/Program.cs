@@ -21,11 +21,6 @@ namespace Phoenix.MEWorkshopTool
 
             var game = new MedievalGame();
             int resultCode = game.InitGame(args);
-            if (Debugger.IsAttached)
-            {
-                Console.WriteLine("Press any key to exit.");
-                Console.ReadKey();
-            }
             return resultCode;
         }
     }
