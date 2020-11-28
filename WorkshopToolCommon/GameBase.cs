@@ -80,19 +80,34 @@ namespace Phoenix.WorkshopTool
         private static string AssemblyResolver(object sender, ResolveEventArgs args, string ext)
         {
             var assemblyname = new AssemblyName(args.Name).Name;
-            var assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname + ext);
+            var assemblyPath = ResolveFromRoot(assemblyname, ext, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname + ext);
+                assemblyPath = ResolveFromRoot(assemblyname, ext, Environment.CurrentDirectory);
+
+            return assemblyPath;
+        }
+
+        private static string ResolveFromRoot(string assemblyname, string ext, string root)
+        {
+            var assemblyPath = Path.Combine(root, assemblyname + ext);
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", "x64", assemblyname + ext);
+                assemblyPath = Path.Combine(root, "Bin64", assemblyname + ext);
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ext);
+                assemblyPath = Path.Combine(root, "Bin64", "x64", assemblyname + ext);
+
+            var sublength = assemblyname.LastIndexOf('.');
+
+            if (sublength == -1)
+                sublength = assemblyname.Length;
 
             if (!File.Exists(assemblyPath))
-                assemblyPath = Path.Combine(Environment.CurrentDirectory, "Bin64", assemblyname.Substring(0, assemblyname.LastIndexOf('.')) + ext);
+                assemblyPath = Path.Combine(root, assemblyname.Substring(0, sublength) + ext);
+
+            if (!File.Exists(assemblyPath))
+                assemblyPath = Path.Combine(root, "Bin64", assemblyname.Substring(0, sublength) + ext);
 
             return assemblyPath;
         }
@@ -167,7 +182,7 @@ namespace Phoenix.WorkshopTool
 
                     options.Upload = false;
                 }
-                
+
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
                 MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}");
