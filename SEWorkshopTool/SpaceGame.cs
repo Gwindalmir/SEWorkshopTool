@@ -47,7 +47,7 @@ namespace Phoenix.SEWorkshopTool
 
             if (m_useModIO)
             {
-                MyLog.Default.WriteLineAndConsole("Using mod.io service, instead of Steam.");
+                MySandboxGame.Log.WriteLineAndConsole("Using mod.io service, instead of Steam.");
                 MyServiceManager.Instance.AddService(VRage.Mod.Io.MyModIoService.Create(MySandboxGame.IsDedicated, MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, false));
             }
 
@@ -134,7 +134,7 @@ namespace Phoenix.SEWorkshopTool
                                     config.AppSettings.Settings.Add("auth-expires", expires.ToString());
                                     config.Save();
 
-                                    MyLog.Default.WriteLineAndConsole($"Your authentication token has been saved in {config.FilePath}. Do not delete or replace this file, or you will need to authenticate again.");
+                                    MySandboxGame.Log.WriteLineAndConsole($"Your authentication token has been saved in {config.FilePath}. Do not delete or replace this file, or you will need to authenticate again.");
                                     PostAuthentication(token, expires);
                                 }
                             });
