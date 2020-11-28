@@ -20,6 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)MySteamService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProgramBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Uploader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WorkshopHelper.cs" />
   </ItemGroup>

@@ -1,10 +1,9 @@
 ﻿using Phoenix.WorkshopTool;
 using System;
-using System.Diagnostics;
 
 namespace Phoenix.MEWorkshopTool
 {
-    public class Program
+    public class Program : ProgramBase
     {
         public static int Main(string[] args)
         {
@@ -19,9 +18,17 @@ namespace Phoenix.MEWorkshopTool
                 }
             }
 
-            var game = new MedievalGame();
-            int resultCode = game.InitGame(args);
-            return resultCode;
+            try
+            {
+                var game = new MedievalGame();
+                int resultCode = game.InitGame(args);
+                return resultCode;
+            }
+            catch
+            {
+                CheckForUpdate();
+                throw;
+            }
         }
     }
 }

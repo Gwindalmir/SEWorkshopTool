@@ -3,15 +3,23 @@ using System;
 
 namespace Phoenix.SEWorkshopTool
 {
-    public class Program
+    public class Program : ProgramBase
     {
         public static int Main(string[] args)
         {
             AppDomain.CurrentDomain.AssemblyResolve += GameBase.CurrentDomain_AssemblyResolve;
             AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += GameBase.CurrentDomain_ReflectionOnlyAssemblyResolve;
 
-            var game = new SpaceGame();
-            return game.InitGame(args);
+            try
+            {
+                var game = new SpaceGame();
+                return game.InitGame(args);
+            }
+            catch
+            {
+                CheckForUpdate();
+                throw;
+            }
         }
     }
 }

@@ -185,6 +185,9 @@ namespace Phoenix.WorkshopTool
                 }
 
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
+
+                ProgramBase.CheckForUpdate(MySandboxGame.Log.WriteLineAndConsole);
+
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
                 MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}");
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);

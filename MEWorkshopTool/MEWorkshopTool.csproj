@@ -56,6 +56,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -112,6 +113,7 @@
     </PackageReference>
   </ItemGroup>
   <Import Project="..\WorkshopToolCommon\WorkshopToolCommon.projitems" Label="Shared" />
+  <Import Project="..\Updater\Updater.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command "&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)CommandLine.dll, $(TargetDir)MEWT.config, $(TargetDir).wtignore -DestinationPath $(TargetDir)$(TargetName)-latest.zip}"</PostBuildEvent>

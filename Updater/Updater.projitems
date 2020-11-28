@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>d50c7559-df0e-477a-9ae7-0b5927530cae</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Gwindalmir.Updater</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Asset.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Release.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UpdateChecker.cs" />
+  </ItemGroup>
+</Project>

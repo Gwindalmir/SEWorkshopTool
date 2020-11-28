@@ -16,10 +16,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Updater", "Updater\Updater.shproj", "{D50C7559-DF0E-477A-9AE7-0B5927530CAE}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Updater\Updater.projitems*{951ac7f6-8487-428e-8bff-b26d689fd259}*SharedItemsImports = 4
 		WorkshopToolCommon\WorkshopToolCommon.projitems*{951ac7f6-8487-428e-8bff-b26d689fd259}*SharedItemsImports = 4
+		Updater\Updater.projitems*{b45a96ab-94b8-46c2-813a-32fd0e1d8390}*SharedItemsImports = 4
 		WorkshopToolCommon\WorkshopToolCommon.projitems*{b45a96ab-94b8-46c2-813a-32fd0e1d8390}*SharedItemsImports = 4
+		Updater\Updater.projitems*{d50c7559-df0e-477a-9ae7-0b5927530cae}*SharedItemsImports = 13
 		WorkshopToolCommon\WorkshopToolCommon.projitems*{f854b41f-d141-467d-a009-74bb31e7a873}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
