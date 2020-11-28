@@ -23,6 +23,7 @@ namespace Phoenix.WorkshopTool
 {
     abstract class GameBase
     {
+        protected static readonly string LaunchDirectory = Environment.CurrentDirectory;
         protected MySandboxGame m_game = null;
         protected MyCommonProgramStartup m_startup;
         protected IMyGameService m_steamService;
@@ -187,6 +188,9 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
                 MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}");
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
+
+                // Make sure file paths are properly rooted based on the user's current directory at launch
+                MySandboxGame.Log.WriteLineAndConsole($"Relative root: {LaunchDirectory}");
 
 #if SE
                 ParameterInfo[] parameters;
@@ -532,11 +536,17 @@ namespace Phoenix.WorkshopTool
                     tags = tags[0].Split(',', ';');
                 }
 
-                string description = null;
+                if (!string.IsNullOrEmpty(options.Thumbnail) &&
+                    !Path.IsPathRooted(options.Thumbnail))
+                    options.Thumbnail = Path.GetFullPath(Path.Combine(LaunchDirectory, options.Thumbnail));
 
                 // Read the description filename, if set
+                string description = null;
                 if (!string.IsNullOrEmpty(options.DescriptionFile))
                 {
+                    if (!Path.IsPathRooted(options.DescriptionFile))
+                        options.DescriptionFile = Path.GetFullPath(Path.Combine(LaunchDirectory, options.DescriptionFile));
+
                     if (File.Exists(options.DescriptionFile))
                         description = File.ReadAllText(options.DescriptionFile);
                     else
@@ -547,6 +557,14 @@ namespace Phoenix.WorkshopTool
                 var changelog = options.Changelog;
                 if (!string.IsNullOrEmpty(options.Changelog))
                 {
+                    if (!Path.IsPathRooted(options.Changelog))
+                    {
+                        var rootedPath = Path.GetFullPath(Path.Combine(LaunchDirectory, options.Changelog));
+
+                        if (File.Exists(rootedPath))
+                            options.Changelog = rootedPath;
+                    }
+
                     if (File.Exists(options.Changelog))
                     {
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Reading changelog from file: {0}", options.Changelog));
