@@ -585,6 +585,7 @@ namespace Phoenix.WorkshopTool
                         // Blueprints have extra tags not in this list
                         validTags.Add(new MyWorkshop.Category() { Id = "large_grid" });
                         validTags.Add(new MyWorkshop.Category() { Id = "small_grid" });
+                        validTags.Add(new MyWorkshop.Category() { Id = "safe" });   // Mod.io only?
 #endif
                         break;
                     case WorkshopType.Scenario:
