@@ -14,9 +14,10 @@ namespace Phoenix.WorkshopTool.Tests.Common
         [Test]
         public void GetReleaseTest()
         {
-            var updateChecker = new UpdateChecker();
+            var updateChecker = new UpdateChecker(prereleases: true);
             var release = updateChecker.GetLatestRelease();
 
+            Assert.That(release, Is.Not.Null);
             Assert.That(release.Id, Is.Not.Zero);
             Assert.That(release.Assets, Is.Not.Null.And.Count.GreaterThan(0));
         }

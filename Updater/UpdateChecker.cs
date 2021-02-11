@@ -68,6 +68,9 @@ namespace Gwindalmir.Updater
 
         public bool IsNewerThan(Version version)
         {
+            if (version is null)
+                return false;
+
             // Get the release version, and filter out the version
             // The version is assumed to follow reasonable semantic versioning,
             // with optional prefix (such as 'v', 'v0.7.9-alpha').

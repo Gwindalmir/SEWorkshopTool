@@ -19,7 +19,7 @@ namespace Phoenix.WorkshopTool
             try
             {
                 var updateChecker = new UpdateChecker(prereleases: true);
-                if (updateChecker.IsNewerThan(Assembly.GetEntryAssembly().GetName().Version))
+                if (updateChecker.IsNewerThan(Assembly.GetEntryAssembly()?.GetName().Version))
                 {
                     var release = updateChecker.GetLatestRelease();
                     var asset = release.GetMatchingAsset(Assembly.GetEntryAssembly().GetName().Name);
