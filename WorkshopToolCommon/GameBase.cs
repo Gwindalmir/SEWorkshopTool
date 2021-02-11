@@ -560,19 +560,28 @@ namespace Phoenix.WorkshopTool
                 var changelog = options.Changelog;
                 if (!string.IsNullOrEmpty(options.Changelog))
                 {
-                    if (!Path.IsPathRooted(options.Changelog))
+                    try
                     {
-                        var rootedPath = Path.GetFullPath(Path.Combine(LaunchDirectory, options.Changelog));
+                        if (!Path.IsPathRooted(options.Changelog))
+                        {
+                            var rootedPath = Path.GetFullPath(Path.Combine(LaunchDirectory, options.Changelog));
 
-                        if (File.Exists(rootedPath))
-                            options.Changelog = rootedPath;
+                            if (File.Exists(rootedPath))
+                                options.Changelog = rootedPath;
+                        }
+
+                        if (File.Exists(options.Changelog))
+                        {
+                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Reading changelog from file: {0}", options.Changelog));
+                            changelog = File.ReadAllText(options.Changelog);
+                        }
                     }
-
-                    if (File.Exists(options.Changelog))
+                    catch(Exception ex)
+                        when (ex is NotSupportedException || ex is IOException)
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Reading changelog from file: {0}", options.Changelog));
-                        changelog = File.ReadAllText(options.Changelog);
-                    }                    
+                        // Assume the string provided isn't a filename
+                        // Could contain invalid characters that GetFullPath can't handle.
+                    }
                 }
 
                 var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs, options.Dependencies, description, options.Changelog);
