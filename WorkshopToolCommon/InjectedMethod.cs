@@ -56,7 +56,16 @@ namespace Phoenix.WorkshopTool
             if (thisobj.Tags != null)
                 SteamUGC.SetItemTags(ugcUpdateHandleT, (IList<string>)thisobj.Tags);
 
-            SteamUGC.SetItemVisibility(ugcUpdateHandleT, (ERemoteStoragePublishedFileVisibility)MySteamHelperType.GetMethod("ToSteam", BindingFlags.Public | BindingFlags.Static).Invoke(null, new[] { thisobj.Visibility }));
+            try
+            {
+                SteamUGC.SetItemVisibility(ugcUpdateHandleT, (ERemoteStoragePublishedFileVisibility)MySteamHelperType.GetMethod("ToSteam", BindingFlags.Public | BindingFlags.Static).Invoke(null, new[] { thisobj.Visibility }));
+            }
+            catch(TargetInvocationException)
+            {
+                SteamUGC.SetItemVisibility(ugcUpdateHandleT, ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPrivate);
+                // Don't fail here, the visibility is invalid (unlisted on Steamworks that doesn't support it)
+                MySandboxGame.Log.WriteLineAndConsole($"Error setting visibility, setting to Private.");
+            }
 
             if (!string.IsNullOrWhiteSpace(thisobj.Description))
                 SteamUGC.SetItemDescription(ugcUpdateHandleT, thisobj.Description);
