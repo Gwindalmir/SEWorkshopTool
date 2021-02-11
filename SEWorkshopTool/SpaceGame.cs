@@ -1,5 +1,6 @@
 ﻿using Phoenix.WorkshopTool;
 using Sandbox;
+using Sandbox.Engine.Networking;
 using Sandbox.Game;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,9 @@ using System.Configuration;
 using System.Reflection;
 using VRage;
 using VRage.GameServices;
+using VRage.Mod.Io;
 using VRage.Scripting;
+using VRage.Steam;
 using VRage.Utils;
 using VRageRender;
 
@@ -33,7 +36,6 @@ namespace Phoenix.SEWorkshopTool
 
             var appDataPath = m_startup.GetAppDataPath();
             VRage.Platform.Windows.MyVRageWindows.Init(MyPerGameSettings.BasicGameInfo.ApplicationName, MySandboxGame.Log, appDataPath, false);
-            MyVRage.Platform.InitScripting(MyVRageScripting.Create());
             MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.System.GetAppDataPath());
             MyRenderProxy.Initialize((IMyRender)new MyNullRender());
             MyInitializer.InitCheckSum();
@@ -41,15 +43,20 @@ namespace Phoenix.SEWorkshopTool
             if (m_startup.PerformColdStart()) return false;
             if (!m_startup.Check64Bit()) return false;
 
-            m_steamService = VRage.Steam.MySteamGameService.Create(MySandboxGame.IsDedicated, AppId);
+            m_steamService = MySteamGameService.Create(MySandboxGame.IsDedicated, AppId);
             MyServiceManager.Instance.AddService(m_steamService);
-            MyServiceManager.Instance.AddService(VRage.Steam.MySteamUgcService.Create(AppId, m_steamService));
+            MyServerDiscoveryAggregator serverDiscoveryAggregator = new MyServerDiscoveryAggregator();
+            MySteamGameService.InitNetworking(false, m_steamService, serverDiscoveryAggregator, true, true);
 
+            // If user specified --modio, set that as the "default" (added first)
+            var modioService = MyModIoService.Create(MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, MyPlatformGameSettings.UGC_TEST_ENVIRONMENT);
+            
             if (m_useModIO)
-            {
-                MySandboxGame.Log.WriteLineAndConsole("Using mod.io service, instead of Steam.");
-                MyServiceManager.Instance.AddService(VRage.Mod.Io.MyModIoService.Create(MySandboxGame.IsDedicated, MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, false));
-            }
+                MyGameService.WorkshopService.AddAggregate(modioService);
+            MyGameService.WorkshopService.AddAggregate(MySteamUgcService.Create(AppId, m_steamService));
+            
+            if (!m_useModIO)
+                MyGameService.WorkshopService.AddAggregate(modioService);
 
             SpaceEngineersGame.SetupPerGameSettings();
             ManuallyAddDLCs();
@@ -63,26 +70,11 @@ namespace Phoenix.SEWorkshopTool
 
         protected void InitModIO()
         {
-            var assemblyname = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MySandboxGame).Assembly.Location), "SpaceEngineers.exe");
-            if (Assembly.ReflectionOnlyLoadFrom(assemblyname) is Assembly asm)
-            {
-                if(asm.GetType("SpaceEngineers.MyProgram", false) is Type program)
-                {
-                    ModIO_GameName = program.GetField("MODIO_GAME_NAME", BindingFlags.NonPublic | BindingFlags.Static)?.GetRawConstantValue() as string;
-                    ModIO_TestGameID = program.GetField("MODIO_TEST_GAMEID", BindingFlags.NonPublic | BindingFlags.Static)?.GetRawConstantValue() as string;
-                    ModIO_TestKey = program.GetField("MODIO_TEST_APIKEY", BindingFlags.NonPublic | BindingFlags.Static)?.GetRawConstantValue() as string;
-                    ModIO_GameID = program.GetField("MODIO_LIVE_GAMEID", BindingFlags.NonPublic | BindingFlags.Static)?.GetRawConstantValue() as string;
-                    ModIO_Key = program.GetField("MODIO_LIVE_APIKEY", BindingFlags.NonPublic | BindingFlags.Static)?.GetRawConstantValue() as string;
-                }
-                else
-                {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "SpaceEngineers.MyProgram"));
-                }
-            }
-            else
-            {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "SpaceEngineers.exe"));
-            }
+            ModIO_GameName = MyPlatformGameSettings.MODIO_GAME_NAME;
+            ModIO_TestGameID = MyPlatformGameSettings.MODIO_TEST_GAMEID;
+            ModIO_TestKey = MyPlatformGameSettings.MODIO_TEST_APIKEY;
+            ModIO_GameID = MyPlatformGameSettings.MODIO_LIVE_GAMEID;
+            ModIO_Key = MyPlatformGameSettings.MODIO_LIVE_APIKEY;
         }
 
         protected override void AuthenticateWorkshop()
@@ -110,7 +102,8 @@ namespace Phoenix.SEWorkshopTool
 
                 if (string.IsNullOrEmpty(token))
                 {
-                    Sandbox.Engine.Networking.MyGameService.WorkshopService.RequestSecurityCode(email, (r) =>
+                    var clsMyModIo = typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo");
+                    clsMyModIo.InvokeMember("EmailRequest", BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod, null, null, new object[]{email, (Action<MyGameServiceCallResult>)((r) =>
                     {
                         if (r == MyGameServiceCallResult.OK)
                         {
@@ -118,11 +111,10 @@ namespace Phoenix.SEWorkshopTool
                             System.Console.Write("Enter Security code: ");
                             var code = System.Console.ReadLine();
 
-                            Sandbox.Engine.Networking.MyGameService.WorkshopService.AuthenticateWithSecurityCode(code, (a) =>
+                            clsMyModIo.InvokeMember("EmailExchange", BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod, null, null, new object[] { code, (Action<MyGameServiceCallResult>)((a) =>
                             {
                                 if (a == MyGameServiceCallResult.OK)
                                 {
-                                    var clsMyModIo = typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo");
                                     System.Console.WriteLine("Authentication successful!");
 
                                     var accessToken = clsMyModIo.GetField("m_authenticatedToken", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
@@ -137,9 +129,9 @@ namespace Phoenix.SEWorkshopTool
                                     MySandboxGame.Log.WriteLineAndConsole($"Your authentication token has been saved in {config.FilePath}. Do not delete or replace this file, or you will need to authenticate again.");
                                     PostAuthentication(token, expires);
                                 }
-                            });
+                            })});
                         }
-                    });
+                    })});
                 }
                 else
                 {

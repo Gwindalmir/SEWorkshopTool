@@ -585,7 +585,7 @@ namespace Phoenix.WorkshopTool
                 }
 
                 var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs, options.Dependencies, description, options.Changelog);
-                if (options.UpdateOnly && mod.ModId == 0)
+                if (options.UpdateOnly && ((IMod)mod).ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
                     continue;
@@ -612,7 +612,7 @@ namespace Phoenix.WorkshopTool
                     }
                     else
                     {
-                        if (mod.ModId == 0)
+                        if (((IMod)mod).ModId == 0)
                         {
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Mod not published, skipping: {0}", mod.Title));
                             success = false;
@@ -620,7 +620,12 @@ namespace Phoenix.WorkshopTool
                         else
                         {
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Not uploading: {0}", mod.Title));
+#if SE
+                            foreach (var item in mod.ModId)
+                                mod.UpdatePreviewFileOrTags(item.Id, MyGameService.GetUGC(item.ServiceName).CreateWorkshopPublisher());
+#else
                             mod.UpdatePreviewFileOrTags();
+#endif
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
                         }
                     }
@@ -699,7 +704,11 @@ namespace Phoenix.WorkshopTool
             var downloadPath = WorkshopHelper.GetWorkshopItemPath(type);
 
 #if SE
-            if (MyWorkshop.GetItemsBlockingUGC(modids, items))
+            var workshopIds = new List<VRage.Game.WorkshopId>();
+            foreach (var id in modids)
+                workshopIds.Add(new VRage.Game.WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName));
+
+            if (MyWorkshop.GetItemsBlockingUGC(workshopIds, items))
 #else
             if (MyWorkshop.GetItemsBlocking(modids, items))
 #endif
@@ -809,7 +818,11 @@ namespace Phoenix.WorkshopTool
                     {
                         List<MyWorkshopItem> depItems = new List<MyWorkshopItem>();
 #if SE
-                        if (MyWorkshop.GetItemsBlockingUGC(item.Dependencies, depItems))
+                        workshopIds.Clear();
+                        foreach (var id in item.Dependencies)
+                            workshopIds.Add(new VRage.Game.WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName));
+
+                        if (MyWorkshop.GetItemsBlockingUGC(workshopIds, depItems))
 #else
                         if (MyWorkshop.GetItemsBlocking(item.Dependencies, depItems))
 #endif

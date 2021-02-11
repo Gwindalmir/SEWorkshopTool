@@ -43,7 +43,6 @@ namespace Phoenix.WorkshopTool
         string m_modPath;
         bool m_compile;
         bool m_dryrun;
-        ulong m_modId = 0;
         string m_title;
         string m_description;
         string m_changelog;
@@ -53,12 +52,28 @@ namespace Phoenix.WorkshopTool
         bool m_isDev = false;
         bool m_force;
         string m_previewFilename;
+#if SE
+        WorkshopId[] m_modId;
+        public WorkshopId[] ModId { get { return m_modId; } }
+        ulong IMod.ModId { get { return m_modId[0].Id; } }
+#else
+        ulong m_modId = 0;
+        public ulong ModId { get { return m_modId; } }
+#endif
 
         private static object _scriptManager;
         private static PublishItemBlocking _publishMethod;
         private static LoadScripts _compileMethod;
         private static HashSet<string> _globalIgnoredExtensions;
         private static string[] _previewFileNames;
+
+#if SE
+        private delegate ValueTuple<MyGameServiceCallResult, string> PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, WorkshopId[] workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions, HashSet<string> ignoredPaths, uint[] requiredDLCs, out MyWorkshopItem[] outIds);
+        private delegate void LoadScripts(string path, MyModContext mod = null);
+        private static bool PublishSuccess { get; set; }
+#else
+        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
+        private delegate void LoadScripts(MyModContext mod = null);
 
         // Static delegate instance of ref-getter method, statically initialized.
         // Requires an 'OfInterestClass' instance argument to be provided by caller.
@@ -67,17 +82,9 @@ namespace Phoenix.WorkshopTool
         // Check log file for error.
         // This is a dynamic getter for the MyWorkshop private field
         private static bool PublishSuccess => __refget_m_publishSuccess != null ?__refget_m_publishSuccess(null) : true;
-
-#if SE
-        private delegate MyWorkshopItemPublisher PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null, uint[] requiredDLCs = null);
-        private delegate void LoadScripts(string path, MyModContext mod = null);
-#else
-        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
-        private delegate void LoadScripts(MyModContext mod = null);
 #endif
 
         public string Title { get { return m_title; } }
-        public ulong ModId { get { return m_modId; } }
         public string ModPath { get { return m_modPath; } }
 
         public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, PublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null, ulong[] deps = null, string description = null, string changelog = null)
@@ -85,10 +92,14 @@ namespace Phoenix.WorkshopTool
             m_modPath = path;
 
             if (ulong.TryParse(m_modPath, out ulong id))
+#if SE
+                m_modId = new[] { new WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName) };
+#else
                 m_modId = id;
+#endif
             else
 #if SE
-                m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath);
+                m_modId = MyWorkshop.GetWorkshopIdFromMod(m_modPath);
 #else
                 m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath) ?? 0;
 #endif
@@ -237,7 +248,22 @@ namespace Phoenix.WorkshopTool
                 }
             }
 
-            var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic);
+            var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic, Type.DefaultBinder, new Type[]
+            {
+                typeof(string),
+                typeof(string),
+                typeof(string),
+                m_modId.GetType(),
+                typeof(MyPublishedFileVisibility),
+                typeof(string[]),
+                typeof(HashSet<string>),
+                typeof(HashSet<string>),
+#if SE
+                typeof(uint[]),
+                typeof(MyWorkshopItem[]).MakeByRefType()
+#endif
+            }, null);
+
             MyDebug.AssertDebug(publishMethod != null);
 
             if (publishMethod != null)
@@ -257,6 +283,7 @@ namespace Phoenix.WorkshopTool
             if (_previewFileNames == null)
                 _previewFileNames = new string[] { "thumb.png", "thumb.jpg" };
 
+#if !SE
             try
             {
                 if (__refget_m_publishSuccess == null)
@@ -267,6 +294,7 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "m_publishSuccess"));
                 MySandboxGame.Log.WriteLine(ex.Message);
             }
+#endif
         }
 
         /// <summary>
@@ -403,14 +431,18 @@ namespace Phoenix.WorkshopTool
             }
 
             // Upload/Publish
+#if SE
+            if(((IMod)this).ModId == 0)
+#else
             if (m_modId == 0)
+#endif
             {
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Uploading new {0}: {1}", m_type.ToString(), m_title));
                 newMod = true;
             }
             else
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId, m_title));
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Updating {0}: {1}; {2}", m_type.ToString(), m_modId.AsString(), m_title));
             }
 
             // Add the global game filter for file extensions
@@ -420,6 +452,8 @@ namespace Phoenix.WorkshopTool
             ProcessTags();
 
             PrintItemDetails();
+
+            MyWorkshopItem[] items = null;
 
             if (m_dryrun)
             {
@@ -431,11 +465,11 @@ namespace Phoenix.WorkshopTool
                 if (_publishMethod != null)
                 {
                     InjectedMethod.ChangeLog = m_changelog;
-                    m_modId = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths
 #if SE
-                        , m_dlcs).Id;
+                    var result = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs, out items);
+                    PublishSuccess = result.Item1 == MyGameServiceCallResult.OK;
 #else
-                        );
+                    m_modId = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths);
 #endif
                 }
                 else
@@ -446,27 +480,27 @@ namespace Phoenix.WorkshopTool
                 // SE libraries don't support updating dependencies, so we have to do that separately
                 WorkshopHelper.PublishDependencies(m_modId, m_deps, m_depsToRemove);
             }
-            if (m_modId == 0 || !PublishSuccess)
+            if (((IMod)this).ModId == 0 || !PublishSuccess)
             {
                 MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
                 return false;
             }
             else
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId));
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId.AsString()));
                 if (newMod)
                 {
 #if SE
-                    if (MyWorkshop.GenerateModInfo(m_modPath, m_modId, MyGameService.UserId))
+                    if (MyWorkshop.GenerateModInfo(m_modPath, items, MyGameService.UserId))
 #else
                     if (MyWorkshop.UpdateModMetadata(m_modPath, m_modId, MySteam.UserId))
 #endif
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi success: {0}", m_modId));
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi success: {0}", m_modId.AsString()));
                     }
                     else
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi FAILED: {0}", m_modId));
+                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi FAILED: {0}", m_modId.AsString()));
                         return false;
                     }
                 }
@@ -478,7 +512,7 @@ namespace Phoenix.WorkshopTool
         {
             var results = new List<MyWorkshopItem>();
 #if SE
-            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
+            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
 #else
             if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
 #endif
@@ -500,11 +534,7 @@ namespace Phoenix.WorkshopTool
                     m_deps = results[0].Dependencies.ToArray();
 
                     MyDebug.AssertDebug(owner == MyGameService.UserId);
-                    if (owner != MyGameService.UserId
-#if SE
-                        && MyGameService.WorkshopService.ServiceName == "Steam"
-#endif
-                        )
+                    if (owner != MyGameService.UserId)
                     {
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MyGameService.UserId));
                         MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
@@ -668,7 +698,7 @@ namespace Phoenix.WorkshopTool
             var results = new List<MyWorkshopItem>();
 
 #if SE
-            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
+            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
 #else
             if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
 #endif
@@ -687,7 +717,7 @@ namespace Phoenix.WorkshopTool
 #if SE
             var results = new List<MyWorkshopItem>();
 
-            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
+            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
             {
                 if (results.Count > 0)
                     return results[0].DLCs.ToArray();
@@ -703,7 +733,7 @@ namespace Phoenix.WorkshopTool
             var results = new List<MyWorkshopItem>();
 
 #if SE
-            if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { m_modId }, results))
+            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
 #else
             if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
 #endif
@@ -717,12 +747,18 @@ namespace Phoenix.WorkshopTool
             return PublishedFileVisibility.Private;
         }
 
+#if !SE
         public bool UpdatePreviewFileOrTags()
+        {
+            return UpdatePreviewFileOrTags(ModId, MyGameService.CreateWorkshopPublisher());
+        }
+#endif
+
+        public bool UpdatePreviewFileOrTags(ulong modId, MyWorkshopItemPublisher publisher)
         {
             ProcessTags();
 
-            var publisher = MyGameService.CreateWorkshopPublisher();
-            publisher.Id = ModId;
+            publisher.Id = modId;
             publisher.Title = Title;
             publisher.Visibility = (MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
             publisher.Thumbnail = m_previewFilename;
@@ -824,9 +860,13 @@ namespace Phoenix.WorkshopTool
 
             if (m_deps?.Length > 0)
             {
-                List<MyWorkshopItem> depItems = new List<MyWorkshopItem>();
+                var depItems = new List<MyWorkshopItem>();
 #if SE
-                if (MyWorkshop.GetItemsBlockingUGC(m_deps, depItems))
+                var depIds = new List<WorkshopId>();
+                foreach (var item in m_deps)
+                    depIds.Add(new WorkshopId(item, MyGameService.GetDefaultUGC().ServiceName));
+
+                if (MyWorkshop.GetItemsBlockingUGC(depIds, depItems))
 #else
                 if (MyWorkshop.GetItemsBlocking(m_deps, depItems))
 #endif

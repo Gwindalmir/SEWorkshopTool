@@ -96,4 +96,29 @@ namespace Phoenix.WorkshopTool
             log.WriteLineAndConsole(msg);
         }
     }
+
+    public static class WorkshopIdHelper
+    {
+#if SE
+        public static string AsString(this VRage.Game.WorkshopId[] ids)
+        {
+            var result = new StringBuilder();
+
+            if (ids is null)
+                return result.ToString();
+
+            foreach (var id in ids)
+                result.Append($"{id.ServiceName ?? string.Empty}/{id.Id};");
+
+            result.Remove(result.Length - 1, 1);
+
+            return result.ToString();
+        }
+#else
+        public static string AsString(this ulong id)
+        {
+        return id.ToString();
+        }
+#endif
+    }
 }

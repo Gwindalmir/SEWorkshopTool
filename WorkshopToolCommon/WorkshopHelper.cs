@@ -10,6 +10,7 @@ using VRage.FileSystem;
 using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 using Sandbox;
 using VRage.GameServices;
+using VRage.Game;
 #if SE
 using VRage;
 using VRage.Utils;
@@ -55,6 +56,27 @@ namespace Phoenix.WorkshopTool
             dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddDependency((Steamworks.PublishedFileId_t)modId, (Steamworks.PublishedFileId_t)id));
         }
 
+#if SE
+        public static void PublishDependencies(WorkshopId[] modId, ulong[] dependenciesToAdd, ulong[] dependenciesToRemove = null)
+        {
+            foreach (var item in modId)
+            {
+                if (item.ServiceName == "Steam")
+                {
+                    dependenciesToRemove?.ForEach(id => Steamworks.SteamUGC.RemoveDependency((Steamworks.PublishedFileId_t)item.Id, (Steamworks.PublishedFileId_t)id));
+                    dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddDependency((Steamworks.PublishedFileId_t)item.Id, (Steamworks.PublishedFileId_t)id));
+                }
+                else if (item.ServiceName == "mod.io")
+                {
+                    throw new NotImplementedException("Setting mod dependencies on mod.io is not implemented yet.");
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(item.ServiceName), $"Unknown service: {item.ServiceName}");
+                }
+            }
+        }
+#endif
         #region Collections
         public static IEnumerable<MySubscribedItem> GetCollectionDetails(ulong modid)
         {
@@ -166,7 +188,7 @@ namespace Phoenix.WorkshopTool
 
                                     // SE and ME have different methods, why?
 #if SE
-                                    if (MyWorkshop.GetItemsBlockingUGC(new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }, results))
+                                    if (MyWorkshop.GetItemsBlockingUGC(new List<WorkshopId>() { new WorkshopId(Convert.ToUInt64(sub.ReadElementContentAsString()), MyGameService.GetDefaultUGC().ServiceName) }, results))
 #else
                                     if (MyWorkshop.GetItemsBlocking(new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }, results))
 #endif
