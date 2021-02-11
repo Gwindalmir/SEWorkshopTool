@@ -728,11 +728,13 @@ namespace Phoenix.WorkshopTool
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
 #if SE
-            publisher.DLCs = new HashSet<uint>(m_dlcs);
+            if(m_dlcs != null)
+                publisher.DLCs = new HashSet<uint>(m_dlcs);
 #else
             publisher.Folder = m_modPath;
 #endif
-            publisher.Dependencies = new List<ulong>(m_deps);
+            if(m_deps != null)
+                publisher.Dependencies = new List<ulong>(m_deps);
             
             AutoResetEvent resetEvent = new AutoResetEvent(false);
             try
