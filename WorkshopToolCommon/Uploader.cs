@@ -55,7 +55,7 @@ namespace Phoenix.WorkshopTool
 #if SE
         WorkshopId[] m_modId;
         public WorkshopId[] ModId { get { return m_modId; } }
-        ulong IMod.ModId { get { return m_modId[0].Id; } }
+        ulong IMod.ModId { get { return m_modId?.Length > 0 ? m_modId[0].Id : 0; } }
 #else
         ulong m_modId = 0;
         public ulong ModId { get { return m_modId; } }
