@@ -17,18 +17,18 @@ namespace Phoenix.WorkshopTool.Tests
     public abstract class IntegrationBase
     {
         #region Base Setup
-        protected readonly string _parameterPrefix = "SE";
         protected string[] _extraArguments = new string[0];
 
         public IntegrationBase()
         {
-            if (this.GetType().Namespace.EndsWith("ME"))
-                _parameterPrefix = "ME";
         }
+
+        internal abstract string ParameterPrefix { get; }
+        internal abstract string GameName { get; }
 
         protected int LaunchMain(string[] args)
         {
-            if (_parameterPrefix == "SE")
+            if (ParameterPrefix == "SE")
             {
                 return SEWorkshopTool.Program.Main(args);
             }
@@ -59,11 +59,11 @@ namespace Phoenix.WorkshopTool.Tests
         [OneTimeSetUp]
         public virtual void OneTimeSetup()
         {
-            Environment.CurrentDirectory = TestContext.Parameters[$"{_parameterPrefix}.Install"];
+            Environment.CurrentDirectory = TestContext.Parameters[$"{ParameterPrefix}.Install"];
 
-            if (TestContext.Parameters.Exists($"{_parameterPrefix}.AppData"))
+            if (TestContext.Parameters.Exists($"{ParameterPrefix}.AppData"))
             {
-                _extraArguments = new[] { "--appdata", TestContext.Parameters[$"{_parameterPrefix}.AppData"] };
+                _extraArguments = new[] { "--appdata", TestContext.Parameters[$"{ParameterPrefix}.AppData"] };
             }
 
         }
@@ -74,7 +74,7 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void DownloadMod()
         {
-            var args = new List<string>(new[] { "--download", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModIDToDownload"], "--extract" });
+            var args = new List<string>(new[] { "--download", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModIDToDownload"], "--extract" });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
@@ -85,7 +85,7 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void UpdateTags()
         {
-            var args = new List<string>(new[] { "--update-only", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod,Other" });
+            var args = new List<string>(new[] { "--update-only", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod,Other" });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
@@ -96,7 +96,7 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void UploadMod()
         {
-            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod" });
+            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod" });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
@@ -107,7 +107,7 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void CompileMod()
         {
-            var args = new List<string>(new[] { "--upload", "--compile", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--dry-run" });
+            var args = new List<string>(new[] { "--upload", "--compile", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--dry-run" });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
@@ -118,8 +118,8 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void UploadModWithDescription()
         {
-            var filename = Path.Combine(TestContext.CurrentContext.WorkDirectory, "..", "..", "..", TestContext.Parameters[$"{_parameterPrefix}.ModDescriptionFile"]);
-            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--description", filename });
+            var filename = Path.Combine(TestContext.CurrentContext.WorkDirectory, "..", "..", "..", TestContext.Parameters[$"{ParameterPrefix}.ModDescriptionFile"]);
+            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--description", filename });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
@@ -131,11 +131,35 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void UploadModWithChangelog()
         {
-            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{_parameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--message", $"SEWT Unit Test: {DateTime.Now.ToShortTimeString()}" });
+            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--message", $"SEWT Unit Test: {DateTime.Now.ToShortTimeString()}" });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+        }
+
+        [Test]
+        [Explicit]
+        public void UploadNewModDryRun()
+        {
+            var newModName = "NewMod";
+            var appdata = TestContext.Parameters[$"{ParameterPrefix}.AppData"] ?? 
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GameName);
+            var moddir = Path.Combine(appdata, "Mods", newModName);
+
+            Directory.CreateDirectory(moddir);
+            try
+            {
+                var args = new List<string>(new[] { "--upload", "--mods", newModName, "--tags", "Mod", "--dry-run" });
+                args.AddRange(_extraArguments);
+
+                var exitCode = LaunchMain(args.ToArray());
+                Assert.That(exitCode, Is.EqualTo(0));
+            }
+            finally
+            {
+                Directory.Delete(moddir);
+            }
         }
         #endregion Common Tests
     }
