@@ -468,6 +468,9 @@ namespace Phoenix.WorkshopTool
 #if SE
                     var result = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs, out items);
                     PublishSuccess = result.Item1 == MyGameServiceCallResult.OK;
+
+                    if(PublishSuccess)
+                        m_modId = items.Select(i => new WorkshopId(i.Id, i.ServiceName)).ToArray();
 #else
                     m_modId = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths);
 #endif
