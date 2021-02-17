@@ -864,6 +864,7 @@ namespace Phoenix.WorkshopTool
             if (m_deps?.Length > 0)
             {
                 var depItems = new List<MyWorkshopItem>();
+                var width = Console.IsOutputRedirected ? 256 : Console.WindowWidth;
 #if SE
                 var depIds = new List<WorkshopId>();
                 foreach (var item in m_deps)
@@ -874,7 +875,7 @@ namespace Phoenix.WorkshopTool
                 if (MyWorkshop.GetItemsBlocking(m_deps, depItems))
 #endif
                     depItems.ForEach(i => MySandboxGame.Log.WriteLineAndConsole(string.Format("{0,15} -> {1}",
-                        i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, Console.WindowWidth - 45)))));
+                        i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, width - 45)))));
                 else
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("     {0}", string.Join(", ", m_deps)));
             }
