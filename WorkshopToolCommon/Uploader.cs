@@ -53,6 +53,7 @@ namespace Phoenix.WorkshopTool
         bool m_force;
         string m_previewFilename;
 #if SE
+        private Dictionary<WorkshopId, MyWorkshopItem> m_workshopItems = new Dictionary<WorkshopId, MyWorkshopItem>();
         WorkshopId[] m_modId;
         public WorkshopId[] ModId { get { return m_modId; } }
         ulong IMod.ModId { get { return m_modId?.Length > 0 ? m_modId[0].Id : 0; } }
@@ -313,6 +314,21 @@ namespace Phoenix.WorkshopTool
                         MySandboxGame.Log.WriteLineAndConsole("Compiling...");
 #if SE
                         var mod = new MyModContext();
+
+                        // Because of a regression in SE, we need to create a checkpoint ModItem to set the Id.
+                        var modob = new MyObjectBuilder_Checkpoint.ModItem();
+                        modob.Name = Path.GetFileName(m_modPath);
+                        
+                        if (ModId.Length > 0)
+                        {
+                            modob.PublishedFileId = m_workshopItems[m_modId[0]].Id;
+                            modob.PublishedServiceName = m_workshopItems[m_modId[0]].ServiceName;
+                            modob.FriendlyName = m_workshopItems[m_modId[0]].Title;
+                            modob.SetModData(m_workshopItems[m_modId[0]]);
+                        }
+                        mod.Init(modob);
+
+                        // Call init again, to make sure the path in set properly to the local mod directory
                         mod.Init(m_title, null, m_modPath);
 #else
                         var workshopItem = new MyLocalWorkshopItem(new VRage.ObjectBuilders.SerializableModReference(Path.GetFileName(m_modPath), 0));
@@ -523,6 +539,11 @@ namespace Phoenix.WorkshopTool
                 System.Threading.Thread.Sleep(1000); // Fix for DLC not being filled in
                 if (results.Count > 0)
                 {
+                    m_workshopItems[m_modId[0]] = results[0];
+                    
+                    if(m_modId.Length > 1 && results.Count > 1)
+                        m_workshopItems[m_modId[1]] = results[1];
+
                     m_title = results[0].Title;
 
                     // Check if the mod owner in the sbmi matches steam owner
