@@ -577,7 +577,7 @@ namespace Phoenix.WorkshopTool
                         }
                     }
                     catch(Exception ex)
-                        when (ex is NotSupportedException || ex is IOException)
+                        when (ex is NotSupportedException || ex is IOException || ex is ArgumentException)
                     {
                         // Assume the string provided isn't a filename
                         // Could contain invalid characters that GetFullPath can't handle.
