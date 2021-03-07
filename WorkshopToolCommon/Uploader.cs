@@ -462,6 +462,11 @@ namespace Phoenix.WorkshopTool
             {
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Uploading new {0}: {1}", m_type.ToString(), m_title));
                 newMod = true;
+
+#if SE
+                if (m_modId.Length == 0)
+                    m_modId = new WorkshopId[1] { new WorkshopId(0, MyGameService.GetDefaultUGC().ServiceName) };
+#endif
             }
             else
             {
