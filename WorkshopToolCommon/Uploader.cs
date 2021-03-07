@@ -326,6 +326,13 @@ namespace Phoenix.WorkshopTool
                             modob.FriendlyName = m_workshopItems[m_modId[0]].Title;
                             modob.SetModData(m_workshopItems[m_modId[0]]);
                         }
+                        else
+                        {
+                            // Fake it, so the compile still works
+                            modob.PublishedFileId = 0;
+                            modob.PublishedServiceName = MyGameService.GetDefaultUGC().ServiceName;
+                            modob.FriendlyName = Title;
+                        }
                         mod.Init(modob);
 
                         // Call init again, to make sure the path in set properly to the local mod directory
