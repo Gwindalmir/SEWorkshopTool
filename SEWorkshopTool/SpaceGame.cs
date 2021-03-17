@@ -49,7 +49,7 @@ namespace Phoenix.SEWorkshopTool
             MySteamGameService.InitNetworking(false, m_steamService, serverDiscoveryAggregator, true, true);
 
             // If user specified --modio, set that as the "default" (added first)
-            var modioService = MyModIoService.Create(MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, MyPlatformGameSettings.UGC_TEST_ENVIRONMENT);
+            var modioService = MyModIoService.Create(MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, false);
             
             if (m_useModIO)
                 MyGameService.WorkshopService.AddAggregate(modioService);
