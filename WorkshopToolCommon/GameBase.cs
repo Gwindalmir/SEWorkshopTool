@@ -696,6 +696,8 @@ namespace Phoenix.WorkshopTool
             if (paths == null)
                 return true;
 
+            var width = Console.IsOutputRedirected ? 256 : Console.WindowWidth;
+
             var items = new List<MyWorkshopItem>();
             var modids = paths.Select(ulong.Parse);
 
@@ -827,7 +829,7 @@ namespace Phoenix.WorkshopTool
                         if (MyWorkshop.GetItemsBlocking(item.Dependencies, depItems))
 #endif
                             depItems.ForEach(i => MySandboxGame.Log.WriteLineAndConsole(string.Format("{0,15} -> {1}", 
-                                i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, Console.WindowWidth - 45)))));
+                                i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, width - 45)))));
                         else
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("     {0}", string.Join(", ", item.Dependencies)));
                     }
