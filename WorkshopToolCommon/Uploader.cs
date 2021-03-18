@@ -551,10 +551,15 @@ namespace Phoenix.WorkshopTool
                 System.Threading.Thread.Sleep(1000); // Fix for DLC not being filled in
                 if (results.Count > 0)
                 {
+#if SE
                     m_workshopItems[m_modId[0]] = results[0];
                     
                     if(m_modId.Length > 1 && results.Count > 1)
                         m_workshopItems[m_modId[1]] = results[1];
+#else
+                    if(results.Count > 1)
+                        m_modId = results[0].Id;
+#endif
 
                     m_title = results[0].Title;
 
