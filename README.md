@@ -9,15 +9,18 @@ Please note, this is a command-line application only. A GUI may be considered in
 
 # Requirements
 1. A copy of Space Engineers on Steam
-2. Visual Studio 2013 Update 4 or higher
+2. Visual Studio 2013 Update 4 or higher (alternative: JetBrains Rider)
 
 # Build Steps
-1. Open **SEWorkshopTool.sln**
-2. Change the references for *CommandLine.dll*, *Sandbox.Game.dll*, *SpaceEngineers.Game.dll*, *Vrage.dll*, *VRage.Game.dll*, *VRage.Library.dll*, and *VRage.Scripting.dll* to point to the location where Space Engineers is installed, typically *&lt;SteamApps&gt;\Common\SpaceEngineers\Bin64*
-3. Select **Release**, **Any CPU**, and build the solution.
-4. Copy the following files into the Space Engineers *Bin64* directory above: *SEWorkshopTool.exe*, and *SEWorkshopTool.exe.config*.
-5. Open a command prompt in the Space Engineers *Bin64* directory as used above.
-6. Run the tool with the appropriate options.
+1. Link game binary directories (adjust the path to your actual folder as needed)
+  a. Space Engineers: mklink /J SpaceEngineersBin64 "C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64" 
+  b. Medieval Engineers: TODO
+2. Open **SEWorkshopTool.sln**
+3. Change the references for *CommandLine.dll*, *Sandbox.Game.dll*, *SpaceEngineers.Game.dll*, *Vrage.dll*, *VRage.Game.dll*, *VRage.Library.dll*, and *VRage.Scripting.dll* to point to the location where Space Engineers is installed, typically *&lt;SteamApps&gt;\Common\SpaceEngineers\Bin64*
+4. Select **Release**, **Any CPU**, and build the solution.
+5. Copy the following files into the Space Engineers *Bin64* directory above: *SEWorkshopTool.exe*, and *SEWorkshopTool.exe.config*.
+6. Open a command prompt in the Space Engineers *Bin64* directory as used above.
+7. Run the tool with the appropriate options.
 
 # Examples
 
