@@ -46,7 +46,7 @@ namespace Phoenix.SEWorkshopTool
             m_steamService = MySteamGameService.Create(MySandboxGame.IsDedicated, AppId);
             MyServiceManager.Instance.AddService(m_steamService);
             MyServerDiscoveryAggregator serverDiscoveryAggregator = new MyServerDiscoveryAggregator();
-            MySteamGameService.InitNetworking(false, m_steamService, serverDiscoveryAggregator, true, true);
+            MySteamGameService.InitNetworking(false, m_steamService, MyPerGameSettings.BasicGameInfo.GameName, serverDiscoveryAggregator, true, true);
 
             // If user specified --modio, set that as the "default" (added first)
             var modioService = MyModIoService.Create(MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, m_useModIO ? true : false);
