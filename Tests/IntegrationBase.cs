@@ -118,7 +118,7 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void UploadModWithDescription()
         {
-            var filename = Path.Combine(TestContext.CurrentContext.WorkDirectory, "..", "..", "..", TestContext.Parameters[$"{ParameterPrefix}.ModDescriptionFile"]);
+            var filename = Path.Combine(TestContext.CurrentContext.WorkDirectory, "..", "..", "..", "TestFiles", TestContext.Parameters[$"{ParameterPrefix}.ModDescriptionFile"]);
             var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--description", filename });
             args.AddRange(_extraArguments);
 
@@ -132,6 +132,19 @@ namespace Phoenix.WorkshopTool.Tests
         public void UploadModWithChangelog()
         {
             var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--message", $"SEWT Unit Test: {DateTime.Now.ToShortTimeString()}" });
+            args.AddRange(_extraArguments);
+
+            var exitCode = LaunchMain(args.ToArray());
+            Assert.That(exitCode, Is.EqualTo(0));
+        }
+
+        // This requires an actual change to push, otherwise there's no changelog posted.
+        [Test]
+        [Explicit]
+        public void UploadModWithChangelogFile ()
+        {
+            var filename = Path.Combine(TestContext.CurrentContext.WorkDirectory, "..", "..", "..", "TestFiles", TestContext.Parameters[$"{ParameterPrefix}.ModChangelogFile"]);
+            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--message", filename });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
