@@ -13,6 +13,7 @@ using VRage.Utils;
 using VRage.GameServices;
 using System.Diagnostics;
 using VRage;
+using CommandLine;
 #if SE
 using ParallelTasks;
 #else
@@ -128,7 +129,9 @@ namespace Phoenix.WorkshopTool
             var options = new Options();
             var parser = new CommandLine.Parser(with => with.HelpWriter = Console.Error);
 
-            if (parser.ParseArgumentsStrict(args, options, HandleInputError))
+            var result = parser.ParseArguments<Options>(args).WithNotParsed(l => HandleInputError());
+
+            if (result.Tag == ParserResultType.Parsed)
             {
                 if (options.ModPaths == null &&
                     options.Blueprints == null &&
@@ -141,18 +144,18 @@ namespace Phoenix.WorkshopTool
                 {
                     if (!options.ClearSteamCloud && !options.ListDLCs)
                     {
-                        Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(options).ToString());
+                        Console.WriteLine(CommandLine.Text.HelpText.AutoBuild<Options>(result, null, null).ToString());
                         return Cleanup(1);
                     }
                 }
                 
                 // If a "0" or "none" was specified for DLC, that means remove them all.
-                if(options.DLCs?.Length > 0 && 
+                if(options.DLCs?.Count() > 0 && 
                     (options.DLCs.Contains("0") || options.DLCs.Contains("none", StringComparer.InvariantCultureIgnoreCase)))
                     options.DLCs = new string[0];
 
                 // If a 0 was specified for dependencies, that means remove them all.
-                if (options.Dependencies?.Length > 0 && options.Dependencies.Contains((ulong)0))
+                if (options.Dependencies?.Count() > 0 && options.Dependencies.Contains((ulong)0))
                     options.Dependencies = new ulong[0];
 
                 // SE requires -appdata, but the commandline dll requires --appdata, so fix it
@@ -226,7 +229,7 @@ namespace Phoenix.WorkshopTool
                 if (options.Download)
                     Task = DownloadMods(options);
                 else if (options.ClearSteamCloud)
-                    Task = ClearSteamCloud(options.DeleteSteamCloudFiles, options.Force);
+                    Task = ClearSteamCloud(options.DeleteSteamCloudFiles.ToArray(), options.Force);
                 else if (options.ListDLCs)
                     Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(()=> { ListDLCs(); return true; });
                 else
@@ -532,7 +535,7 @@ namespace Phoenix.WorkshopTool
                     pathname = paths[idx];
                 }
 
-                var tags = options.Tags;
+                var tags = options.Tags.ToArray();
 
                 // If user comma-separated the tags, split them
                 if(tags != null && tags.Length == 1)
@@ -585,7 +588,7 @@ namespace Phoenix.WorkshopTool
                     }
                 }
 
-                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions, options.IgnorePaths, options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs, options.Dependencies, description, changelog);
+                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions.ToArray(), options.IgnorePaths.ToArray(), options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs.ToArray(), options.Dependencies.ToArray(), description, changelog);
                 if (options.UpdateOnly && ((IMod)mod).ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -692,7 +695,7 @@ namespace Phoenix.WorkshopTool
             return Task;
         }
 
-        static bool ProcessItemsDownload(WorkshopType type, string[] paths, Options options)
+        static bool ProcessItemsDownload(WorkshopType type, IEnumerable<string> paths, Options options)
         {
             if (paths == null)
                 return true;
@@ -850,8 +853,9 @@ namespace Phoenix.WorkshopTool
 #endregion Download
 
 #region Pathing
-        static string[] TestPathAndMakeAbsolute(WorkshopType type, string[] paths)
+        static string[] TestPathAndMakeAbsolute(WorkshopType type, IEnumerable<string> pathsin)
         {
+            var paths = pathsin.ToArray();
             for (int idx = 0; paths != null && idx < paths.Length; idx++)
             {
                 // If the passed in path doesn't exist, and is relative, try to match it with the expected data directory
@@ -918,7 +922,7 @@ namespace Phoenix.WorkshopTool
 #endif
         }
 
-        static string[] CombineCollectionWithList(WorkshopType type, List<MyWorkshopItem> items, string[] existingitems)
+        static string[] CombineCollectionWithList(WorkshopType type, List<MyWorkshopItem> items, IEnumerable<string> existingitems)
         {
             var tempList = new List<string>();
 
@@ -935,7 +939,7 @@ namespace Phoenix.WorkshopTool
 
                 return tempList.ToArray();
             }
-            return existingitems;
+            return existingitems.ToArray();
         }
 
         public static void CopyAll(string source, string target)
