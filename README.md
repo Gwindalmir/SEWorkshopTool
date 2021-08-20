@@ -8,14 +8,14 @@ It takes various command-line options, which can be displayed by running **SEWor
 Please note, this is a command-line application only. A GUI may be considered in the future, however at this time it is not planned.
 
 # Requirements
-1. A copy of Space Engineers on Steam
-2. Visual Studio 2013 Update 4 or higher
+1. A copy of Space Engineers (or Medieval) on Steam
+2. Visual Studio 2017 or higher (JetBrains Rider is reported as working).
 
 # Build Steps
 1. Open **SEWorkshopTool.sln**
-2. Change the references for *CommandLine.dll*, *Sandbox.Game.dll*, *SpaceEngineers.Game.dll*, *Vrage.dll*, *VRage.Game.dll*, *VRage.Library.dll*, and *VRage.Scripting.dll* to point to the location where Space Engineers is installed, typically *&lt;SteamApps&gt;\Common\SpaceEngineers\Bin64*
+2. If Steam and Space Engineers (or Medieval) are installed, they should be detected during the build and the project references to the game DLLs should automatically update. If not, you will need to manually create the junction. If there is a problem, the error message in the build output will explain how to create that manually.
 3. Select **Release**, **Any CPU**, and build the solution.
-4. Copy the following files into the Space Engineers *Bin64* directory above: *SEWorkshopTool.exe*, and *SEWorkshopTool.exe.config*.
+4. Copy the following files into the Space Engineers *Bin64* directory above: *SEWorkshopTool.exe*, *SEWorkshopTool.exe.config*, *CommandLine.dll*, and *steam_appid.txt*. Alternatively, just grab *SEWorkshopTool-latest.zip* in the output folder, and extract that to the Bin64 directory.
 5. Open a command prompt in the Space Engineers *Bin64* directory as used above.
 6. Run the tool with the appropriate options.
 
