@@ -14,6 +14,7 @@ using VRage.GameServices;
 using System.Diagnostics;
 using VRage;
 using CommandLine;
+using Phoenix.WorkshopTool.Options;
 #if SE
 using ParallelTasks;
 #else
@@ -116,7 +117,7 @@ namespace Phoenix.WorkshopTool
 
         private void HandleInputError()
         {
-            Console.WriteLine("You have an error in one or more of your arguments.");
+            ProgramBase.ConsoleWriteColored(ConsoleColor.Red, () => Console.Error.WriteLine("You have an error in one or more of your arguments."));
             if (Debugger.IsAttached)
             {
                 Console.WriteLine("Press any key to exit.");
@@ -126,12 +127,34 @@ namespace Phoenix.WorkshopTool
 
         public virtual int InitGame(string[] args)
         {
-            var options = new Options();
-            var parser = new CommandLine.Parser(with => with.HelpWriter = Console.Error);
+            ProcessedOptions options = default(ProcessedOptions);
+            var parser = new CommandLine.Parser(with => with.HelpWriter = null);
 
-            var result = parser.ParseArguments<Options>(args).WithNotParsed(l => HandleInputError());
+            var result = parser.ParseArguments<DownloadVerb, UploadVerb, CloudVerb>(args)
+                .WithParsed(o => options = (ProcessedOptions)o)
+                .WithNotParsed(l =>
+                {
+                    parser.ParseArguments<LegacyOptions>(args)
+                        .WithParsed(o =>
+                        {
+                            options = (ProcessedOptions)o;
+                            ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () => Console.Error.WriteLine("You are using the legacy command-line arguments."));
 
-            if (result.Tag == ParserResultType.Parsed)
+                            string newargs = null;
+                            if (options.Upload)
+                                newargs = parser.FormatCommandLine((UploadVerb)options);
+                            else if (options.Download)
+                                newargs = parser.FormatCommandLine((DownloadVerb)options);
+                            else if (options.Type == typeof(CloudVerb))
+                                newargs = parser.FormatCommandLine((CloudVerb)options);
+
+                            if (newargs != null)
+                                ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () => Console.Error.WriteLine($"Use this instead: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} {newargs}"));
+                        })
+                        .WithNotParsed(e => HandleInputError());
+                });
+
+            if (options != default(ProcessedOptions))
             {
                 if (options.ModPaths == null &&
                     options.Blueprints == null &&
@@ -142,9 +165,9 @@ namespace Phoenix.WorkshopTool
                     options.Worlds == null &&
                     options.Collections == null)
                 {
-                    if (!options.ClearSteamCloud && !options.ListDLCs)
+                    if (!options.Clear && !options.ListCloud && !options.ListDLCs)
                     {
-                        Console.WriteLine(CommandLine.Text.HelpText.AutoBuild<Options>(result, null, null).ToString());
+                        Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null).ToString());
                         return Cleanup(1);
                     }
                 }
@@ -185,7 +208,8 @@ namespace Phoenix.WorkshopTool
                     if (options.Download)
                         return Cleanup(3);
 
-                    options.Upload = false;
+                    // TODO
+                    //options.Upload = false;
                 }
 
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
@@ -193,7 +217,8 @@ namespace Phoenix.WorkshopTool
                 ProgramBase.CheckForUpdate(MySandboxGame.Log.WriteLineAndConsole);
 
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
-                MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}");
+                ProgramBase.ConsoleWriteColored(ConsoleColor.Gray, () =>
+                    MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}"));
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
 
                 // Make sure file paths are properly rooted based on the user's current directory at launch
@@ -228,8 +253,8 @@ namespace Phoenix.WorkshopTool
 
                 if (options.Download)
                     Task = DownloadMods(options);
-                else if (options.ClearSteamCloud)
-                    Task = ClearSteamCloud(options.DeleteSteamCloudFiles.ToArray(), options.Force);
+                else if (options.Clear)
+                    Task = ClearSteamCloud(options.Files.ToArray(), options.Force);
                 else if (options.ListDLCs)
                     Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(()=> { ListDLCs(); return true; });
                 else
@@ -259,6 +284,10 @@ namespace Phoenix.WorkshopTool
                 // If the task reported any error, return exit code
                 if (!Task.Result)
                     return Cleanup(-1);
+            }
+            else
+            {
+                ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () => Console.Error.WriteLine(CommandLine.Text.HelpText.AutoBuild(result).ToString()));
             }
 
             return Cleanup();
@@ -474,7 +503,7 @@ namespace Phoenix.WorkshopTool
 #endregion
 
 #region Upload
-        static System.Threading.Tasks.Task<bool> UploadMods(Options options)
+        static System.Threading.Tasks.Task<bool> UploadMods(ProcessedOptions options)
         {
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
@@ -517,7 +546,7 @@ namespace Phoenix.WorkshopTool
             return Task;
         }
 
-        static bool ProcessItemsUpload(WorkshopType type, List<string> paths, Options options)
+        static bool ProcessItemsUpload(WorkshopType type, List<string> paths, ProcessedOptions options)
         {
             bool success = true;
             for (int idx = 0; idx < paths.Count; idx++)
@@ -588,7 +617,7 @@ namespace Phoenix.WorkshopTool
                     }
                 }
 
-                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions.ToArray(), options.IgnorePaths.ToArray(), options.Compile, options.DryRun, options.Development, options.Visibility, options.Force, options.Thumbnail, options.DLCs.ToArray(), options.Dependencies.ToArray(), description, changelog);
+                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions.ToArray(), options.IgnorePaths.ToArray(), options.Compile, options.DryRun, false, options.Visibility, options.Force, options.Thumbnail, options.DLCs.ToArray(), options.Dependencies.ToArray(), description, changelog);
                 if (options.UpdateOnly && ((IMod)mod).ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -647,7 +676,7 @@ namespace Phoenix.WorkshopTool
 #endregion  Upload
 
 #region Download
-        static System.Threading.Tasks.Task<bool> DownloadMods(Options options)
+        static System.Threading.Tasks.Task<bool> DownloadMods(ProcessedOptions options)
         {
             // Get PublishItemBlocking internal method via reflection
             MySandboxGame.Log.WriteLineAndConsole(string.Empty);
@@ -695,9 +724,9 @@ namespace Phoenix.WorkshopTool
             return Task;
         }
 
-        static bool ProcessItemsDownload(WorkshopType type, IEnumerable<string> paths, Options options)
+        static bool ProcessItemsDownload(WorkshopType type, IEnumerable<string> paths, ProcessedOptions options)
         {
-            if (paths == null)
+            if (paths == null || paths?.Count() == 0 )
                 return true;
 
             var width = Console.IsOutputRedirected ? 256 : Console.WindowWidth;
@@ -855,7 +884,7 @@ namespace Phoenix.WorkshopTool
 #region Pathing
         static string[] TestPathAndMakeAbsolute(WorkshopType type, IEnumerable<string> pathsin)
         {
-            var paths = pathsin.ToArray();
+            var paths = pathsin?.ToArray();
             for (int idx = 0; paths != null && idx < paths.Length; idx++)
             {
                 // If the passed in path doesn't exist, and is relative, try to match it with the expected data directory

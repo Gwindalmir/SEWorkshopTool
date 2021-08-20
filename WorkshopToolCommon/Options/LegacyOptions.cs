@@ -4,7 +4,7 @@ using VRage.GameServices;
 
 namespace Phoenix.WorkshopTool
 {
-    public sealed class Options
+    public sealed class LegacyOptions : Options.OptionBase
     {
         private const string OptionSet = "MainFunctions";
 
@@ -38,9 +38,6 @@ namespace Phoenix.WorkshopTool
         [Option("ignore", HelpText = "List of paths to exclude from upload")]
         public IEnumerable<string> IgnorePaths { get; set; }
 
-        [Option('f', "force", Default = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
-        public bool Force { get; set; }
-
         [Option('m', "mods", HelpText = "List of directories of mods to upload; or Workshop ID of mods to download (when in download mode), use quotes if spaces")]
         public IEnumerable<string> ModPaths { get; set; }
 
@@ -52,11 +49,11 @@ namespace Phoenix.WorkshopTool
 
         [Option('w', "worlds", HelpText = "List of directories of worlds to upload; or Workshop ID of worlds to download (when in download mode)")]
         public IEnumerable<string> Worlds { get; set; }
-
 #if SE
         [Option('i', "scripts", HelpText = "List of directories of scripts to upload; or Workshop ID of scripts to download (when in download mode)")]
-        public IEnumerable<string> IngameScripts { get; set; }
 #endif
+        public IEnumerable<string> IngameScripts { get; set; }
+
         [Option('t', "tags", HelpText = "List of workshop mod categories/tags to use (removes previous, default is keep existing)")]
         public IEnumerable<string> Tags { get; set; }
 
@@ -71,27 +68,17 @@ namespace Phoenix.WorkshopTool
 
         [Option("deletecloudfile", HelpText = "Delete individual file or files from the Steam Cloud")]
         public IEnumerable<string> DeleteSteamCloudFiles { get; set; }
-
 #if SE
         [Option("listdlc", HelpText = "List available DLCs", SetName = "dlc")]
 #endif
         public bool ListDLCs { get; set; }
-
 #if SE
         [Option("dlc", HelpText = "Add DLC dependency to mod, accepts numeric ID or name. Use 0 or None to remove all DLC.")]
 #endif
         public IEnumerable<string> DLCs { get; set; }
 
-#if SE
-        [Option("modio", HelpText = "Use mod.io by default.")]
-#endif
-        public bool ModIO { get; set; } = false;
-
         [Option("dependencies", HelpText = "Specify dependencies to other mods (modids only). Use 0 to remove all.")]
         public IEnumerable<ulong> Dependencies { get; set; }
-
-        [Option("appdata", Default = "%AppData%\\SpaceEngineers", HelpText = "Specify custom AppData location")]
-        public string AppData { get; set; }
 
         [Option("description", HelpText = "File containing the description to set for workshop item")]
         public string DescriptionFile { get; set; }
