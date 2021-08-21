@@ -8,9 +8,6 @@
     <AssemblyName>Phoenix.WorkshopTool.Tests</AssemblyName>
 
     <RootNamespace>Phoenix.WorkshopTool.Tests</RootNamespace>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
