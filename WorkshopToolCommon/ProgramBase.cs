@@ -30,8 +30,10 @@ namespace Phoenix.WorkshopTool
                     if (!string.IsNullOrEmpty(asset?.Url))
                     {
                         ConsoleWriteColored(ConsoleColor.Green, () =>
-                            logMethod($"Update Check: UPDATE AVAILABLE: {Assembly.GetEntryAssembly().GetName().Name} {release.TagName}"));
+                            logMethod($"Update Check: UPDATE AVAILABLE: {release.TagName}, released {release.Published.ToLocalTime()}"));
                         logMethod($"Download at: {asset.Url}");
+
+                        logMethod($"Changelog:\n{release.GetChangelog()}");
                         return;
                     }
                 }

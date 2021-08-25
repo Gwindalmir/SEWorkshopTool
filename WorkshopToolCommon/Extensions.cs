@@ -1,4 +1,5 @@
-﻿using Sandbox;
+﻿using Gwindalmir.Updater;
+using Sandbox;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -140,6 +141,19 @@ namespace Phoenix.WorkshopTool
                 return !Console.IsErrorRedirected;
 
             return false;
+        }
+    }
+
+    public static class UpdaterExtensions
+    {
+        public static string GetChangelog(this Release release)
+        {
+            var end = release.Body.IndexOf("To Install");
+
+            if (end <= 0)
+                end = release.Body.Length;
+
+            return release.Body.Substring(0, end).Trim();
         }
     }
 }
