@@ -167,7 +167,8 @@ namespace Phoenix.WorkshopTool
                 {
                     if (!options.Clear && !options.ListCloud && !options.ListDLCs)
                     {
-                        Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null).ToString());
+                        ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
+                                Console.WriteLine(HelpText.AutoBuild(result, null, null).ToString()));
                         return Cleanup(1);
                     }
                 }
@@ -201,9 +202,12 @@ namespace Phoenix.WorkshopTool
 
                 if (!SteamAPI.IsSteamRunning())
                 {
-                    MySandboxGame.Log.WriteLineAndConsole("ERROR: * Steam not detected. Is Steam running and not as Admin? *");
-                    MySandboxGame.Log.WriteLineAndConsole("* Only compile testing is available. *");
-                    MySandboxGame.Log.WriteLineAndConsole("");
+                    ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
+                    {
+                        MySandboxGame.Log.WriteLineAndConsole("ERROR: * Steam not detected. Is Steam running and not as Admin? *");
+                        MySandboxGame.Log.WriteLineAndConsole("* Only compile testing is available. *");
+                        MySandboxGame.Log.WriteLineAndConsole("");
+                    });
 
                     if (options.Download)
                         return Cleanup(3);
@@ -217,7 +221,7 @@ namespace Phoenix.WorkshopTool
                 ProgramBase.CheckForUpdate(MySandboxGame.Log.WriteLineAndConsole);
 
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
-                ProgramBase.ConsoleWriteColored(ConsoleColor.Gray, () =>
+                ProgramBase.ConsoleWriteColored(ConsoleColor.White, () =>
                     MySandboxGame.Log.WriteLineAndConsole($"Log file: {MySandboxGame.Log.GetFilePath()}"));
                 MySandboxGame.Log.WriteLineToConsole(string.Empty);
 
@@ -729,7 +733,7 @@ namespace Phoenix.WorkshopTool
             if (paths == null || paths?.Count() == 0 )
                 return true;
 
-            var width = Console.IsOutputRedirected ? 256 : Console.WindowWidth;
+            var width = Console.Out.IsInteractive() ? Console.WindowWidth : 256;
 
             var items = new List<MyWorkshopItem>();
             var modids = paths.Select(ulong.Parse);

@@ -40,7 +40,7 @@ namespace Phoenix.WorkshopTool
             catch (Exception ex)
             {
                 // Don't cause problems if update checker failed. Just report it.
-                ConsoleWriteColored(ConsoleColor.Green, () =>
+                ConsoleWriteColored(ConsoleColor.Red, () =>
                     errorMethod($"Error checking for update: {ex.Message}"));
             }
         }
@@ -58,7 +58,7 @@ namespace Phoenix.WorkshopTool
         public static void ConsoleWriteColored(ConsoleColor color, Action outputMethod)
         {
             // Don't colorize output if the terminal is non-interactive, or any output streams are redirected.
-            if(Environment.UserInteractive && !Console.IsOutputRedirected && !Console.IsErrorRedirected)
+            if(Console.Out.IsInteractive() && Console.Error.IsInteractive())
                 Console.ForegroundColor = color;
 
             try
@@ -67,7 +67,7 @@ namespace Phoenix.WorkshopTool
             }
             finally
             {
-                if (Environment.UserInteractive && !Console.IsOutputRedirected && !Console.IsErrorRedirected)
+                if (Console.Out.IsInteractive() && Console.Error.IsInteractive())
                     Console.ResetColor();
             }
         }

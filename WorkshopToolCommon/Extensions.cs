@@ -3,6 +3,7 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using VRage;
 using VRage.GameServices;
@@ -81,9 +82,12 @@ namespace Phoenix.WorkshopTool
         /// <param name="customMessage">Message text to log, exception message will be appended.</param>
         public static void Log(this Exception ex, string customMessage = "ERROR: An exception occurred: ")
         {
-            MySandboxGame.Log.WriteLineAndConsole(customMessage + ex.Message);
-            MySandboxGame.Log.WriteLineToConsole("Check the log file for details.");
-            MySandboxGame.Log.WriteLine(ex.StackTrace);
+            ProgramBase.ConsoleWriteColored(ConsoleColor.Red, () =>
+            {
+                MySandboxGame.Log.WriteLineAndConsole(customMessage + ex.Message);
+                MySandboxGame.Log.WriteLineToConsole("Check the log file for details.");
+                MySandboxGame.Log.WriteLine(ex.StackTrace);
+            });
         }
 
         /// <summary>
@@ -120,5 +124,22 @@ namespace Phoenix.WorkshopTool
         return id.ToString();
         }
 #endif
+    }
+
+    public static class ConsoleHelper
+    {
+        public static bool IsInteractive(this TextWriter stream)
+        {
+            if (!Environment.UserInteractive)
+                return false;
+
+            if (Console.Out == stream)
+                return !Console.IsOutputRedirected;
+
+            if (Console.Error == stream)
+                return !Console.IsErrorRedirected;
+
+            return false;
+        }
     }
 }

@@ -902,7 +902,7 @@ namespace Phoenix.WorkshopTool
             if (m_deps?.Length > 0)
             {
                 var depItems = new List<MyWorkshopItem>();
-                var width = Console.IsOutputRedirected ? 256 : Console.WindowWidth;
+                var width = Console.Out.IsInteractive() ? Console.WindowWidth : 256;
 #if SE
                 var depIds = new List<WorkshopId>();
                 foreach (var item in m_deps)
