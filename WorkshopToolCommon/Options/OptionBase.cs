@@ -8,7 +8,7 @@ namespace Phoenix.WorkshopTool.Options
     public abstract class OptionBase
     {
 #if SE
-        [Option("modio", HelpText = "Use mod.io by default.")]
+        [Option("modio", HelpText = "Use mod.io by default")]
 #endif
         public bool ModIO { get; set; } = false;
 

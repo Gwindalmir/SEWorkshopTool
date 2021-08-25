@@ -16,9 +16,8 @@ namespace Phoenix.WorkshopTool.Options
 
         // Download properties
         public bool Download => Type == typeof(DownloadVerb);
-
-        IList<ulong> Ids { get; set; }
         public bool Extract { get; set; }
+        public IList<ulong> Ids { get; set; }
 
         // Upload properties
         public bool Upload => Type == typeof(UploadVerb);
@@ -49,12 +48,11 @@ namespace Phoenix.WorkshopTool.Options
         // TODO
         public bool ListDLCs { get; set; }
 
-
         public ProcessedOptions(DownloadVerb options) 
             : this((OptionBase) options)
         {
             Ids = options.Ids.ToList();
-            Extract = options.Extract;
+            Extract = !options.NoExtract;
         }
 
         public ProcessedOptions(UploadVerb options)
@@ -78,6 +76,14 @@ namespace Phoenix.WorkshopTool.Options
             Tags = options.Tags?.ToList();
             DLCs = options.DLCs?.ToList();
             Dependencies = options.Dependencies?.ToList();
+        }
+
+        public ProcessedOptions(CompileVerb options)
+            : this((OptionBase)options)
+        {
+            Compile = true;
+            ModPaths = options.ModPaths?.ToList();
+            IngameScripts = options.IngameScripts?.ToList();
         }
 
         public ProcessedOptions(CloudVerb options)
@@ -122,6 +128,14 @@ namespace Phoenix.WorkshopTool.Options
             Scenarios = options.Scenarios?.ToList();
             IngameScripts = options.IngameScripts?.ToList();
 
+            var allids = new HashSet<ulong>();
+            ModPaths?.ForEach(s => allids.Add(ulong.Parse(s)));
+            Blueprints?.ForEach(s => allids.Add(ulong.Parse(s)));
+            Scenarios?.ForEach(s => allids.Add(ulong.Parse(s)));
+            IngameScripts?.ForEach(s => allids.Add(ulong.Parse(s)));
+            Ids = allids.ToList();
+
+            Extract = options.Extract;
             ExcludeExtensions = options.ExcludeExtensions?.ToList();
             IgnorePaths = options.IgnorePaths?.ToList();
             Tags = options.Tags?.ToList();
@@ -136,10 +150,11 @@ namespace Phoenix.WorkshopTool.Options
             Files = options.DeleteSteamCloudFiles?.ToList();
         }
 
-        public static explicit operator ProcessedOptions(DownloadVerb options) => new ProcessedOptions(options);
-        public static explicit operator ProcessedOptions(UploadVerb options) => new ProcessedOptions(options);
-        public static explicit operator ProcessedOptions(CloudVerb options) => new ProcessedOptions(options);
-        public static explicit operator ProcessedOptions(LegacyOptions options) => new ProcessedOptions(options);
+        public static implicit operator ProcessedOptions(DownloadVerb options) => new ProcessedOptions(options);
+        public static implicit operator ProcessedOptions(UploadVerb options) => new ProcessedOptions(options);
+        public static implicit operator ProcessedOptions(CompileVerb options) => new ProcessedOptions(options);
+        public static implicit operator ProcessedOptions(CloudVerb options) => new ProcessedOptions(options);
+        public static implicit operator ProcessedOptions(LegacyOptions options) => new ProcessedOptions(options);
 
         public static explicit operator DownloadVerb(ProcessedOptions options)
         {
@@ -147,7 +162,7 @@ namespace Phoenix.WorkshopTool.Options
             result.AppData = options.AppData;
             result.Force = options.Force;
             result.ModIO = options.ModIO;
-            result.Extract = options.Extract;
+            result.NoExtract = !options.Extract;
             result.Ids = options.Ids;
             return result;
         }
@@ -187,6 +202,17 @@ namespace Phoenix.WorkshopTool.Options
             result.Scenarios = options.Scenarios;
             result.Tags = options.Tags;
             result.Worlds = options.Worlds;
+            return result;
+        }
+
+        public static explicit operator CompileVerb(ProcessedOptions options)
+        {
+            var result = new CompileVerb();
+            result.AppData = options.AppData;
+            result.Force = options.Force;
+            result.ModIO = options.ModIO;
+            result.IngameScripts = options.IngameScripts;
+            result.ModPaths = options.ModPaths;
             return result;
         }
     }

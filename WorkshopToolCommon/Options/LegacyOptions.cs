@@ -20,10 +20,10 @@ namespace Phoenix.WorkshopTool
         [Option('d', "dry-run", Default = false, HelpText = "Only run a test, do not actually upload. Useful with --compile")]
         public bool DryRun { get; set; }
 
-        [Option("download", Default = false, HelpText = "Download mods", SetName = "download")]
+        [Option("download", Group = "main", HelpText = "Download mods")]
         public bool Download { get; set; }
 
-        [Option("upload", Default = false, HelpText = "Upload and publish mods", SetName = "upload")]
+        [Option("upload", Group = "main", HelpText = "Upload and publish mods")]
         public bool Upload { get; set; }
 
         [Option('e', "extract", Default = false, HelpText = "Extract downloaded mods (valid for download only)")]
@@ -63,17 +63,17 @@ namespace Phoenix.WorkshopTool
         [Option("thumb", HelpText = "Thumbnail to upload (doesn't re-upload mod)")]
         public string Thumbnail { get; set; }
 
-        [Option("clearsteamcloud", Default = false, HelpText = "Clear Steam Cloud (WARNING!). THIS WILL DELETE YOUR STEAM CLOUD FOR SE! Use with --force to actually delete.", SetName = "cloud")]
+        [Option("clearsteamcloud", Group = "main", HelpText = "Clear Steam Cloud (WARNING!). THIS WILL DELETE YOUR STEAM CLOUD FOR SE! Use with --force to actually delete.")]
         public bool ClearSteamCloud { get; set; }
 
         [Option("deletecloudfile", HelpText = "Delete individual file or files from the Steam Cloud")]
         public IEnumerable<string> DeleteSteamCloudFiles { get; set; }
 #if SE
-        [Option("listdlc", HelpText = "List available DLCs", SetName = "dlc")]
+        [Option("listdlc", Group = "main", HelpText = "List available DLCs")]
 #endif
         public bool ListDLCs { get; set; }
 #if SE
-        [Option("dlc", HelpText = "Add DLC dependency to mod, accepts numeric ID or name. Use 0 or None to remove all DLC.")]
+        [Option("dlc", Group = "main", HelpText = "Add DLC dependency to mod, accepts numeric ID or name. Use 0 or None to remove all DLC.")]
 #endif
         public IEnumerable<string> DLCs { get; set; }
 

@@ -15,6 +15,7 @@ using System.Diagnostics;
 using VRage;
 using CommandLine;
 using Phoenix.WorkshopTool.Options;
+using CommandLine.Text;
 #if SE
 using ParallelTasks;
 #else
@@ -115,48 +116,66 @@ namespace Phoenix.WorkshopTool
             return assemblyPath;
         }
 
-        private void HandleInputError()
-        {
-            ProgramBase.ConsoleWriteColored(ConsoleColor.Red, () => Console.Error.WriteLine("You have an error in one or more of your arguments."));
-            if (Debugger.IsAttached)
-            {
-                Console.WriteLine("Press any key to exit.");
-                Console.ReadKey();
-            }
-        }
-
         public virtual int InitGame(string[] args)
         {
             ProcessedOptions options = default(ProcessedOptions);
             var parser = new CommandLine.Parser(with => with.HelpWriter = null);
 
-            var result = parser.ParseArguments<DownloadVerb, UploadVerb, CloudVerb>(args)
-                .WithParsed(o => options = (ProcessedOptions)o)
+            var result = parser.ParseArguments<DownloadVerb, UploadVerb, PublishVerb, CompileVerb, CloudVerb>(args)
+                .WithParsed(o => options = (ProcessedOptions)(dynamic)o)
                 .WithNotParsed(l =>
                 {
                     parser.ParseArguments<LegacyOptions>(args)
                         .WithParsed(o =>
                         {
-                            options = (ProcessedOptions)o;
-                            ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () => Console.Error.WriteLine("You are using the legacy command-line arguments."));
+                            options = o;
+
+                            if (options.ListDLCs)
+                                return;
+
+                            ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () => Console.Error.WriteLine("You are using the legacy command-line arguments. These will be removed after v0.8!"));
 
                             string newargs = null;
                             if (options.Upload)
-                                newargs = parser.FormatCommandLine((UploadVerb)options);
+                                newargs = parser.FormatCommandLine((UploadVerb)options, s=> s.SkipDefault = true);
                             else if (options.Download)
-                                newargs = parser.FormatCommandLine((DownloadVerb)options);
+                                newargs = parser.FormatCommandLine((DownloadVerb)options, s => s.SkipDefault = true);
                             else if (options.Type == typeof(CloudVerb))
-                                newargs = parser.FormatCommandLine((CloudVerb)options);
+                                newargs = parser.FormatCommandLine((CloudVerb)options, s => s.SkipDefault = true);
 
                             if (newargs != null)
                                 ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () => Console.Error.WriteLine($"Use this instead: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} {newargs}"));
                         })
-                        .WithNotParsed(e => HandleInputError());
+                    ;
                 });
 
-            if (options != default(ProcessedOptions))
+            if (options == default(ProcessedOptions))
             {
-                if (options.ModPaths == null &&
+                var helptext = HelpText.AutoBuild(result, h =>
+                {
+                    //h.OptionComparison = HelpText.RequiredThenAlphaComparison;
+                    h.AddEnumValuesToHelpText = true;
+
+                    if (Console.Out.IsInteractive() || Console.Error.IsInteractive())
+                        h.MaximumDisplayWidth = Console.WindowWidth;
+
+                    return h;
+                });
+                
+                // Print the help text in yellow if it's not a user requested help prompt
+                result.WithNotParsed(e =>
+                {
+                    if(e.IsHelp() || e.IsVersion())
+                        Console.WriteLine(helptext.ToString());
+                    else
+                        ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
+                            Console.Error.WriteLine(helptext.ToString()));
+                });
+            }
+            else
+            {
+                if (options.Ids == null && 
+                    options.ModPaths == null &&
                     options.Blueprints == null &&
 #if SE
                     options.IngameScripts == null &&
@@ -209,11 +228,8 @@ namespace Phoenix.WorkshopTool
                         MySandboxGame.Log.WriteLineAndConsole("");
                     });
 
-                    if (options.Download)
+                    if (options.Download || (options.Upload && !options.Compile))
                         return Cleanup(3);
-
-                    // TODO
-                    //options.Upload = false;
                 }
 
                 MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
@@ -288,10 +304,6 @@ namespace Phoenix.WorkshopTool
                 // If the task reported any error, return exit code
                 if (!Task.Result)
                     return Cleanup(-1);
-            }
-            else
-            {
-                ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () => Console.Error.WriteLine(CommandLine.Text.HelpText.AutoBuild(result).ToString()));
             }
 
             return Cleanup();
@@ -622,6 +634,7 @@ namespace Phoenix.WorkshopTool
                 }
 
                 var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions.ToArray(), options.IgnorePaths.ToArray(), options.Compile, options.DryRun, false, options.Visibility, options.Force, options.Thumbnail, options.DLCs.ToArray(), options.Dependencies.ToArray(), description, changelog);
+                var mod = new Uploader(type, pathname, (UploadVerb)options, tags, description, changelog);
                 if (options.UpdateOnly && ((IMod)mod).ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -698,6 +711,7 @@ namespace Phoenix.WorkshopTool
 
                     // get collection information
                     options.Collections.ForEach(s => items.AddRange(WorkshopHelper.GetCollectionDetails(ulong.Parse(s))));
+                    items.AddRange(WorkshopHelper.GetItemDetails(options.Ids));
 
                     options.ModPaths = CombineCollectionWithList(WorkshopType.Mod, items, options.ModPaths);
                     options.Blueprints = CombineCollectionWithList(WorkshopType.Blueprint, items, options.Blueprints);

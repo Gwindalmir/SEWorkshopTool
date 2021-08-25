@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Phoenix.WorkshopTool.Options
 {
-    [Verb("cloud", isDefault: false, HelpText = "Interact with saved files on the Steam Cloud.")]
+    [Verb("cloud", HelpText = "Interact with saved files on the Steam Cloud.")]
     public class CloudVerb : OptionBase
     {
         [Option('l', "list", Default = true, SetName = "list", HelpText = "List files stored in the cloud.")]
