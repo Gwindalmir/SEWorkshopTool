@@ -25,14 +25,60 @@ namespace Phoenix.WorkshopTool.Options
         public bool DryRun { get; set; }
         public bool Compile { get; set; }
         public IList<string> Collections { get; set; }
-        public IList<string> ModPaths { get; set; }
+        public IList<string> Mods { get; set; }
         public IList<string> Blueprints { get; set; }
         public IList<string> Scenarios { get; set; }
         public IList<string> Worlds { get; set; }
         public IList<string> IngameScripts { get; set; }
         public IList<string> ExcludeExtensions { get; set; }
         public IList<string> IgnorePaths { get; set; }
-        public IList<string> Tags { get; set; }
+
+        IList<string> _tags;
+        public IList<string> Tags
+        {
+            get => _tags;
+            set
+            {
+                // If user comma-separated the tags, split them
+                if (value != null)
+                {
+                    var tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                    value.ForEach(s => s.Split(',', ';').ForEach(t => tags.Add(t)));
+                    _tags = tags.ToList();
+                }
+            }
+        }
+
+        IList<string> _tagsToAdd;
+        public IList<string> TagsToAdd
+        {
+            get => _tagsToAdd;
+            set
+            {
+                if (value != null)
+                {
+                    var tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                    value.ForEach(s => s.Split(',', ';').ForEach(t => tags.Add(t)));
+                    _tagsToAdd = tags.ToList();
+                }
+            }
+        }
+
+        IList<string> _tagsToRemove;
+        public IList<string> TagsToRemove
+        {
+            get => _tagsToAdd;
+            set
+            {
+                if (value != null)
+                {
+                    var tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                    value.ForEach(s => s.Split(',', ';').ForEach(t => tags.Add(t)));
+                    _tagsToAdd = tags.ToList();
+                }
+            }
+        }
+
         public IList<string> DLCs { get; set; }
         public IList<ulong> Dependencies { get; set; }
         public string Thumbnail { get; set; }
@@ -45,7 +91,7 @@ namespace Phoenix.WorkshopTool.Options
         public bool Clear { get; set; }
         public IEnumerable<string> Files { get; set; }
 
-        // TODO
+        // Currently relies on LegacyOptions
         public bool ListDLCs { get; set; }
 
         public ProcessedOptions(DownloadVerb options) 
@@ -66,7 +112,7 @@ namespace Phoenix.WorkshopTool.Options
             Changelog = options.Changelog;
             Visibility = options.Visibility;
 
-            ModPaths = options.ModPaths?.ToList();
+            Mods = options.Mods?.ToList();
             Blueprints = options.Blueprints?.ToList();
             Scenarios = options.Scenarios?.ToList();
             IngameScripts = options.IngameScripts?.ToList();
@@ -74,6 +120,8 @@ namespace Phoenix.WorkshopTool.Options
             ExcludeExtensions = options.ExcludeExtensions?.ToList();
             IgnorePaths = options.IgnorePaths?.ToList();
             Tags = options.Tags?.ToList();
+            TagsToAdd = options.TagsToAdd?.ToList();
+            TagsToRemove = options.TagsToRemove?.ToList();
             DLCs = options.DLCs?.ToList();
             Dependencies = options.Dependencies?.ToList();
         }
@@ -82,7 +130,7 @@ namespace Phoenix.WorkshopTool.Options
             : this((OptionBase)options)
         {
             Compile = true;
-            ModPaths = options.ModPaths?.ToList();
+            Mods = options.Mods?.ToList();
             IngameScripts = options.IngameScripts?.ToList();
         }
 
@@ -123,13 +171,19 @@ namespace Phoenix.WorkshopTool.Options
             Changelog = options.Changelog;
             Visibility = options.Visibility;
 
-            ModPaths = options.ModPaths?.ToList();
+            Mods = options.ModPaths?.ToList();
             Blueprints = options.Blueprints?.ToList();
             Scenarios = options.Scenarios?.ToList();
             IngameScripts = options.IngameScripts?.ToList();
 
             var allids = new HashSet<ulong>();
-            ModPaths?.ForEach(s => allids.Add(ulong.Parse(s)));
+            Mods?.ForEach(s =>
+            {
+                ulong val;
+                if (ulong.TryParse(s, out val))
+                    allids.Add(val);
+            });
+
             Blueprints?.ForEach(s => allids.Add(ulong.Parse(s)));
             Scenarios?.ForEach(s => allids.Add(ulong.Parse(s)));
             IngameScripts?.ForEach(s => allids.Add(ulong.Parse(s)));
@@ -198,9 +252,12 @@ namespace Phoenix.WorkshopTool.Options
             result.ExcludeExtensions = options.ExcludeExtensions;
             result.IgnorePaths = options.IgnorePaths;
             result.IngameScripts = options.IngameScripts;
-            result.ModPaths = options.ModPaths;
+            result.Mods = options.Mods;
             result.Scenarios = options.Scenarios;
             result.Tags = options.Tags;
+            result.TagsToAdd = options.TagsToAdd;
+            result.TagsToRemove = options.TagsToRemove;
+
             result.Worlds = options.Worlds;
             return result;
         }
@@ -212,7 +269,7 @@ namespace Phoenix.WorkshopTool.Options
             result.Force = options.Force;
             result.ModIO = options.ModIO;
             result.IngameScripts = options.IngameScripts;
-            result.ModPaths = options.ModPaths;
+            result.Mods = options.Mods;
             return result;
         }
     }

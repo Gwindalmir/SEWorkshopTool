@@ -47,7 +47,13 @@ namespace Phoenix.WorkshopTool.Options
         [Option("dependencies", HelpText = "Specify dependencies to other mods (modids only). Use 0 to remove all.", MetaValue = "<id>[,<id>]")]
         public IEnumerable<ulong> Dependencies { get; set; }
 
+        internal bool TagsSpecified => Tags != null || TagsToAdd != null || TagsToRemove != null;
 
+        [Option("add-tag", HelpText = "List of workshop categories/tags to add")]
+        public IEnumerable<string> TagsToAdd { get; set; }
+
+        [Option("remove-tag", HelpText = "List of workshop categories/tags to remove")]
+        public IEnumerable<string> TagsToRemove { get; set; }
 
         [Option("tags", HelpText = "List of workshop mod categories/tags to use (overwrites previous, default: keep)")]
         public IEnumerable<string> Tags { get; set; }

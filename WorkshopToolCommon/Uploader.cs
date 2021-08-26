@@ -88,7 +88,7 @@ namespace Phoenix.WorkshopTool
         public string Title { get { return m_title; } }
         public string ModPath { get { return m_modPath; } }
 
-        public Uploader(WorkshopType type, string path, string[] tags = null, string[] ignoredExtensions = null, string[] ignoredPaths = null, bool compile = false, bool dryrun = false, bool development = false, PublishedFileVisibility? visibility = null, bool force = false, string previewFilename = null, string[] dlcs = null, ulong[] deps = null, string description = null, string changelog = null)
+        public Uploader(WorkshopType type, string path, Options.UploadVerb options, string description = null, string changelog = null)
         {
             m_modPath = path;
 
@@ -108,11 +108,11 @@ namespace Phoenix.WorkshopTool
             // Fill defaults before assigning user-defined ones
             FillPropertiesFromPublished();
 
-            m_compile = compile;
-            m_dryrun = dryrun;
+            m_compile = options.Compile;
+            m_dryrun = options.DryRun;
 
-            if (visibility != null)
-                m_visibility = visibility;
+            if (options.Visibility != null)
+                m_visibility = options.Visibility;
 
             if (string.IsNullOrEmpty(m_title))
                 m_title = Path.GetFileName(path);
@@ -121,28 +121,28 @@ namespace Phoenix.WorkshopTool
             m_changelog = changelog;
 
             m_type = type;
-            m_isDev = development;
-            m_force = force;
+            m_isDev = false;
+            m_force = options.Force;
 
-            if(previewFilename != null)
-                m_previewFilename = previewFilename;
+            if(options.Thumbnail != null)
+                m_previewFilename = options.Thumbnail;
 #if SE
-            var mappedlc = MapDLCStringsToInts(dlcs);
+            var mappedlc = MapDLCStringsToInts(options.DLCs);
 
             // If user specified "0" or "none" for DLCs, remove all of them
-            if (dlcs != null)
+            if (options.DLCs != null)
                 m_dlcs = mappedlc;
 #endif
-            if (tags != null)
-                m_tags = tags;
+            if (options.Tags != null)
+                m_tags = options.Tags.ToArray();
 
-            if (deps != null)
+            if (options.Dependencies != null)
             {
                 // Any dependencies that existed, but weren't specified, will be removed
                 if (m_deps != null)
-                    m_depsToRemove = m_deps.Except(deps).ToArray();
+                    m_depsToRemove = m_deps.Except(options.Dependencies).ToArray();
 
-                m_deps = deps;
+                m_deps = options.Dependencies.ToArray();
             }
 
             // This file list should match the PublishXXXAsync methods in MyWorkshop
@@ -162,15 +162,14 @@ namespace Phoenix.WorkshopTool
                     break;
             }
 
-            if ( ignoredExtensions != null )
+            if ( options.ExcludeExtensions != null )
             {
-                ignoredExtensions = ignoredExtensions.Select(s => "." + s.TrimStart(new[] { '.', '*' })).ToArray();
-                ignoredExtensions.ForEach(s => m_ignoredExtensions.Add(s));
+                options.ExcludeExtensions.Select(s => "." + s.TrimStart(new[] { '.', '*' })).ForEach(s => m_ignoredExtensions.Add(s));
             }
 
-            if (ignoredPaths != null)
+            if (options.IgnorePaths != null)
             {
-                ignoredPaths.ForEach(s => m_ignoredPaths.Add(s));
+                options.IgnorePaths.ForEach(s => m_ignoredPaths.Add(s));
             }
 
             // Start with the parent file, if it exists. This is at %AppData%\SpaceEngineers\Mods.
@@ -190,7 +189,7 @@ namespace Phoenix.WorkshopTool
         }
 
 #if SE
-        private uint[] MapDLCStringsToInts(string[] stringdlcs)
+        private uint[] MapDLCStringsToInts(IEnumerable<string> stringdlcs)
         {
             var dlcs = new HashSet<uint>();
 

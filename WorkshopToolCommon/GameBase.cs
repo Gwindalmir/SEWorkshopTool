@@ -175,7 +175,7 @@ namespace Phoenix.WorkshopTool
             else
             {
                 if (options.Ids == null && 
-                    options.ModPaths == null &&
+                    options.Mods == null &&
                     options.Blueprints == null &&
 #if SE
                     options.IngameScripts == null &&
@@ -528,7 +528,7 @@ namespace Phoenix.WorkshopTool
                 List<string> itemPaths;
 
                 // Process mods
-                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Mod, options.ModPaths));
+                itemPaths = GetGlobbedPaths(TestPathAndMakeAbsolute(WorkshopType.Mod, options.Mods));
                 if (!ProcessItemsUpload(WorkshopType.Mod, itemPaths, options))
                     success = false;
 
@@ -577,13 +577,7 @@ namespace Phoenix.WorkshopTool
                     pathname = paths[idx];
                 }
 
-                var tags = options.Tags.ToArray();
-
-                // If user comma-separated the tags, split them
-                if(tags != null && tags.Length == 1)
-                {
-                    tags = tags[0].Split(',', ';');
-                }
+                var tags = options.Tags?.ToArray();
 
                 if (!string.IsNullOrEmpty(options.Thumbnail) &&
                     !Path.IsPathRooted(options.Thumbnail))
@@ -630,7 +624,7 @@ namespace Phoenix.WorkshopTool
                     }
                 }
 
-                var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions.ToArray(), options.IgnorePaths.ToArray(), options.Compile, options.DryRun, false, options.Visibility, options.Force, options.Thumbnail, options.DLCs.ToArray(), options.Dependencies.ToArray(), description, changelog);
+                var mod = new Uploader(type, pathname, (UploadVerb)options, description, changelog);
                 if (options.UpdateOnly && ((IMod)mod).ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -709,7 +703,7 @@ namespace Phoenix.WorkshopTool
                     options.Collections.ForEach(s => items.AddRange(WorkshopHelper.GetCollectionDetails(ulong.Parse(s))));
                     items.AddRange(WorkshopHelper.GetItemDetails(options.Ids));
 
-                    options.ModPaths = CombineCollectionWithList(WorkshopType.Mod, items, options.ModPaths);
+                    options.Mods = CombineCollectionWithList(WorkshopType.Mod, items, options.Mods);
                     options.Blueprints = CombineCollectionWithList(WorkshopType.Blueprint, items, options.Blueprints);
 #if SE
                     options.IngameScripts = CombineCollectionWithList(WorkshopType.IngameScript, items, options.IngameScripts);
@@ -718,7 +712,7 @@ namespace Phoenix.WorkshopTool
                     options.Scenarios = CombineCollectionWithList(WorkshopType.Scenario, items, options.Scenarios);
                 }
 
-                if (!ProcessItemsDownload(WorkshopType.Mod, options.ModPaths, options))
+                if (!ProcessItemsDownload(WorkshopType.Mod, options.Mods, options))
                     success = false;
                 if (!ProcessItemsDownload(WorkshopType.Blueprint, options.Blueprints, options))
                     success = false;

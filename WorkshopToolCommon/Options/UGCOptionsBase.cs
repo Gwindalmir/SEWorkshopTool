@@ -8,7 +8,7 @@ namespace Phoenix.WorkshopTool.Options
     public abstract class UGCOptionBase : OptionBase
     {
         [Option("mods", Group = "workshop", HelpText = "List of folder names of mods, use quotes if spaces")]
-        public IEnumerable<string> ModPaths { get; set; }
+        public IEnumerable<string> Mods { get; set; }
 #if SE
         [Option("scripts", Group = "workshop", HelpText = "List of folder names of scripts")]
 #endif
