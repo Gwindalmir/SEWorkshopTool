@@ -221,12 +221,9 @@ namespace Phoenix.WorkshopTool
 
                 if (!SteamAPI.IsSteamRunning())
                 {
-                    ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
-                    {
-                        MySandboxGame.Log.WriteLineAndConsole("ERROR: * Steam not detected. Is Steam running and not as Admin? *");
-                        MySandboxGame.Log.WriteLineAndConsole("* Only compile testing is available. *");
-                        MySandboxGame.Log.WriteLineAndConsole("");
-                    });
+                    MySandboxGame.Log.WriteLineWarning("ERROR: * Steam not detected. Is Steam running and not as Admin? *");
+                    MySandboxGame.Log.WriteLineWarning("* Only compile testing is available. *");
+                    MySandboxGame.Log.WriteLineAndConsole("");
 
                     if (options.Download || (options.Upload && !options.Compile))
                         return Cleanup(3);
@@ -264,7 +261,7 @@ namespace Phoenix.WorkshopTool
                     if (initmethod != null)
                         initmethod.Invoke(m_game, null);
                     else
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "InitModAPI"));
+                        MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "InitModAPI"));
                 }
 #endif
                 ReplaceMethods();
@@ -363,14 +360,14 @@ namespace Phoenix.WorkshopTool
             if (methodtoreplace != null && methodtoinject != null)
                 MethodUtil.ReplaceMethod(methodtoreplace, methodtoinject);
             else
-                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, sourceMethod));
+                MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, sourceMethod));
         }
 
         // Returns argument for chaining
         private int Cleanup(int errorCode = 0)
         {
             if (errorCode != 0)
-                MySandboxGame.Log.WriteLineAndConsole("Check the log file above for error details.");
+                MySandboxGame.Log.WriteLineError("Check the log file above for error details.");
 
             CleanupSandbox();
             return errorCode;
@@ -451,7 +448,7 @@ namespace Phoenix.WorkshopTool
                 if (initWorkshopMethod != null)
                     initWorkshopMethod.Invoke(m_game, null);
                 else
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "InitSteamWorkshop"));
+                    MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "InitSteamWorkshop"));
             }
             catch (Exception ex)
             {
@@ -602,7 +599,7 @@ namespace Phoenix.WorkshopTool
                     if (File.Exists(options.DescriptionFile))
                         description = File.ReadAllText(options.DescriptionFile);
                     else
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Unable to set description, file does not exist: {0}", options.DescriptionFile));
+                        MySandboxGame.Log.WriteLineWarning(string.Format("Unable to set description, file does not exist: {0}", options.DescriptionFile));
                 }
 
                 // Read the changelog from a file, if detected
@@ -634,7 +631,6 @@ namespace Phoenix.WorkshopTool
                 }
 
                 var mod = new Uploader(type, pathname, tags, options.ExcludeExtensions.ToArray(), options.IgnorePaths.ToArray(), options.Compile, options.DryRun, false, options.Visibility, options.Force, options.Thumbnail, options.DLCs.ToArray(), options.Dependencies.ToArray(), description, changelog);
-                var mod = new Uploader(type, pathname, (UploadVerb)options, tags, description, changelog);
                 if (options.UpdateOnly && ((IMod)mod).ModId == 0)
                 {
                     MySandboxGame.Log.WriteLineAndConsole(string.Format("--update-only passed, skipping: {0}", mod.Title));
@@ -646,7 +642,7 @@ namespace Phoenix.WorkshopTool
                 {
                     if (!SteamAPI.IsSteamRunning())
                     {
-                        MySandboxGame.Log.WriteLineAndConsole("Cannot publish, Steam not detected!");
+                        MySandboxGame.Log.WriteLineError("Cannot publish, Steam not detected!");
                         return false;
                     }
 
@@ -657,14 +653,14 @@ namespace Phoenix.WorkshopTool
                         else
                         {
                             success = false;
-                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Error occurred: {0}", mod.Title));
+                            MySandboxGame.Log.WriteLineError(string.Format("Error occurred: {0}", mod.Title));
                         }
                     }
                     else
                     {
                         if (((IMod)mod).ModId == 0)
                         {
-                            MySandboxGame.Log.WriteLineAndConsole(string.Format("Mod not published, skipping: {0}", mod.Title));
+                            MySandboxGame.Log.WriteLineWarning(string.Format("Mod not published, skipping: {0}", mod.Title));
                             success = false;
                         }
                         else
@@ -682,7 +678,7 @@ namespace Phoenix.WorkshopTool
                 }
                 else
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Skipping {0}: {1}", type.ToString(), mod.Title));
+                    MySandboxGame.Log.WriteLineWarning(string.Format("Skipping {0}: {1}", type.ToString(), mod.Title));
                     success = false;
                 }
 
@@ -791,7 +787,7 @@ namespace Phoenix.WorkshopTool
                             loopsuccess = MyWorkshop.DownloadBlueprintBlocking(item, null);
 #endif
                             if (!loopsuccess)
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.Id));
+                                MySandboxGame.Log.WriteLineError(string.Format("Download of {0} FAILED!", item.Id));
                             else
                                 success = true;
                         }
@@ -804,7 +800,7 @@ namespace Phoenix.WorkshopTool
                         {
                             loopsuccess = MyWorkshop.DownloadScriptBlocking(item);
                             if (!loopsuccess)
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.Id));
+                                MySandboxGame.Log.WriteLineError(string.Format("Download of {0} FAILED!", item.Id));
                             else
                                 success = true;
                         }
@@ -825,7 +821,7 @@ namespace Phoenix.WorkshopTool
                             loopsuccess = MyWorkshop.TryCreateWorldInstanceBlocking(item, pathinfo, out path, false);
                             if (!loopsuccess)
                             {
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Download of {0} FAILED!", item.Id));
+                                MySandboxGame.Log.WriteLineError(string.Format("Download of {0} FAILED!", item.Id));
                             }
                             else
                             {
@@ -847,7 +843,7 @@ namespace Phoenix.WorkshopTool
                 }
                 else
                 {
-                    MySandboxGame.Log.WriteLineAndConsole("Download FAILED!");
+                    MySandboxGame.Log.WriteLineError("Download FAILED!");
                     return false;
                 }
 

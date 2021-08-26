@@ -100,6 +100,18 @@ namespace Phoenix.WorkshopTool
         {
             log.WriteLineAndConsole(msg);
         }
+
+        public static void WriteLineError(this MyLog log, string msg)
+        {
+            ProgramBase.ConsoleWriteColored(ConsoleColor.Red, () =>
+                log.WriteLineAndConsole(msg));
+        }
+
+        public static void WriteLineWarning(this MyLog log, string msg)
+        {
+            ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
+                log.WriteLineAndConsole(msg));
+        }
     }
 
     public static class WorkshopIdHelper

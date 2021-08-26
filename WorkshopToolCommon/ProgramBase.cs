@@ -57,6 +57,11 @@ namespace Phoenix.WorkshopTool
             ConsoleWriteColored(color, () => outputMethod?.Invoke(message));
         }
 
+        public static void ConsoleWriteColored(ConsoleColor color, string message)
+        {
+            ConsoleWriteColored(color, () => Console.Out.WriteLine(message));
+        }
+
         public static void ConsoleWriteColored(ConsoleColor color, Action outputMethod)
         {
             // Don't colorize output if the terminal is non-interactive, or any output streams are redirected.

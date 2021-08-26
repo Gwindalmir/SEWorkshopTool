@@ -94,7 +94,8 @@ namespace Phoenix.SEWorkshopTool
                         "Authentication to mod.io required." + Environment.NewLine +
                         "This will create an OAuth2 token for your account." + Environment.NewLine +
                         "This is a one-time process, and does NOT require your password." + Environment.NewLine +
-                        $"Your email and token will be saved in {config.FilePath}." + Environment.NewLine +
+                        $"Your email and token will be saved in {config.FilePath}." + Environment.NewLine);
+                    ProgramBase.ConsoleWriteColored(ConsoleColor.White,
                         "Protect this file." + Environment.NewLine);
                     System.Console.Write("Enter the email associated with your mod.io account: ");
                     email = System.Console.ReadLine();
@@ -164,7 +165,7 @@ namespace Phoenix.SEWorkshopTool
 
             if (obj == null)
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "MyDLC.ctor"));
+                MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "MyDLC.ctor"));
                 return;
             }
 

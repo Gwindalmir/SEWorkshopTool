@@ -244,7 +244,7 @@ namespace Phoenix.WorkshopTool
 
                     if (_compileMethod == null)
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                        MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
                     }
                 }
             }
@@ -272,7 +272,7 @@ namespace Phoenix.WorkshopTool
 
             if (_publishMethod == null)
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
+                MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
             }
 
             if (_globalIgnoredExtensions == null)
@@ -292,7 +292,7 @@ namespace Phoenix.WorkshopTool
             }
             catch (Exception ex)
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "m_publishSuccess"));
+                MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "m_publishSuccess"));
                 MySandboxGame.Log.WriteLine(ex.Message);
             }
 #endif
@@ -370,25 +370,29 @@ namespace Phoenix.WorkshopTool
                             }
 
                             if( errorCount > 0)
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile errors:", errorCount));
+                                MySandboxGame.Log.WriteLineError(string.Format("There are {0} compile errors:", errorCount));
                             if (warningCount > 0)
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("There are {0} compile warnings:", warningCount));
+                                MySandboxGame.Log.WriteLineWarning(string.Format("There are {0} compile warnings:", warningCount));
 
                             // Output raw message, which is usually in msbuild friendly format, for automated tools
                             foreach (var error in errors)
+                            {
+                                var color = error.Severity == TErrorSeverity.Warning ? ConsoleColor.Yellow : ConsoleColor.Red;
+                                ProgramBase.ConsoleWriteColored(color, () =>
 #if SE
-                                System.Console.WriteLine(error.Message);
+                                    System.Console.Error.WriteLine(error.Message)
 #else
-                                System.Console.WriteLine(error.Text);
+                                    System.Console.Error.WriteLine(error.Text)
 #endif
-
+                                );
+                            }
 #if SE
                             MyDefinitionErrors.Clear();     // Clear old ones, so next mod starts fresh
 #endif
 
                             if (errorCount > 0)
                             {
-                                MySandboxGame.Log.WriteLineAndConsole("Compilation FAILED!");
+                                MySandboxGame.Log.WriteLineError("Compilation FAILED!");
                                 return false;
                             }
                         }
@@ -396,7 +400,7 @@ namespace Phoenix.WorkshopTool
                     }
                     else
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                        MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
                     }
                 }
 #if SE
@@ -419,7 +423,9 @@ namespace Phoenix.WorkshopTool
                         int errors = 0;
                         foreach (var msg in messages)
                         {
-                            MySandboxGame.Log.WriteLineAndConsole(msg.Text);
+                            var color = msg.IsError ? ConsoleColor.Red : ConsoleColor.Gray;
+                            ProgramBase.ConsoleWriteColored(color, () => 
+                                MySandboxGame.Log.WriteLineAndConsole(msg.Text));
 
                             if (msg.IsError)
                                 errors++;
@@ -449,7 +455,7 @@ namespace Phoenix.WorkshopTool
 
             if(!Directory.Exists(m_modPath))
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Directory does not exist {0}. Wrong option?", m_modPath ?? string.Empty));
+                MySandboxGame.Log.WriteLineWarning(string.Format("Directory does not exist {0}. Wrong option?", m_modPath ?? string.Empty));
                 return false;
             }
 
@@ -505,7 +511,7 @@ namespace Phoenix.WorkshopTool
                 }
                 else
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
+                    MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
                 }
                 
                 // SE libraries don't support updating dependencies, so we have to do that separately
@@ -513,7 +519,7 @@ namespace Phoenix.WorkshopTool
             }
             if (((IMod)this).ModId == 0 || !PublishSuccess)
             {
-                MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
+                MySandboxGame.Log.WriteLineError("Upload/Publish FAILED!");
                 return false;
             }
             else
@@ -577,8 +583,8 @@ namespace Phoenix.WorkshopTool
                     MyDebug.AssertDebug(owner == MyGameService.UserId);
                     if (owner != MyGameService.UserId)
                     {
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MyGameService.UserId));
-                        MySandboxGame.Log.WriteLineAndConsole("Upload/Publish FAILED!");
+                        MySandboxGame.Log.WriteLineError(string.Format("Owner mismatch! Mod owner: {0}; Current user: {1}", owner, MyGameService.UserId));
+                        MySandboxGame.Log.WriteLineError("Upload/Publish FAILED!");
                         return false;
                     }
                     return true;
@@ -826,7 +832,7 @@ namespace Phoenix.WorkshopTool
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Updated thumbnail: {0}", Title));
                     }
                     else
-                        MySandboxGame.Log.WriteLineAndConsole(string.Format("Error during publishing: {0}", (object)result));
+                        MySandboxGame.Log.WriteLineError(string.Format("Error during publishing: {0}", (object)result));
                     resetEvent.Set();
                 });
 
