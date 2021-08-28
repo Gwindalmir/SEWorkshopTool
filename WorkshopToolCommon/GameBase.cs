@@ -270,7 +270,7 @@ namespace Phoenix.WorkshopTool
 
                 if (options.Download)
                     Task = DownloadMods(options);
-                else if (options.Clear)
+                else if (options.Clear || options.ListCloud)
                     Task = ClearSteamCloud(options.Files.ToArray(), options.Force);
                 else if (options.ListDLCs)
                     Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(()=> { ListDLCs(); return true; });
