@@ -58,7 +58,7 @@ namespace Phoenix.WorkshopTool
         public IEnumerable<string> Tags { get; set; }
 
         [Option("collections", HelpText = "List of Workshop IDs of collections to download")]
-        public IEnumerable<string> Collections { get; set; }
+        public IEnumerable<ulong> Collections { get; set; }
 
         [Option("thumb", HelpText = "Thumbnail to upload (doesn't re-upload mod)")]
         public string Thumbnail { get; set; }

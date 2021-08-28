@@ -18,13 +18,13 @@ namespace Phoenix.WorkshopTool.Options
         public bool Download => Type == typeof(DownloadVerb);
         public bool Extract { get; set; }
         public IList<ulong> Ids { get; set; }
+        public IList<ulong> Collections { get; set; }
 
         // Upload properties
         public bool Upload => Type == typeof(UploadVerb);
         public bool UpdateOnly { get; set; }
         public bool DryRun { get; set; }
         public bool Compile { get; set; }
-        public IList<string> Collections { get; set; }
         public IList<string> Mods { get; set; }
         public IList<string> Blueprints { get; set; }
         public IList<string> Scenarios { get; set; }
@@ -197,10 +197,13 @@ namespace Phoenix.WorkshopTool.Options
             Dependencies = options.Dependencies?.ToList();
             Collections = options.Collections?.ToList();
             ListDLCs = options.ListDLCs;
-            if (options.ClearSteamCloud && Force)
-                Clear = options.ClearSteamCloud;
-            else
-                ListCloud = true;
+            if (options.ClearSteamCloud)
+            {
+                if (Force || options.DeleteSteamCloudFiles?.Count() > 0)
+                    Clear = options.ClearSteamCloud;
+                else
+                    ListCloud = true;
+            }
             Files = options.DeleteSteamCloudFiles?.ToList();
         }
 

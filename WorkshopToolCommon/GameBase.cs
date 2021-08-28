@@ -700,8 +700,15 @@ namespace Phoenix.WorkshopTool
                     var items = new List<MyWorkshopItem>();
 
                     // get collection information
-                    options.Collections.ForEach(s => items.AddRange(WorkshopHelper.GetCollectionDetails(ulong.Parse(s))));
-                    items.AddRange(WorkshopHelper.GetItemDetails(options.Ids));
+                    options.Collections.ForEach(i => items.AddRange(WorkshopHelper.GetCollectionDetails(i)));
+                    WorkshopHelper.GetItemDetails(options.Ids).ForEach(item =>
+                    {
+                        // Ids can contain any workshop id, including collections, so check each one
+                        if (item.ItemType == MyWorkshopItemType.Collection)
+                            items.AddRange(WorkshopHelper.GetCollectionDetails(item.Id));
+                        else
+                            items.Add(item);
+                    });
 
                     options.Mods = CombineCollectionWithList(WorkshopType.Mod, items, options.Mods);
                     options.Blueprints = CombineCollectionWithList(WorkshopType.Blueprint, items, options.Blueprints);
