@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SEWorkshopTool", "SEWorkshopTool\SEWorkshopTool.csproj", "{B45A96AB-94B8-46C2-813A-32FD0E1D8390}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SEWorkshopTool", "SEWorkshopTool\SEWorkshopTool.csproj", "{B45A96AB-94B8-46C2-813A-32FD0E1D8390}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WorkshopToolCommon", "WorkshopToolCommon\WorkshopToolCommon.shproj", "{F854B41F-D141-467D-A009-74BB31E7A873}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MEWorkshopTool", "MEWorkshopTool\MEWorkshopTool.csproj", "{951AC7F6-8487-428E-8BFF-B26D689FD259}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MEWorkshopTool", "MEWorkshopTool\MEWorkshopTool.csproj", "{951AC7F6-8487-428E-8BFF-B26D689FD259}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{C8E85CFE-78CA-4450-A23D-55FAC0D16BD9}"
 EndProject
