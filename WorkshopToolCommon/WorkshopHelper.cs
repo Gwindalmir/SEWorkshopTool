@@ -1,5 +1,4 @@
-﻿using Sandbox.Engine.Networking;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,19 +6,32 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using VRage.FileSystem;
-using MySubscribedItem = VRage.GameServices.MyWorkshopItem;
 using Sandbox;
 using VRage.GameServices;
 using VRage.Game;
-#if SE
-using VRage;
+using System.Reflection;
 using VRage.Utils;
+using VRage;
+using Phoenix.WorkshopTool.Extensions;
+using Sandbox.Engine.Networking;
+using Sandbox.Graphics.GUI;
+#if SE
+using Sandbox.Game.World;
+using MyDebug = Phoenix.WorkshopTool.Extensions.MyDebug;
+using Error = VRage.Game.MyDefinitionErrors.Error;
+using CancelToken = Sandbox.Engine.Networking.MyWorkshop.CancelToken;
 #else
 using MySteam = VRage.GameServices.MyGameService;
+using MyScriptManager = VRage.Session.MyModManager;
+using Error = VRage.Scripting.MyScriptCompiler.Message;
+using WorkshopId = System.UInt64;
+using VRage.Scripting;
+using VRage.Session;
 #endif
 
 namespace Phoenix.WorkshopTool
 {
+    // This class is meant to consolidate all the game-specific workshop logic, to keep the rest of the app cleaner.
     class WorkshopHelper
     {
 #if SE
@@ -50,10 +62,99 @@ namespace Phoenix.WorkshopTool
             return downloadPath;
         }
 
-        public static void PublishDependencies(ulong modId, ulong[] dependenciesToAdd, ulong[] dependenciesToRemove = null)
+        public static bool GenerateModInfo(string modPath, MyWorkshopItem[] publishedFiles, WorkshopId[] modIds, ulong steamIDOwner)
         {
-            dependenciesToRemove?.ForEach(id => Steamworks.SteamUGC.RemoveDependency((Steamworks.PublishedFileId_t)modId, (Steamworks.PublishedFileId_t)id));
-            dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddDependency((Steamworks.PublishedFileId_t)modId, (Steamworks.PublishedFileId_t)id));
+#if SE
+            return MyWorkshop.GenerateModInfo(modPath, publishedFiles, steamIDOwner);
+#else
+            return MyWorkshop.UpdateModMetadata(modPath, modIds[0], steamIDOwner);
+#endif
+        }
+
+        public static WorkshopId[] GetWorkshopIdFromMod(string modFolder)
+        {
+#if SE
+            return MyWorkshop.GetWorkshopIdFromMod(modFolder);
+#else
+            return new[] { MyWorkshop.GetWorkshopIdFromLocalMod(modFolder) ?? 0 };
+#endif
+        }
+
+#if SE
+        public static List<MyWorkshopItem> GetItemsBlocking(ICollection<WorkshopId> ids)
+        {
+            var results = new List<MyWorkshopItem>();
+            MyWorkshop.GetItemsBlockingUGC(ids.ToList(), results);
+            return results;
+        }
+#endif
+
+        public static MyWorkshopItem GetItemBlocking(ulong id)
+        {
+            return GetItemsBlocking(new[] { id })?.FirstOrDefault();
+        }
+
+        public static List<MyWorkshopItem> GetItemsBlocking(ICollection<ulong> ids)
+        {
+#if SE
+            var workshopIds = new List<WorkshopId>();
+            ids.ForEach(i => workshopIds.Add(new WorkshopId(i, MyGameService.GetDefaultUGC().ServiceName)));
+            return GetItemsBlocking(workshopIds.ToArray());
+#else
+            var results = new List<MyWorkshopItem>();
+            MyWorkshop.GetItemsBlocking(ids, results);
+            return results;
+#endif
+        }
+
+        public static MyModContext GetContext(string modPath, MyWorkshopItem workshopItem, WorkshopId[] modId, string title = null)
+        {
+#if SE
+            var mod = new MyModContext();
+
+            // Because of a regression in SE, we need to create a checkpoint ModItem to set the Id.
+            var modob = new MyObjectBuilder_Checkpoint.ModItem();
+            modob.Name = Path.GetFileName(modPath);
+                        
+            if (modId.Length > 0)
+            {
+                modob.PublishedFileId = workshopItem.Id;
+                modob.PublishedServiceName = workshopItem.ServiceName;
+                modob.FriendlyName = workshopItem.Title;
+                modob.SetModData(workshopItem);
+            }
+            else
+            {
+                // Fake it, so the compile still works
+                modob.PublishedFileId = 0;
+                modob.PublishedServiceName = MyGameService.GetDefaultUGC().ServiceName;
+                modob.FriendlyName = title;
+            }
+            mod.Init(modob);
+
+            // Call init again, to make sure the path in set properly to the local mod directory
+            mod.Init(title, null, modPath);
+#else
+            var item = new MyLocalWorkshopItem(new VRage.ObjectBuilders.SerializableModReference(Path.GetFileName(modPath), 0));
+            var mod = new MyModContext(item, 0);
+#endif
+            return mod;
+        }
+
+        #region Publishing
+        public static MyWorkshopItemPublisher GetPublisher(WorkshopId modId)
+        {
+#if SE
+            return MyGameService.GetUGC(modId.ServiceName).CreateWorkshopPublisher();
+#else
+            return MyGameService.CreateWorkshopPublisher();
+#endif
+        }
+
+        public static void PublishDependencies(ulong[] modId, ulong[] dependenciesToAdd, ulong[] dependenciesToRemove = null)
+        {
+            dependenciesToRemove?.ForEach(id => Steamworks.SteamUGC.RemoveDependency((Steamworks.PublishedFileId_t)modId[0], (Steamworks.PublishedFileId_t)id));
+            dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddDependency((Steamworks.PublishedFileId_t)modId[0], (Steamworks.PublishedFileId_t)id));
         }
 
 #if SE
@@ -77,25 +178,211 @@ namespace Phoenix.WorkshopTool
             }
         }
 #endif
-        public static List<MyWorkshopItem> GetItemDetails(ICollection<ulong> ids)
-        {
-            var results = new List<MyWorkshopItem>();
-#if SE
-            var workshopids = new List<WorkshopId>();
-            foreach (var id in ids)
-                workshopids.Add(new WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName));
+        #endregion Publishing
 
-            MyWorkshop.GetItemsBlockingUGC(workshopids, results);
+        #region Downloading
+        public static MyWorkshop.ResultData DownloadModsBlocking(List<MyWorkshopItem> mods, CancelToken cancelToken = null)
+        {
+#if SE
+            return MyWorkshop.DownloadModsBlockingUGC(mods, cancelToken);
 #else
-            MyWorkshop.GetItemsBlocking(ids, results);
+            return MyWorkshop.DownloadModsBlocking(mods, cancelToken);
 #endif
-            return results;
         }
 
-        #region Collections
-        public static IEnumerable<MySubscribedItem> GetCollectionDetails(ulong modid)
+        public static bool DownloadBlueprintBlocking(MyWorkshopItem item, bool check = true)
         {
-            IEnumerable<MySubscribedItem> details = new List<MySubscribedItem>();
+#if SE
+            return MyWorkshop.DownloadBlueprintBlockingUGC(item, check);
+#else
+            return MyWorkshop.DownloadBlueprintBlocking(item, null, check);
+#endif
+        }
+
+        public static bool TryCreateWorldInstanceBlocking(WorkshopType type, MyWorkshopItem world, out string sessionPath, bool overwrite)
+        {
+#if SE
+            MyWorkshop.MyWorkshopPathInfo pathinfo = type == WorkshopType.World ?
+                                                    MyWorkshop.MyWorkshopPathInfo.CreateWorldInfo() :
+                                                    MyWorkshop.MyWorkshopPathInfo.CreateScenarioInfo();
+
+            return MyWorkshop.TryCreateWorldInstanceBlocking(world, pathinfo, out sessionPath, overwrite);
+#else
+            return MyWorkshop.TryCreateWorldInstanceBlocking(world, out sessionPath, overwrite, null);
+#endif
+        }
+
+        #endregion Downloading
+
+        #region Reflection
+#if SE
+        private delegate ValueTuple<MyGameServiceCallResult, string> PublishItemBlockingDelegate(string localFolder, string publishedTitle, string publishedDescription, WorkshopId[] workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions, HashSet<string> ignoredPaths, uint[] requiredDLCs, out MyWorkshopItem[] outIds);
+        private delegate void LoadScriptsDelegate(string path, MyModContext mod = null);
+        internal static bool PublishSuccess { get; set; }
+#else
+        private delegate ulong PublishItemBlockingDelegate(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
+        private delegate void LoadScriptsDelegate(MyModContext mod = null);
+
+        // Static delegate instance of ref-getter method, statically initialized.
+        // Requires an 'OfInterestClass' instance argument to be provided by caller.
+        static MethodUtil.RefGetter<MyWorkshop, bool> __refget_m_publishSuccess;
+        // Default returns true, as a reflection error doesn't necessarily mean the publish failed.
+        // Check log file for error.
+        // This is a dynamic getter for the MyWorkshop private field
+        internal static bool PublishSuccess => __refget_m_publishSuccess != null ? __refget_m_publishSuccess(null) : true;
+#endif
+
+        private static object _scriptManager = new MyScriptManager();
+        private static PublishItemBlockingDelegate _publishMethod;
+        private static LoadScriptsDelegate _compileMethod;
+
+        private static string[] _previewFileNames;
+        public static ICollection<string> PreviewFileNames
+        {
+            get
+            {
+                if (_previewFileNames == null)
+                    _previewFileNames = typeof(MyWorkshop).GetField("m_previewFileNames", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as string[];
+
+                if (_previewFileNames == null)
+                    _previewFileNames = new string[] { "thumb.png", "thumb.jpg" };
+
+                return _previewFileNames;
+            }
+        }
+
+        private static HashSet<string> _globalIgnoredExtensions;
+        public static ICollection<string> IgnoredExtensions
+        {
+            get
+            {
+                if (_globalIgnoredExtensions == null)
+                    _globalIgnoredExtensions = typeof(MyWorkshop).GetField("m_ignoredExecutableExtensions", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as HashSet<string>;
+
+                return _globalIgnoredExtensions;
+            }
+        }
+
+        public static bool LoadScripts(string path, MyModContext mod = null)
+        {
+            if (_compileMethod == null)
+            {
+                if (_compileMethod == null)
+                {
+                    var compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public, null
+#if SE
+                        , new[] { typeof(string), typeof(MyModContext) }
+#else
+                        , new[] { typeof(MyModContext) }
+#endif
+                        , null);
+                    MyDebug.AssertDebug(compileMethod != null);
+
+                    if (compileMethod != null)
+                        _compileMethod = Delegate.CreateDelegate(typeof(LoadScriptsDelegate), _scriptManager, compileMethod, false) as LoadScriptsDelegate;
+
+                    if (_compileMethod == null)
+                    {
+                        MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                        return false;
+                    }
+                }
+            }
+#if SE
+            _compileMethod(path, mod);
+#else
+            _compileMethod(mod);
+#endif
+            return true;
+        }
+
+        public static bool PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, WorkshopId[] workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions, HashSet<string> ignoredPaths, uint[] requiredDLCs, out MyWorkshopItem[] outIds)
+        {
+            if (_publishMethod == null)
+            {
+                var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic, Type.DefaultBinder, new Type[]
+                {
+                    typeof(string),
+                    typeof(string),
+                    typeof(string),
+#if SE
+                    typeof(WorkshopId[]),
+#else
+                    typeof(ulong),
+#endif
+                    typeof(MyPublishedFileVisibility),
+                    typeof(string[]),
+                    typeof(HashSet<string>),
+                    typeof(HashSet<string>),
+#if SE
+                    typeof(uint[]),
+                    typeof(MyWorkshopItem[]).MakeByRefType()
+#endif
+                }, null);
+
+                MyDebug.AssertDebug(publishMethod != null);
+
+                if (publishMethod != null)
+                    _publishMethod = Delegate.CreateDelegate(typeof(PublishItemBlockingDelegate), publishMethod, false) as PublishItemBlockingDelegate;
+
+                if (_publishMethod == null)
+                {
+                    MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
+                    outIds = null;
+                    return false;
+                }
+
+#if !SE
+                try
+                {
+                    if (__refget_m_publishSuccess == null)
+                        __refget_m_publishSuccess = MethodUtil.create_refgetter<MyWorkshop, bool>("m_publishSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+                }
+                catch (Exception ex)
+                {
+                    MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "m_publishSuccess"));
+                    MySandboxGame.Log.WriteLine(ex.Message);
+                    outIds = null;
+                    return false;
+                }
+#endif
+            }
+#if SE
+            var result = _publishMethod(localFolder, publishedTitle, publishedDescription, workshopId, visibility, tags, ignoredExtensions, ignoredPaths, requiredDLCs, out outIds);
+            PublishSuccess = result.Item1 == MyGameServiceCallResult.OK;
+#else
+            var result = _publishMethod(localFolder, publishedTitle, publishedDescription, workshopId[0], visibility, tags, ignoredExtensions, ignoredPaths);
+            if (result > 0)
+                outIds = new[] { GetItemBlocking(result) };
+            else
+                outIds = null;
+#endif
+            return PublishSuccess;
+        }
+
+        public static void ClearErrors()
+        {
+#if SE
+            MyDefinitionErrors.Clear();     // Clear old ones, so next mod starts fresh
+#endif
+        }
+
+        public static List<Error> GetErrors()
+        {
+#if SE
+            var errors = MyDefinitionErrors.GetErrors();
+#else
+            var compileMessages = _scriptManager.GetType().GetField("m_messages", BindingFlags.NonPublic | BindingFlags.Instance);
+            var errors = (compileMessages.GetValue(_scriptManager) as List<MyScriptCompiler.Message>) ?? new List<MyScriptCompiler.Message>();
+#endif
+            return errors.ToList();
+        }
+        #endregion Reflection
+
+        #region Collections
+        public static IEnumerable<MyWorkshopItem> GetCollectionDetails(ulong modid)
+        {
+            IEnumerable<MyWorkshopItem> details = new List<MyWorkshopItem>();
 
             MySandboxGame.Log.WriteLineAndConsole("Begin processing collections");
 
@@ -120,10 +407,10 @@ namespace Phoenix.WorkshopTool
         }
 
         // code from Rexxar, modified to use XML
-        public static bool GetCollectionDetails(IEnumerable<ulong> publishedFileIds, Action<bool, IEnumerable<MySubscribedItem>> callback)
+        public static bool GetCollectionDetails(IEnumerable<ulong> publishedFileIds, Action<bool, IEnumerable<MyWorkshopItem>> callback)
         {
             string xml = "";
-            var modsInCollection = new List<MySubscribedItem>();
+            var modsInCollection = new List<MyWorkshopItem>();
             bool failure = false;
             MySandboxGame.Log.IncreaseIndent();
             try
@@ -199,14 +486,8 @@ namespace Phoenix.WorkshopTool
                             {
                                 while (sub.ReadToFollowing("publishedfileid"))
                                 {
-                                    var results = new List<MySubscribedItem>();
-
-                                    // SE and ME have different methods, why?
-#if SE
-                                    if (MyWorkshop.GetItemsBlockingUGC(new List<WorkshopId>() { new WorkshopId(Convert.ToUInt64(sub.ReadElementContentAsString()), MyGameService.GetDefaultUGC().ServiceName) }, results))
-#else
-                                    if (MyWorkshop.GetItemsBlocking(new List<ulong>() { Convert.ToUInt64(sub.ReadElementContentAsString()) }, results))
-#endif
+                                    var results = GetItemsBlocking(new [] { Convert.ToUInt64(sub.ReadElementContentAsString()).ToWorkshopId() });
+                                    if(results?.Count > 0)
                                     {
                                         var item = results[0];
 
@@ -238,6 +519,6 @@ namespace Phoenix.WorkshopTool
             }
             return failure;
         }
-#endregion Collections
+        #endregion Collections
     }
 }

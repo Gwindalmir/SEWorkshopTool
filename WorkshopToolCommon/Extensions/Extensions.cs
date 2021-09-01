@@ -5,16 +5,22 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using VRage;
+using VRage.Game;
 using VRage.GameServices;
-#if SE
+using Sandbox.Engine.Networking;
 using VRage.Utils;
+#if SE
+using Error = VRage.Game.MyDefinitionErrors.Error;
+using MyDebug = Phoenix.WorkshopTool.Extensions.MyDebug;
 #else
+using Error = VRage.Scripting.MyScriptCompiler.Message;
 using VRage.Logging;
 #endif
 
-namespace Phoenix.WorkshopTool
+namespace Phoenix.WorkshopTool.Extensions
 {
 #if SE
     static class MyDebug
@@ -74,7 +80,7 @@ namespace Phoenix.WorkshopTool
         }
     }
 
-    public static class LoggingHelper
+    public static class LoggingExtensions
     {
         /// <summary>
         /// Logs an exception.
@@ -114,9 +120,19 @@ namespace Phoenix.WorkshopTool
         }
     }
 
-    public static class WorkshopIdHelper
+    public static class WorkshopIdExtensions
     {
 #if SE
+        public static ulong GetId(this VRage.Game.WorkshopId id)
+        {
+            return id.Id;
+        }
+
+        public static ulong[] GetIds(this VRage.Game.WorkshopId[] ids)
+        {
+            return ids.Select(i => i.Id).ToArray();
+        }
+
         public static string AsString(this VRage.Game.WorkshopId[] ids)
         {
             var result = new StringBuilder();
@@ -131,15 +147,51 @@ namespace Phoenix.WorkshopTool
 
             return result.ToString();
         }
-#else
-        public static string AsString(this ulong id)
+
+        public static WorkshopId[] ToWorkshopIds(this IEnumerable<ulong> ids)
         {
-        return id.ToString();
+            return ids.Select(id => new VRage.Game.WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName)).ToArray();
+        }
+
+        public static WorkshopId ToWorkshopId(this ulong id)
+        {
+            return new VRage.Game.WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName);
+        }
+#else
+        // This is just a wrapper so the same method call can be used for either game.
+        public static ulong GetId(this ulong id)
+        {
+            return id;
+        }
+
+        public static ulong[] GetIds(this ulong[] ids)
+        {
+            return ids;
+        }
+
+        public static string AsString(this ulong[] id)
+        {
+            return id[0].ToString();
+        }
+
+        public static ulong[] ToWorkshopIds(this MyWorkshopItem[] items)
+        {
+            return items?.Select(i => i.Id)?.ToArray();
+        }
+
+        public static ulong[] ToWorkshopIds(this IEnumerable<ulong> ids)
+        {
+            return ids.ToArray();
+        }
+
+        public static ulong ToWorkshopId(this ulong id)
+        {
+            return id;
         }
 #endif
     }
 
-    public static class ConsoleHelper
+    public static class ConsoleExtensions
     {
         public static bool IsInteractive(this TextWriter stream)
         {
@@ -166,6 +218,76 @@ namespace Phoenix.WorkshopTool
                 end = release.Body.Length;
 
             return release.Body.Substring(0, end).Trim();
+        }
+    }
+
+    public static class MyDefinitionErrorExtensions
+    {
+        public static string GetErrorText(this Error error)
+        {
+#if SE
+            return error.Message;
+#else
+            return error.Text;
+#endif
+        }
+    }
+
+    public static class MyWorkshopExtensions
+    {
+        internal static void AddHiddenTags(this List<MyWorkshop.Category> categories, WorkshopType? type = null)
+        {
+            switch (type)
+            {
+                case WorkshopType.Mod:
+#if SE
+                    categories.Add(new MyWorkshop.Category() { Id = "campaign" });
+                    categories.Add(new MyWorkshop.Category() { Id = "font" });
+                    categories.Add(new MyWorkshop.Category() { Id = "noscripts" });
+#endif
+                    break;
+                case WorkshopType.Blueprint:
+                    MyWorkshop.BlueprintCategories.ForEach(c => categories.Add(c));
+#if SE
+                    categories.Add(new MyWorkshop.Category() { Id = "large_grid" });
+                    categories.Add(new MyWorkshop.Category() { Id = "small_grid" });
+                    categories.Add(new MyWorkshop.Category() { Id = "safe" });   // Mod.io only?
+#endif
+                    break;
+                case WorkshopType.Scenario:
+                    break;
+                case WorkshopType.World:
+                    break;
+                case WorkshopType.IngameScript:
+                    break;
+                case null:
+#if SE
+                    // 'obsolete' tag is always available, as is 'No Mods' and 'experimental'
+                    categories.Add(new MyWorkshop.Category() { Id = "obsolete" });
+                    categories.Add(new MyWorkshop.Category() { Id = "no mods" });
+                    categories.Add(new MyWorkshop.Category() { Id = "experimental" });
+#endif
+                    break;
+                default:
+                    MyDebug.FailRelease("Invalid category.");
+                    break;
+            }
+        }
+    }
+
+    public static class MyDLCExtensions
+    {
+        public static uint TryGetDLC(this string dlc)
+        {
+#if SE
+            Sandbox.Game.MyDLCs.MyDLC dlcvalue;
+            if (Sandbox.Game.MyDLCs.TryGetDLC(dlc, out dlcvalue))
+                return dlcvalue.AppId;
+            else
+                return 0;
+#else
+            return 0;
+#endif
         }
     }
 }
