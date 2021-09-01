@@ -460,22 +460,35 @@ namespace Phoenix.WorkshopTool
         {
             var Task = System.Threading.Tasks.Task<bool>.Factory.StartNew(() =>
             {
-#if SE
+                void WriteLine(string line)
+                {
+                    const int TIMESTAMP_LENGTH = 26;
+
+                    // Check if the table is too large to fit with the logging timestamp
+                    if (Console.Out.IsInteractive() && Console.WindowWidth < line.Length + TIMESTAMP_LENGTH)
+                        Console.Out.WriteLine(line);
+                    else
+                        MySandboxGame.Log.WriteLineAndConsole(line);
+                }
+
                 ulong totalBytes = 0;
                 ulong availableBytes = 0;
+                
+                MySteamService.Service.GetRemoteStorageQuota(out totalBytes, out availableBytes);
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Quota: total = {0:N0} kiB, available = {1:N0} kiB", totalBytes / 1024, availableBytes / 1024));
 
-                MyGameService.GetRemoteStorageQuota(out totalBytes, out availableBytes);
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Quota: total = {0}, available = {1}", totalBytes, availableBytes));
+                int totalCloudFiles = MySteamService.Service.GetRemoteStorageFileCount();
+                var wantsToDelete = force || filesToDelete?.Length > 0;
 
-                int totalCloudFiles = MyGameService.GetRemoteStorageFileCount();
-
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Listing cloud {0} files", totalCloudFiles));
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Listing {0} cloud files", totalCloudFiles));
                 MySandboxGame.Log.IncreaseIndent();
+
+                var rows = new List<Tuple<string, int, bool, bool>>();
                 for (int i = 0; i < totalCloudFiles; ++i)
                 {
                     int fileSize = 0;
-                    string fileName = MyGameService.GetRemoteStorageFileNameAndSize(i, out fileSize);
-                    bool persisted = MyGameService.IsRemoteStorageFilePersisted(fileName);
+                    string fileName = MySteamService.Service.GetRemoteStorageFileNameAndSize(i, out fileSize);
+                    bool persisted = MySteamService.Service.IsRemoteStorageFilePersisted(fileName);
                     bool forgot = false;
 
                     // Here's how the if works: 
@@ -484,26 +497,41 @@ namespace Phoenix.WorkshopTool
                     if ((force && filesToDelete == null) || (persisted && fileName.StartsWith("tmp") && fileName.EndsWith(".tmp")) ||
                         (filesToDelete?.Length > 0 && filesToDelete.Contains(fileName, StringComparer.CurrentCultureIgnoreCase))) // dont sync useless temp files
                     {
-                        forgot = MyGameService.RemoteStorageFileForget(fileName);
+                        forgot = MySteamService.Service.RemoteStorageFileForget(fileName);
 
                         // force actually deletes the file on local disk, don't do that unless --force specified
                         if (force)
                         {
-                            forgot = MyGameService.DeleteFromCloud(fileName);
+                            forgot = MySteamService.Service.DeleteFromCloud(fileName);
                             // Delete is immediate, and alters the count, so adjust for that
                             totalCloudFiles--;
                             i--;
                         }
                     }
-
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("'{0}', {1}B, {2}, {3}", fileName, fileSize, persisted, forgot));
+                    rows.Add(new Tuple<string, int, bool, bool>(fileName, fileSize, persisted, forgot));
                 }
+
+                var forgotHeader = force ? "Deleted" : "Forgotten";
+                var colWidths = new List<int>();
+                colWidths.Add(Math.Max(rows.Select(r => r.Item1.Length).DefaultIfEmpty(0).Max() + 1, 10));
+                colWidths.Add(10);
+                colWidths.Add(8);
+                colWidths.Add(forgotHeader.Length);
+
+                var rowFormat = $"{{0,-{colWidths[0]}}}|{{1,{colWidths[1]}}}|{{2,{colWidths[2]}}}|{{3,{colWidths[3]}}}";
+                WriteLine(string.Format(rowFormat, "Filename".PadRight(colWidths[0]), "Size (kiB)".PadRight(colWidths[1]), "In Cloud", forgotHeader));
+                WriteLine(string.Format(rowFormat, new string('-', colWidths[0]), new string('-', colWidths[1]), new string('-', colWidths[2]), new string('-', colWidths[3])));
+
+                foreach (var row in rows)
+                    WriteLine(string.Format(rowFormat, row.Item1, (row.Item2 / 1024).ToString("##,#' '"), row.Item3.ToString().PadRight(6), (wantsToDelete ? row.Item4.ToString() : "N/A").PadRight(colWidths[3] - 2)));
+
                 MySandboxGame.Log.DecreaseIndent();
 
-                MyGameService.GetRemoteStorageQuota(out totalBytes, out availableBytes);
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Quota: total = {0}, available = {1}", totalBytes, availableBytes));
-
-#endif
+                if (wantsToDelete)
+                {
+                    MySteamService.Service.GetRemoteStorageQuota(out totalBytes, out availableBytes);
+                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Quota: total = {0:N0} kiB, available = {1:N0} kiB", totalBytes / 1024, availableBytes / 1024));
+                }
                 return true;
             });
             return Task;
