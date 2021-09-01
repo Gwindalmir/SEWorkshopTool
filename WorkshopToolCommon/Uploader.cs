@@ -39,6 +39,7 @@ namespace Phoenix.WorkshopTool
         readonly HashSet<string> m_ignoredPaths = new HashSet<string>();
         uint[] m_dlcs;
         ulong[] m_deps;
+        ulong[] m_depsToAdd;
         ulong[] m_depsToRemove;
         string m_modPath;
         bool m_compile;
@@ -48,8 +49,9 @@ namespace Phoenix.WorkshopTool
         string m_changelog;
         PublishedFileVisibility? m_visibility;
         WorkshopType m_type;
-        string[] m_tags = new string[1];
-        bool m_isDev = false;
+        string[] m_tags = new string[0];
+        string[] m_tagsToAdd = new string[0];
+        string[] m_tagsToRemove = new string[0];
         bool m_force;
         string m_previewFilename;
 #if SE
@@ -58,6 +60,7 @@ namespace Phoenix.WorkshopTool
         public WorkshopId[] ModId { get { return m_modId; } }
         ulong IMod.ModId { get { return m_modId?.Length > 0 ? m_modId[0].Id : 0; } }
 #else
+        private Dictionary<ulong, MyWorkshopItem> m_workshopItems = new Dictionary<ulong, MyWorkshopItem>();
         ulong m_modId = 0;
         public ulong ModId { get { return m_modId; } }
 #endif
@@ -121,29 +124,23 @@ namespace Phoenix.WorkshopTool
             m_changelog = changelog;
 
             m_type = type;
-            m_isDev = false;
             m_force = options.Force;
 
             if(options.Thumbnail != null)
                 m_previewFilename = options.Thumbnail;
 #if SE
             var mappedlc = MapDLCStringsToInts(options.DLCs);
-
-            // If user specified "0" or "none" for DLCs, remove all of them
-            if (options.DLCs != null)
-                m_dlcs = mappedlc;
+            ProcessDLCs(mappedlc, MapDLCStringsToInts(options.DLCToAdd), MapDLCStringsToInts(options.DLCToRemove));
 #endif
             if (options.Tags != null)
                 m_tags = options.Tags.ToArray();
+            if (options.TagsToAdd != null)
+                m_tagsToAdd = options.TagsToAdd.ToArray();
+            if (options.TagsToRemove != null)
+                m_tagsToRemove = options.TagsToRemove.ToArray();
 
-            if (options.Dependencies != null)
-            {
-                // Any dependencies that existed, but weren't specified, will be removed
-                if (m_deps != null)
-                    m_depsToRemove = m_deps.Except(options.Dependencies).ToArray();
-
-                m_deps = options.Dependencies.ToArray();
-            }
+            ProcessTags();
+            ProcessDependencies(options.Dependencies, options.DependenciesToAdd, options.DependenciesToRemove);
 
             // This file list should match the PublishXXXAsync methods in MyWorkshop
             switch (m_type)
@@ -162,15 +159,8 @@ namespace Phoenix.WorkshopTool
                     break;
             }
 
-            if ( options.ExcludeExtensions != null )
-            {
-                options.ExcludeExtensions.Select(s => "." + s.TrimStart(new[] { '.', '*' })).ForEach(s => m_ignoredExtensions.Add(s));
-            }
-
-            if (options.IgnorePaths != null)
-            {
-                options.IgnorePaths.ForEach(s => m_ignoredPaths.Add(s));
-            }
+            options.ExcludeExtensions?.Select(s => "." + s.TrimStart(new[] { '.', '*' })).ForEach(s => m_ignoredExtensions.Add(s));
+            options.IgnorePaths?.ForEach(s => m_ignoredPaths.Add(s));
 
             // Start with the parent file, if it exists. This is at %AppData%\SpaceEngineers\Mods.
             if (IgnoreFile.TryLoadIgnoreFile(Path.Combine(m_modPath, "..", ".wtignore"), Path.GetFileName(m_modPath), out var extensionsToIgnore, out var pathsToIgnore))
@@ -205,11 +195,17 @@ namespace Phoenix.WorkshopTool
                 }
                 else
                 {
-                    Sandbox.Game.MyDLCs.MyDLC dlcvalue;
-                    if (Sandbox.Game.MyDLCs.TryGetDLC(dlc, out dlcvalue))
+                    if (Sandbox.Game.MyDLCs.TryGetDLC(dlc, out var dlcvalue))
+                    {
                         dlcs.Add(dlcvalue.AppId);
+                    }
                     else
-                        MySandboxGame.Log.WriteLineAndConsole($"Invalid DLC specified: {dlc}");
+                    {
+                        if (stringdlcs.Count() == 1 && dlc.Equals("none", StringComparison.InvariantCultureIgnoreCase))
+                            dlcs.Add(0);
+                        else
+                            MySandboxGame.Log.WriteLineAndConsole($"Invalid DLC specified: {dlc}");
+                    }
                 }
             }
             return dlcs.ToArray();
@@ -481,9 +477,6 @@ namespace Phoenix.WorkshopTool
             // Add the global game filter for file extensions
             _globalIgnoredExtensions?.ForEach(s => m_ignoredExtensions.Add(s));
 
-            // Process Tags
-            ProcessTags();
-
             PrintItemDetails();
 
             MyWorkshopItem[] items = null;
@@ -514,7 +507,7 @@ namespace Phoenix.WorkshopTool
                 }
                 
                 // SE libraries don't support updating dependencies, so we have to do that separately
-                WorkshopHelper.PublishDependencies(m_modId, m_deps, m_depsToRemove);
+                WorkshopHelper.PublishDependencies(m_modId, m_depsToAdd, m_depsToRemove);
             }
             if (((IMod)this).ModId == 0 || !PublishSuccess)
             {
@@ -562,7 +555,9 @@ namespace Phoenix.WorkshopTool
                     if(m_modId.Length > 1 && results.Count > 1)
                         m_workshopItems[m_modId[1]] = results[1];
 #else
-                    if(results.Count > 1)
+                    m_workshopItems[m_modId] = results[0];
+
+                    if (results.Count > 1)
                         m_modId = results[0].Id;
 #endif
 
@@ -593,13 +588,130 @@ namespace Phoenix.WorkshopTool
             return true;
         }
 
+        ulong ParseOrGetWorkshopID(string idOrName)
+        {
+            if (ulong.TryParse(idOrName, out var id))
+            {
+                return id;
+            }
+            else
+            {
+                // Dependencies can only be mods (not blueprints, scripts, etc)
+#if SE
+                id = MyWorkshop.GetWorkshopIdFromMod(Path.Combine(WorkshopHelper.GetWorkshopItemPath(m_type), idOrName)).FirstOrDefault().Id;
+#else
+                id = MyWorkshop.GetWorkshopIdFromLocalMod(Path.Combine(WorkshopHelper.GetWorkshopItemPath(m_type), idOrName)) ?? 0;
+#endif
+                // TODO: Better handle if an unpublished mod is passed in, but bailing on exception is fine for now
+                if (id == 0)
+                    throw new ArgumentException($"Cannot determine Workshop ID of dependency '{idOrName}'. Is it a published mod?");
+                return id;
+            }
+        }
+
+        // This can process passed in dependencies, either as the workshop id (ulong), or a path.
+        // If a path is passed in, then an attempt will be made to grab the workshop id from the local mod.
+        // Mod must be published for that to work.
+        void ProcessDependencies(IEnumerable<string> deps, IEnumerable<string> add, IEnumerable<string> remove)
+        {
+#if SE
+            var existingDeps = m_workshopItems[m_modId[0]].Dependencies.ToList();
+#else
+            var existingDeps = m_workshopItems[m_modId].Dependencies.ToList();
+#endif
+            // Check if the deps contains exactly one element, and that element is a 0 or "none",
+            // if so, set the result to a list of a single ulong value of 0
+            // Otherwise, just fill it with the contents transformed to ids.
+            var explicitDeps = (deps?.Count() == 1 && (deps.First() == "0" || deps.First().Equals("none", StringComparison.InvariantCultureIgnoreCase)))
+                                    ? new List<ulong>(){ 0 } : new List<ulong>(deps?.Select(id => ParseOrGetWorkshopID(id)) ?? new List<ulong>());
+            var depsToAdd = new List<ulong>(add.Select(id => ParseOrGetWorkshopID(id)));
+            var depsToRemove = new List<ulong>(remove.Select(id => ParseOrGetWorkshopID(id)));
+
+            // Steam actually requests the list of deps to add and remove explicitly, so we have to figure it out
+            if (explicitDeps?.Count > 0)
+            {
+                if (explicitDeps.Count == 1 && explicitDeps[0] == 0)
+                {
+                    // Remove ALL dependencies
+                    depsToRemove.AddRange(existingDeps);
+                }
+                else if (existingDeps?.Count > 0)
+                {
+                    // Any dependencies that existed, but weren't specified, will be removed
+                    depsToRemove.AddRange(existingDeps.Except(explicitDeps));
+                    depsToAdd.AddRange(explicitDeps.Except(existingDeps));
+                }
+            }
+
+            // Remove from add/remove list any dependencies that don't exist, or aren't configured to set
+            depsToAdd.RemoveAll(d => existingDeps.Contains(d) || explicitDeps?.Contains(d) == true);
+            depsToRemove.RemoveAll(d => !existingDeps.Contains(d) && !(explicitDeps?.Contains(d) == true));
+
+            // Filter out items that aren't actually mods, these can crash the game if set
+            // Don't check depsToRemove though, so users can remove invalid ones that already exist
+            WorkshopHelper.GetItemDetails(explicitDeps).ForEach(i => { if (!CheckDependency(i)) explicitDeps.Remove(i.Id); });
+            WorkshopHelper.GetItemDetails(depsToAdd).ForEach(i => { if (!CheckDependency(i)) depsToAdd.Remove(i.Id); });
+
+            m_deps = existingDeps.Union(explicitDeps ?? new List<ulong>()).Union(depsToAdd).Except(depsToRemove).Where(i => i != 0).Distinct().ToArray();
+            m_depsToAdd = depsToAdd.Distinct().ToArray();
+            m_depsToRemove = depsToRemove.Distinct().ToArray();
+        }
+
+        bool CheckDependency(MyWorkshopItem item)
+        {
+            if (item.ItemType == MyWorkshopItemType.Item && item.Tags.Contains("Mod", StringComparer.InvariantCultureIgnoreCase))
+                return true;
+
+            if (item.ItemType != MyWorkshopItemType.Item)
+                MySandboxGame.Log.WriteLineWarning($"Dependency '{item.Id}' is not a valid workshop type, skipping.");
+            else
+                MySandboxGame.Log.WriteLineWarning($"Dependency '{item.Id}' has the category '{item.Tags.FirstOrDefault() ?? ""}', not 'mod', skipping.");
+            return false;
+        }
+
+        void ProcessDLCs(IEnumerable<uint> dlcs, IEnumerable<uint> add, IEnumerable<uint> remove)
+        {
+#if SE
+            var existingDeps = m_workshopItems[m_modId[0]].DLCs.ToList();
+            var explicitDeps = dlcs?.ToList();
+            var depsToAdd = add?.ToList();
+            var depsToRemove = remove?.ToList();
+
+            // Steam actually requests the list of deps to add and remove explicitly, so we have to figure it out
+            if (explicitDeps?.Count > 0)
+            {
+                // If a "0" or "none" was specified for DLC, that means remove them all.
+                if (explicitDeps.Count == 1 && explicitDeps[0] == 0)
+                {
+                    // Remove ALL DLCS
+                    depsToRemove.AddRange(existingDeps);
+                }
+                else if (existingDeps?.Count > 0)
+                {
+                    // Any dependencies that existed, but weren't specified, will be removed
+                    depsToRemove.AddRange(existingDeps.Except(explicitDeps));
+                    depsToAdd.AddRange(explicitDeps.Except(existingDeps));
+                }
+            }
+
+            // Remove from add/remove list any dependencies that don't exist, or aren't configured to set
+            depsToAdd.RemoveAll(d => existingDeps.Contains(d) || explicitDeps?.Contains(d) == true);
+            depsToRemove.RemoveAll(d => !existingDeps.Contains(d) && !(explicitDeps?.Contains(d) == true));
+
+            m_dlcs = existingDeps.Union(explicitDeps ?? new List<uint>()).Union(depsToAdd).Except(depsToRemove).Where(i => i != 0).Distinct().ToArray();
+#endif
+        }
+
         void ProcessTags()
         {
             // TODO: This code could be better.
 
-            // Get the list of existing tags, if there are any
+            // 0a) Get the list of existing tags, if there are any
             var existingTags = GetTags();
-            var length = m_tags.Length;
+            var userTags = new List<string>(m_tags);
+
+            // 0b) Add user-specified tags *to add*
+            m_tagsToAdd.ForEach(t => userTags.Add(t));
 
             // Order or tag processing matters
             // 1) Copy mod type into tags
@@ -608,33 +720,34 @@ namespace Phoenix.WorkshopTool
             // 2) Verify the modtype matches what was listed in the workshop
             // TODO If type doesn't match, process as workshop type
             if (existingTags != null && existingTags.Length > 0)
-                MyDebug.AssertRelease(existingTags.Contains(modtype, StringComparer.InvariantCultureIgnoreCase), string.Format("Mod type '{0}' does not match workshop '{1}'", modtype, existingTags[0]));
+            {
+                var msg = string.Format("Workshop category '{0}' does not match expected '{1}'. Is something wrong?", existingTags[0], modtype);
+                MySandboxGame.Log.WriteLineWarning(msg);
+                MyDebug.AssertDebug(existingTags.Contains(modtype, StringComparer.InvariantCultureIgnoreCase), msg);
+            }
 
 #if SE
             // 3a) check if user passed in the 'development' tag
             // If so, remove it, and mark the mod as 'dev' so it doesn't get flagged later
-            if (m_tags.Contains(MyWorkshop.WORKSHOP_DEVELOPMENT_TAG))
-            {
-                m_tags = (from tag in m_tags where tag != MyWorkshop.WORKSHOP_DEVELOPMENT_TAG select tag).ToArray();
-                m_isDev = true;
-            }
+            userTags.RemoveAll(t => t.Equals(MyWorkshop.WORKSHOP_DEVELOPMENT_TAG, StringComparison.InvariantCultureIgnoreCase));
 #endif
-            // 3b If tags contain mod type, remove it
-            if (m_tags.Contains(modtype, StringComparer.InvariantCultureIgnoreCase))
-            {
-                m_tags = (from tag in m_tags where string.Compare(tag, modtype, true) != 0 select tag).ToArray();
-            }
+            // 4) If no user-specified tags were set, grab them from the workshop
+            // NOTE: Specifically check m_tags here
+            if (m_tags?.Length == 0 && existingTags?.Length > 0)
+                existingTags.ForEach(t => userTags.Add(t));
 
-            // 4)
-            if ( m_tags.Length == 1 && m_tags[0] == null && existingTags != null && existingTags.Length > 0)
+            // 5) If tags contain mod type, remove it
+            userTags.RemoveAll(t => t.Equals(modtype, StringComparison.InvariantCultureIgnoreCase));
+
+            // 6) Check user-specified tags to add and remove
+            m_tagsToRemove.ForEach(t => userTags.RemoveAll(n => n.Equals(t, StringComparison.InvariantCultureIgnoreCase)));
+
+            // 7) Strip empty values
+            userTags.RemoveAll(x => string.IsNullOrEmpty(x?.Trim()));
+
+            if (userTags.Count > 0)
             {
-                // 4a) If user passed no tags, use existing ones
-                Array.Resize(ref m_tags, existingTags.Length);
-                Array.Copy(existingTags, m_tags, existingTags.Length);
-            }
-            else
-            {
-                // 4b) Verify passed in tags are valid for this mod type
+                // Verify passed in tags are valid for this mod type
                 var validTags = new List<MyWorkshop.Category>()
                 {
 #if SE
@@ -680,63 +793,52 @@ namespace Phoenix.WorkshopTool
 
                 // This query gets all the items in 'm_tags' that do *not* exist in 'validTags'
                 // This is for detecting invalid tags passed in
-                var invalidItems = from utag in m_tags
+                var invalidItems = (from utag in userTags
                                    where !(
                                         from tag in validTags
                                         select tag.Id
                                    ).Contains(utag, StringComparer.InvariantCultureIgnoreCase)
-                                   select utag;
+                                   select utag);
 
-                if( invalidItems.Count() > 0 )
+                if (invalidItems.Count() > 0)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole(string.Format("{0} invalid tags: {1}", (m_force ? "Forced" : "Removing"), string.Join(", ", invalidItems)));
+                    MySandboxGame.Log.WriteLineWarning(string.Format("{0} invalid tags: {1}", (m_force ? "Forced" : "Removing"), string.Join(", ", invalidItems)));
 
                     if (!m_force)
-                        m_tags = (from tag in m_tags where !invalidItems.Contains(tag) select tag).ToArray();
+                        invalidItems.ToList().ForEach(t => userTags.RemoveAll(n => n.Equals(t, StringComparison.InvariantCultureIgnoreCase)));
                 }
 
                 // Now prepend the 'Type' tag
-                string[] newTags = new string[m_tags.Length + 1];
-                newTags[0] = m_type.ToString();
+                var newTags = new List<string>();
+                newTags.AddOrInsert(m_type.ToString(), 0);
 
                 var tags = from tag in validTags select tag.Id;
 
                 // Convert all tags to proper-case
-                for(var x = 0; x < m_tags.Length; x++)
+                for (var x = 0; x < userTags.Count; x++)
                 {
-                    var tag = m_tags[x];
+                    var tag = userTags[x];
                     var newtag = (from vtag in tags where (string.Compare(vtag, tag, true) == 0) select vtag).FirstOrDefault();
 
                     if (!string.IsNullOrEmpty(newtag))
-                        newTags[x + 1] = newtag;
+                        newTags.AddOrInsert(newtag, x + 1);
                     else
-                        newTags[x + 1] = m_tags[x];
+                        newTags.AddOrInsert(userTags[x], x + 1);
                 }
 
-                m_tags = newTags;
+                userTags = newTags;
             }
 #if SE
-            // 5) Set or clear development tag
-            if (m_isDev)
-            {
-                // If user selected dev, add dev tag
-                if (!m_tags.Contains(MyWorkshop.WORKSHOP_DEVELOPMENT_TAG))
-                {
-                    Array.Resize(ref m_tags, m_tags.Length + 1);
-                    m_tags[m_tags.Length - 1] = MyWorkshop.WORKSHOP_DEVELOPMENT_TAG;
-                }
-            }
-            else
-            {
-                // If not, remove tag
-                if (m_tags.Contains(MyWorkshop.WORKSHOP_DEVELOPMENT_TAG))
-                    m_tags = (from tag in m_tags where tag != MyWorkshop.WORKSHOP_DEVELOPMENT_TAG select tag).ToArray(); 
-            }
+            // 8) Always remove DEV tag, if present
+            if (userTags.Contains(MyWorkshop.WORKSHOP_DEVELOPMENT_TAG))
+                userTags.RemoveAll(t => t.Equals(MyWorkshop.WORKSHOP_DEVELOPMENT_TAG, StringComparison.InvariantCultureIgnoreCase));
 #endif
-            // 6) Strip empty values
-            m_tags = m_tags.Where(x => !string.IsNullOrEmpty(x)).ToArray();
+            // Sanity check, tags, if set, should always have the type
+            if (userTags?.Count == 0)
+                userTags.Add(m_type.ToString());
 
             // Done
+            m_tags = userTags.Distinct().ToArray();
         }
 
         string[] GetTags()
@@ -802,8 +904,6 @@ namespace Phoenix.WorkshopTool
 
         public bool UpdatePreviewFileOrTags(ulong modId, MyWorkshopItemPublisher publisher)
         {
-            ProcessTags();
-
             publisher.Id = modId;
             publisher.Title = Title;
             publisher.Visibility = (MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
@@ -815,9 +915,9 @@ namespace Phoenix.WorkshopTool
 #else
             publisher.Folder = m_modPath;
 #endif
-            if(m_deps != null)
+            if (m_deps != null)
                 publisher.Dependencies = new List<ulong>(m_deps);
-            
+
             AutoResetEvent resetEvent = new AutoResetEvent(false);
             try
             {
@@ -836,9 +936,14 @@ namespace Phoenix.WorkshopTool
                 });
 
                 PrintItemDetails();
-                
+
+                if(m_dryrun)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole("DRY-RUN; Publish skipped");
+                    return true;
+                }
                 publisher.Publish();
-                WorkshopHelper.PublishDependencies(m_modId, m_deps, m_depsToRemove);
+                WorkshopHelper.PublishDependencies(m_modId, m_depsToAdd, m_depsToRemove);
 
                 if (!resetEvent.WaitOne())
                     return false;
@@ -848,7 +953,6 @@ namespace Phoenix.WorkshopTool
                 if (resetEvent != null)
                     resetEvent.Dispose();
             }
-
             return true;
         }
 
@@ -875,7 +979,7 @@ namespace Phoenix.WorkshopTool
                 var fileinfo = new FileInfo(previewFilename);
                 if (fileinfo.Length >= MAX_SIZE)
                 {
-                    MySandboxGame.Log.WriteLineAndConsole($"Thumbnail too large: Must be less than {MAX_SIZE} bytes; Size: {fileinfo.Length} bytes");
+                    MySandboxGame.Log.WriteLineWarning($"Thumbnail too large: Must be less than {MAX_SIZE} bytes; Size: {fileinfo.Length} bytes");
                     return false;
                 }
             }

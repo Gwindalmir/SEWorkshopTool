@@ -11,7 +11,7 @@ namespace Phoenix.WorkshopTool
         [Option("visibility", Default = null, HelpText = "Sets mod visibility (for new only). Accepted values: Public, FriendsOnly, Private, Unlisted")]
         public PublishedFileVisibility? Visibility { get; set; }
 
-        [Option("dev", Default = false, HelpText = "Set to true if the mod will have the 'development' tag when uploaded (deprecated)")]
+        [Option("dev", Default = false, Hidden = true, HelpText = "This is obsolete and no longer functional.")]
         public bool Development { get; set; }
 
         [Option('c', "compile", Default = false, HelpText = "Compile the mod before uploading. Will not upload if compilation fails.")]
@@ -77,8 +77,8 @@ namespace Phoenix.WorkshopTool
 #endif
         public IEnumerable<string> DLCs { get; set; }
 
-        [Option("dependencies", HelpText = "Specify dependencies to other mods (modids only). Use 0 to remove all.")]
-        public IEnumerable<ulong> Dependencies { get; set; }
+        [Option("dependencies", HelpText = "Specify dependencies to other mods. Use 0 to remove all.")]
+        public IEnumerable<string> Dependencies { get; set; }
 
         [Option("description", HelpText = "File containing the description to set for workshop item")]
         public string DescriptionFile { get; set; }

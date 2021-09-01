@@ -19,12 +19,14 @@
     <Compile Include="$(MSBuildThisFileDirectory)MethodUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MySteamService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GameBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Options\ChangeVerb.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\CloudVerb.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\CompileVerb.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\DownloadVerb.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\LegacyOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\OptionBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\ProcessedOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Options\PublishVerbBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\UGCOptionsBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\UploadVerb.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProgramBase.cs" />

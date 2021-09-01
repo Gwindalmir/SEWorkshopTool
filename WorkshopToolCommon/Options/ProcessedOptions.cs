@@ -67,20 +67,68 @@ namespace Phoenix.WorkshopTool.Options
         IList<string> _tagsToRemove;
         public IList<string> TagsToRemove
         {
-            get => _tagsToAdd;
+            get => _tagsToRemove;
             set
             {
                 if (value != null)
                 {
                     var tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
                     value.ForEach(s => s.Split(',', ';').ForEach(t => tags.Add(t)));
-                    _tagsToAdd = tags.ToList();
+                    _tagsToRemove = tags.ToList();
+                }
+            }
+        }
+
+        IList<string> _dependencies;
+        public IList<string> Dependencies
+        {
+            get => _dependencies;
+            set
+            {
+                // If user comma-separated the dependencies, split them
+                if (value != null)
+                {
+                    var dependencies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                    value.ForEach(s => s.Split(',', ';').ForEach(t => dependencies.Add(t)));
+                    _dependencies = dependencies.ToList();
+                }
+            }
+        }
+
+        IList<string> _dependenciesToAdd;
+        public IList<string> DependenciesToAdd
+        {
+            get => _dependenciesToAdd;
+            set
+            {
+                if (value != null)
+                {
+                    var dependencies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                    value.ForEach(s => s.Split(',', ';').ForEach(t => dependencies.Add(t)));
+                    _dependenciesToAdd = dependencies.ToList();
+                }
+            }
+        }
+
+        IList<string> _dependenciesToRemove;
+        public IList<string> DependenciesToRemove
+        {
+            get => _dependenciesToRemove;
+            set
+            {
+                if (value != null)
+                {
+                    var dependencies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                    value.ForEach(s => s.Split(',', ';').ForEach(t => dependencies.Add(t)));
+                    _dependenciesToRemove = dependencies.ToList();
                 }
             }
         }
 
         public IList<string> DLCs { get; set; }
-        public IList<ulong> Dependencies { get; set; }
+        public IList<string> DLCToAdd { get; set; }
+        public IList<string> DLCToRemove { get; set; }
+
         public string Thumbnail { get; set; }
         public string DescriptionFile { get; set; }
         public string Changelog { get; set; }
@@ -102,36 +150,25 @@ namespace Phoenix.WorkshopTool.Options
         }
 
         public ProcessedOptions(UploadVerb options)
-            : this((OptionBase)options)
+            : this((PublishVerbBase)options)
         {
             UpdateOnly = options.UpdateOnly;
-            DryRun = options.DryRun;
             Compile = options.Compile;
-            Thumbnail = options.Thumbnail;
-            DescriptionFile = options.DescriptionFile;
             Changelog = options.Changelog;
-            Visibility = options.Visibility;
-
-            Mods = options.Mods?.ToList();
-            Blueprints = options.Blueprints?.ToList();
-            Scenarios = options.Scenarios?.ToList();
-            IngameScripts = options.IngameScripts?.ToList();
 
             ExcludeExtensions = options.ExcludeExtensions?.ToList();
             IgnorePaths = options.IgnorePaths?.ToList();
-            Tags = options.Tags?.ToList();
-            TagsToAdd = options.TagsToAdd?.ToList();
-            TagsToRemove = options.TagsToRemove?.ToList();
-            DLCs = options.DLCs?.ToList();
-            Dependencies = options.Dependencies?.ToList();
+        }
+
+        public ProcessedOptions(ChangeVerb options)
+            : this((PublishVerbBase)options)
+        {
         }
 
         public ProcessedOptions(CompileVerb options)
-            : this((OptionBase)options)
+            : this((UGCOptionBase)options)
         {
             Compile = true;
-            Mods = options.Mods?.ToList();
-            IngameScripts = options.IngameScripts?.ToList();
         }
 
         public ProcessedOptions(CloudVerb options)
@@ -140,6 +177,35 @@ namespace Phoenix.WorkshopTool.Options
             ListCloud = options.List;
             Files = options.Files;
             Clear = options.Clear;
+        }
+
+        public ProcessedOptions(PublishVerbBase options)
+            : this((UGCOptionBase)options)
+        {
+            DryRun = options.DryRun;
+            Thumbnail = options.Thumbnail;
+            DescriptionFile = options.DescriptionFile;
+            Visibility = options.Visibility;
+
+            Blueprints = options.Blueprints?.ToList();
+            Scenarios = options.Scenarios?.ToList();
+
+            Tags = options.Tags?.ToList();
+            TagsToAdd = options.TagsToAdd?.ToList();
+            TagsToRemove = options.TagsToRemove?.ToList();
+            DLCs = options.DLCs?.ToList();
+            DLCToAdd = options.DLCToAdd?.ToList();
+            DLCToRemove = options.DLCToRemove?.ToList();
+            Dependencies = options.Dependencies?.ToList();
+            DependenciesToAdd = options.DependenciesToAdd?.ToList();
+            DependenciesToRemove = options.DependenciesToRemove?.ToList();
+        }
+
+        public ProcessedOptions(UGCOptionBase options)
+            : this((OptionBase)options)
+        {
+            Mods = options.Mods?.ToList();
+            IngameScripts = options.IngameScripts?.ToList();
         }
 
         public ProcessedOptions(OptionBase options)
@@ -209,6 +275,7 @@ namespace Phoenix.WorkshopTool.Options
 
         public static implicit operator ProcessedOptions(DownloadVerb options) => new ProcessedOptions(options);
         public static implicit operator ProcessedOptions(UploadVerb options) => new ProcessedOptions(options);
+        public static implicit operator ProcessedOptions(ChangeVerb options) => new ProcessedOptions(options);
         public static implicit operator ProcessedOptions(CompileVerb options) => new ProcessedOptions(options);
         public static implicit operator ProcessedOptions(CloudVerb options) => new ProcessedOptions(options);
         public static implicit operator ProcessedOptions(LegacyOptions options) => new ProcessedOptions(options);
@@ -251,7 +318,11 @@ namespace Phoenix.WorkshopTool.Options
             result.Visibility = options.Visibility;
             result.Blueprints = options.Blueprints;
             result.Dependencies = options.Dependencies;
+            result.DependenciesToAdd = options.DependenciesToAdd;
+            result.DependenciesToRemove = options.DependenciesToRemove;
             result.DLCs = options.DLCs;
+            result.DLCToAdd = options.DLCToAdd;
+            result.DLCToRemove = options.DLCToRemove;
             result.ExcludeExtensions = options.ExcludeExtensions;
             result.IgnorePaths = options.IgnorePaths;
             result.IngameScripts = options.IngameScripts;
@@ -260,7 +331,33 @@ namespace Phoenix.WorkshopTool.Options
             result.Tags = options.Tags;
             result.TagsToAdd = options.TagsToAdd;
             result.TagsToRemove = options.TagsToRemove;
+            result.Worlds = options.Worlds;
+            return result;
+        }
 
+        public static explicit operator ChangeVerb(ProcessedOptions options)
+        {
+            var result = new ChangeVerb();
+            result.AppData = options.AppData;
+            result.Force = options.Force;
+            result.ModIO = options.ModIO;
+            result.DescriptionFile = options.Changelog;
+            result.DryRun = options.DryRun;
+            result.Thumbnail = options.Thumbnail;
+            result.Visibility = options.Visibility;
+            result.Blueprints = options.Blueprints;
+            result.Dependencies = options.Dependencies;
+            result.DependenciesToAdd = options.DependenciesToAdd;
+            result.DependenciesToRemove = options.DependenciesToRemove;
+            result.DLCs = options.DLCs;
+            result.DLCToAdd = options.DLCToAdd;
+            result.DLCToRemove = options.DLCToRemove;
+            result.IngameScripts = options.IngameScripts;
+            result.Mods = options.Mods;
+            result.Scenarios = options.Scenarios;
+            result.Tags = options.Tags;
+            result.TagsToAdd = options.TagsToAdd;
+            result.TagsToRemove = options.TagsToRemove;
             result.Worlds = options.Worlds;
             return result;
         }

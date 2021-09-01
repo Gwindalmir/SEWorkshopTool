@@ -121,7 +121,7 @@ namespace Phoenix.WorkshopTool
             ProcessedOptions options = default(ProcessedOptions);
             var parser = new CommandLine.Parser(with => with.HelpWriter = null);
 
-            var result = parser.ParseArguments<DownloadVerb, UploadVerb, PublishVerb, CompileVerb, CloudVerb>(args)
+            var result = parser.ParseArguments<DownloadVerb, UploadVerb, PublishVerb, ChangeVerb, CompileVerb, CloudVerb>(args)
                 .WithParsed(o => options = (ProcessedOptions)(dynamic)o)
                 .WithNotParsed(l =>
                 {
@@ -140,6 +140,8 @@ namespace Phoenix.WorkshopTool
                                 newargs = parser.FormatCommandLine((UploadVerb)options, s=> s.SkipDefault = true);
                             else if (options.Download)
                                 newargs = parser.FormatCommandLine((DownloadVerb)options, s => s.SkipDefault = true);
+                            else if (options.Type == typeof(ChangeVerb))
+                                newargs = parser.FormatCommandLine((ChangeVerb)options, s => s.SkipDefault = true);
                             else if (options.Type == typeof(CloudVerb))
                                 newargs = parser.FormatCommandLine((CloudVerb)options, s => s.SkipDefault = true);
 
@@ -192,15 +194,6 @@ namespace Phoenix.WorkshopTool
                     }
                 }
                 
-                // If a "0" or "none" was specified for DLC, that means remove them all.
-                if(options.DLCs?.Count() > 0 && 
-                    (options.DLCs.Contains("0") || options.DLCs.Contains("none", StringComparer.InvariantCultureIgnoreCase)))
-                    options.DLCs = new string[0];
-
-                // If a 0 was specified for dependencies, that means remove them all.
-                if (options.Dependencies?.Count() > 0 && options.Dependencies.Contains((ulong)0))
-                    options.Dependencies = new ulong[0];
-
                 // SE requires -appdata, but the commandline dll requires --appdata, so fix it
                 for (var idx = 0; idx < args.Length; idx++)
                     if (string.Compare(args[idx], "--appdata", StringComparison.InvariantCultureIgnoreCase) == 0)

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Phoenix.WorkshopTool.Options
 {
-    [Verb("download", HelpText = "Download workshop items")]
+    [Verb("get", HelpText = "Download workshop items")]
     public class DownloadVerb : OptionBase
     {
         [Option("ids", Required = true, Min = 1, HelpText = "Workshop IDs of items or collections to download")]
@@ -13,6 +13,5 @@ namespace Phoenix.WorkshopTool.Options
 
         [Option('E', "no-extract", Default = false, HelpText = "Don't automatically extract downloaded workshop items to AppData.")]
         public bool NoExtract { get; set; }
-
     }
 }
