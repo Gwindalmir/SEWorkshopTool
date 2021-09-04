@@ -1,4 +1,5 @@
 ﻿using Phoenix.WorkshopTool;
+using Phoenix.WorkshopTool.Extensions;
 using Sandbox;
 using Sandbox.Engine.Networking;
 using Sandbox.Game;

@@ -1,4 +1,5 @@
-﻿using Steamworks;
+﻿using Sandbox.Engine.Networking;
+using Steamworks;
 using System;
 using VRage.GameServices;
 #if !SE
@@ -13,27 +14,24 @@ namespace Phoenix.WorkshopTool
     /// We have to override the default behavior, then forcibly set the correct options.
     /// </summary>
 #if !SE
-#if !SE
     [VRage.Engine.System("Steam Game Services")]
 #endif
-    public class MySteamService : MySteamServiceBase
-    {
-#if SE
-        public MySteamService(bool isDedicated, uint appId)
-            : base(true, appId)
-#else
-        public new void Init(MySteamService.Parameters configuration)
+    public class MySteamService
+#if !SE
+        : MySteamServiceBase
 #endif
+    {
+#if !SE
+        public new void Init(MySteamService.Parameters configuration)
         {
             var steam = typeof(MySteamServiceBase);
-#if !SE
             // Do MyGameService.Init()
             typeof(MyGameService).GetField("m_serviceStaticRef", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).SetValue(this, this);
             var isDedicated = configuration.Server;
             var appId = configuration.AppId;
             steam.GetProperty("Static").GetSetMethod(true).Invoke(this, new object[] { this });
             steam.GetField("SteamAppId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(this, (Steamworks.AppId_t)appId);
-#endif
+
             // TODO: Add protection for this mess... somewhere
             GameServer?.Shutdown();
             steam.GetField("m_gameServer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(this, null);
@@ -50,18 +48,14 @@ namespace Phoenix.WorkshopTool
             }
             else
             {
-#if !SE
                 var cur = System.IO.Directory.GetCurrentDirectory();
-#endif
+
                 // Steam API doesn't initialize correctly if it can't find steam_appid.txt
-                // Why is ME different now?
                 if (!System.IO.File.Exists("steam_appid.txt"))
                     System.IO.Directory.SetCurrentDirectory("..");
 
                 steam.GetProperty("IsActive").GetSetMethod(true).Invoke(this, new object[] { SteamAPI.Init() });
-#if !SE
                 System.IO.Directory.SetCurrentDirectory(cur);
-#endif
 
                 if (IsActive)
                 {
@@ -83,15 +77,20 @@ namespace Phoenix.WorkshopTool
                     steam.GetMethod("RegisterCallbacks",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                         .Invoke(this, null);
-
-#if SE
-                    steam.GetField("m_remoteStorage", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(this, new VRage.Steam.MySteamRemoteStorage());
-#endif
                 }
             }
 
             steam.GetProperty("Peer2Peer").GetSetMethod(true).Invoke(this, new object[] { new VRage.Steam.MySteamPeer2Peer() });
         }
-    }
 #endif
+
+        public static IMyGameService Service
+        {
+#if SE
+            get => MyGameService.Service;
+#else
+            get => MySteamService.Static;
+#endif
+        }
+    }
 }

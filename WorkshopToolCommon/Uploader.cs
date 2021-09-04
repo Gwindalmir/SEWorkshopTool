@@ -11,11 +11,13 @@ using VRage.GameServices;
 using VRage.Utils;
 using System.Threading;
 using VRage.Scripting;
+using Phoenix.WorkshopTool.Extensions;
+using System.Diagnostics;
 #if SE
-using Sandbox.Game.World;
+using MyDebug = Phoenix.WorkshopTool.Extensions.MyDebug;
 #else
+using WorkshopId = System.UInt64;
 using TErrorSeverity = VRage.Scripting.ErrorSeverity;
-using MySteam = VRage.GameServices.MyGameService;
 using VRage.Session;
 #endif
 
@@ -54,39 +56,11 @@ namespace Phoenix.WorkshopTool
         string[] m_tagsToRemove = new string[0];
         bool m_force;
         string m_previewFilename;
-#if SE
+
         private Dictionary<WorkshopId, MyWorkshopItem> m_workshopItems = new Dictionary<WorkshopId, MyWorkshopItem>();
         WorkshopId[] m_modId;
         public WorkshopId[] ModId { get { return m_modId; } }
-        ulong IMod.ModId { get { return m_modId?.Length > 0 ? m_modId[0].Id : 0; } }
-#else
-        private Dictionary<ulong, MyWorkshopItem> m_workshopItems = new Dictionary<ulong, MyWorkshopItem>();
-        ulong m_modId = 0;
-        public ulong ModId { get { return m_modId; } }
-#endif
-
-        private static object _scriptManager;
-        private static PublishItemBlocking _publishMethod;
-        private static LoadScripts _compileMethod;
-        private static HashSet<string> _globalIgnoredExtensions;
-        private static string[] _previewFileNames;
-
-#if SE
-        private delegate ValueTuple<MyGameServiceCallResult, string> PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, WorkshopId[] workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions, HashSet<string> ignoredPaths, uint[] requiredDLCs, out MyWorkshopItem[] outIds);
-        private delegate void LoadScripts(string path, MyModContext mod = null);
-        private static bool PublishSuccess { get; set; }
-#else
-        private delegate ulong PublishItemBlocking(string localFolder, string publishedTitle, string publishedDescription, ulong? workshopId, MyPublishedFileVisibility visibility, string[] tags, HashSet<string> ignoredExtensions = null, HashSet<string> ignoredPaths = null);
-        private delegate void LoadScripts(MyModContext mod = null);
-
-        // Static delegate instance of ref-getter method, statically initialized.
-        // Requires an 'OfInterestClass' instance argument to be provided by caller.
-        static MethodUtil.RefGetter<MyWorkshop, bool> __refget_m_publishSuccess;
-        // Default returns true, as a reflection error doesn't necessarily mean the publish failed.
-        // Check log file for error.
-        // This is a dynamic getter for the MyWorkshop private field
-        private static bool PublishSuccess => __refget_m_publishSuccess != null ?__refget_m_publishSuccess(null) : true;
-#endif
+        ulong IMod.ModId { get { return m_modId.GetIds().FirstOrDefault(); } }
 
         public string Title { get { return m_title; } }
         public string ModPath { get { return m_modPath; } }
@@ -96,17 +70,9 @@ namespace Phoenix.WorkshopTool
             m_modPath = path;
 
             if (ulong.TryParse(m_modPath, out ulong id))
-#if SE
-                m_modId = new[] { new WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName) };
-#else
-                m_modId = id;
-#endif
+                m_modId = WorkshopIdExtensions.ToWorkshopIds(new[] { id });
             else
-#if SE
-                m_modId = MyWorkshop.GetWorkshopIdFromMod(m_modPath);
-#else
-                m_modId = MyWorkshop.GetWorkshopIdFromLocalMod(m_modPath) ?? 0;
-#endif
+                m_modId = WorkshopHelper.GetWorkshopIdFromMod(m_modPath);
 
             // Fill defaults before assigning user-defined ones
             FillPropertiesFromPublished();
@@ -128,10 +94,9 @@ namespace Phoenix.WorkshopTool
 
             if(options.Thumbnail != null)
                 m_previewFilename = options.Thumbnail;
-#if SE
             var mappedlc = MapDLCStringsToInts(options.DLCs);
             ProcessDLCs(mappedlc, MapDLCStringsToInts(options.DLCToAdd), MapDLCStringsToInts(options.DLCToRemove));
-#endif
+
             if (options.Tags != null)
                 m_tags = options.Tags.ToArray();
             if (options.TagsToAdd != null)
@@ -174,11 +139,9 @@ namespace Phoenix.WorkshopTool
                 extensionsToIgnore.ForEach(s => m_ignoredExtensions.Add(s));
                 pathsToIgnore.ForEach(s => m_ignoredPaths.Add(s));
             }
-
-            SetupReflection();
         }
 
-#if SE
+        // This won't do anything for ME, but removed compilation conditionals to clean up code
         private uint[] MapDLCStringsToInts(IEnumerable<string> stringdlcs)
         {
             var dlcs = new HashSet<uint>();
@@ -195,10 +158,9 @@ namespace Phoenix.WorkshopTool
                 }
                 else
                 {
-                    if (Sandbox.Game.MyDLCs.TryGetDLC(dlc, out var dlcvalue))
-                    {
-                        dlcs.Add(dlcvalue.AppId);
-                    }
+                    var dlcid = dlc.TryGetDLC();
+                    if (dlcid > 0)
+                        dlcs.Add(dlcid);
                     else
                     {
                         if (stringdlcs.Count() == 1 && dlc.Equals("none", StringComparison.InvariantCultureIgnoreCase))
@@ -209,88 +171,6 @@ namespace Phoenix.WorkshopTool
                 }
             }
             return dlcs.ToArray();
-        }
-#endif
-
-        private void SetupReflection()
-        {
-            if (m_compile && m_type == WorkshopType.Mod)
-            {
-#if SE
-                if (_scriptManager == null)
-                    _scriptManager = new MyScriptManager();
-#else
-                if (_scriptManager == null)
-                    _scriptManager = new MyModManager();
-#endif
-                if (_compileMethod == null)
-                {
-                    var compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public, null
-#if SE
-                        , new[] { typeof(string), typeof(MyModContext) }
-#else
-                        , new[] { typeof(MyModContext) }
-#endif
-                        , null);
-                    MyDebug.AssertDebug(compileMethod != null);
-
-                    if(compileMethod != null)
-                        _compileMethod = Delegate.CreateDelegate(typeof(LoadScripts), _scriptManager, compileMethod, false) as LoadScripts;
-
-                    if (_compileMethod == null)
-                    {
-                        MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
-                    }
-                }
-            }
-
-            var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic, Type.DefaultBinder, new Type[]
-            {
-                typeof(string),
-                typeof(string),
-                typeof(string),
-                m_modId.GetType(),
-                typeof(MyPublishedFileVisibility),
-                typeof(string[]),
-                typeof(HashSet<string>),
-                typeof(HashSet<string>),
-#if SE
-                typeof(uint[]),
-                typeof(MyWorkshopItem[]).MakeByRefType()
-#endif
-            }, null);
-
-            MyDebug.AssertDebug(publishMethod != null);
-
-            if (publishMethod != null)
-                _publishMethod = Delegate.CreateDelegate(typeof(PublishItemBlocking), publishMethod, false) as PublishItemBlocking;
-
-            if (_publishMethod == null)
-            {
-                MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
-            }
-
-            if (_globalIgnoredExtensions == null)
-                _globalIgnoredExtensions = (HashSet<string>)typeof(MyWorkshop).GetField("m_ignoredExecutableExtensions", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
-
-            if (_previewFileNames == null)
-                _previewFileNames = (string[])typeof(MyWorkshop).GetField("m_previewFileNames", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
-
-            if (_previewFileNames == null)
-                _previewFileNames = new string[] { "thumb.png", "thumb.jpg" };
-
-#if !SE
-            try
-            {
-                if (__refget_m_publishSuccess == null)
-                    __refget_m_publishSuccess = MethodUtil.create_refgetter<MyWorkshop, bool>("m_publishSuccess", BindingFlags.NonPublic | BindingFlags.Static);
-            }
-            catch (Exception ex)
-            {
-                MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "m_publishSuccess"));
-                MySandboxGame.Log.WriteLine(ex.Message);
-            }
-#endif
         }
 
         /// <summary>
@@ -304,57 +184,18 @@ namespace Phoenix.WorkshopTool
             {
                 if (m_type == WorkshopType.Mod)
                 {
-                    if (_compileMethod != null)
+                    MySandboxGame.Log.WriteLineAndConsole("Compiling...");
+                    var mod = WorkshopHelper.GetContext(m_modPath, m_workshopItems[m_modId[0]], m_modId, m_title);
+                    if (WorkshopHelper.LoadScripts(m_modPath, mod))
                     {
-                        MySandboxGame.Log.WriteLineAndConsole("Compiling...");
-#if SE
-                        var mod = new MyModContext();
-
-                        // Because of a regression in SE, we need to create a checkpoint ModItem to set the Id.
-                        var modob = new MyObjectBuilder_Checkpoint.ModItem();
-                        modob.Name = Path.GetFileName(m_modPath);
-                        
-                        if (ModId.Length > 0)
-                        {
-                            modob.PublishedFileId = m_workshopItems[m_modId[0]].Id;
-                            modob.PublishedServiceName = m_workshopItems[m_modId[0]].ServiceName;
-                            modob.FriendlyName = m_workshopItems[m_modId[0]].Title;
-                            modob.SetModData(m_workshopItems[m_modId[0]]);
-                        }
-                        else
-                        {
-                            // Fake it, so the compile still works
-                            modob.PublishedFileId = 0;
-                            modob.PublishedServiceName = MyGameService.GetDefaultUGC().ServiceName;
-                            modob.FriendlyName = Title;
-                        }
-                        mod.Init(modob);
-
-                        // Call init again, to make sure the path in set properly to the local mod directory
-                        mod.Init(m_title, null, m_modPath);
-#else
-                        var workshopItem = new MyLocalWorkshopItem(new VRage.ObjectBuilders.SerializableModReference(Path.GetFileName(m_modPath), 0));
-                        var mod = new MyModContext(workshopItem, 0);
-#endif
-                        _compileMethod(
-#if SE
-                            m_modPath,
-#endif
-                            mod
-                        );
-
                         // Process any errors
-#if SE
-                        var errors = MyDefinitionErrors.GetErrors();
-#else
-                        var compileMessages = _scriptManager.GetType().GetField("m_messages", BindingFlags.NonPublic | BindingFlags.Instance);
-                        var errors = (compileMessages.GetValue(_scriptManager) as List<MyScriptCompiler.Message>) ?? new List<MyScriptCompiler.Message>();
-#endif
+                        var errors = WorkshopHelper.GetErrors();
+
                         if (errors.Count > 0)
                         {
                             int errorCount = 0;
                             int warningCount = 0;
-                            
+
                             // This is not efficient, but I'm lazy
                             foreach (var error in errors)
                             {
@@ -364,7 +205,7 @@ namespace Phoenix.WorkshopTool
                                     warningCount++;
                             }
 
-                            if( errorCount > 0)
+                            if (errorCount > 0)
                                 MySandboxGame.Log.WriteLineError(string.Format("There are {0} compile errors:", errorCount));
                             if (warningCount > 0)
                                 MySandboxGame.Log.WriteLineWarning(string.Format("There are {0} compile warnings:", warningCount));
@@ -374,16 +215,10 @@ namespace Phoenix.WorkshopTool
                             {
                                 var color = error.Severity == TErrorSeverity.Warning ? ConsoleColor.Yellow : ConsoleColor.Red;
                                 ProgramBase.ConsoleWriteColored(color, () =>
-#if SE
-                                    System.Console.Error.WriteLine(error.Message)
-#else
-                                    System.Console.Error.WriteLine(error.Text)
-#endif
-                                );
+                                    System.Console.Error.WriteLine(error.GetErrorText()));
                             }
-#if SE
-                            MyDefinitionErrors.Clear();     // Clear old ones, so next mod starts fresh
-#endif
+
+                            WorkshopHelper.ClearErrors();
 
                             if (errorCount > 0)
                             {
@@ -392,10 +227,6 @@ namespace Phoenix.WorkshopTool
                             }
                         }
                         MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
-                    }
-                    else
-                    {
-                        MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
                     }
                 }
 #if SE
@@ -455,19 +286,13 @@ namespace Phoenix.WorkshopTool
             }
 
             // Upload/Publish
-#if SE
             if(((IMod)this).ModId == 0)
-#else
-            if (m_modId == 0)
-#endif
             {
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Uploading new {0}: {1}", m_type.ToString(), m_title));
                 newMod = true;
 
-#if SE
                 if (m_modId.Length == 0)
-                    m_modId = new WorkshopId[1] { new WorkshopId(0, MyGameService.GetDefaultUGC().ServiceName) };
-#endif
+                    m_modId = WorkshopIdExtensions.ToWorkshopIds(new ulong[] { 0 });
             }
             else
             {
@@ -475,7 +300,7 @@ namespace Phoenix.WorkshopTool
             }
 
             // Add the global game filter for file extensions
-            _globalIgnoredExtensions?.ForEach(s => m_ignoredExtensions.Add(s));
+            WorkshopHelper.IgnoredExtensions?.ForEach(s => m_ignoredExtensions.Add(s));
 
             PrintItemDetails();
 
@@ -488,18 +313,10 @@ namespace Phoenix.WorkshopTool
             }
             else
             {
-                if (_publishMethod != null)
+                InjectedMethod.ChangeLog = m_changelog;
+                if (WorkshopHelper.PublishItemBlocking(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs, out items))
                 {
-                    InjectedMethod.ChangeLog = m_changelog;
-#if SE
-                    var result = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs, out items);
-                    PublishSuccess = result.Item1 == MyGameServiceCallResult.OK;
-
-                    if(PublishSuccess)
-                        m_modId = items.Select(i => new WorkshopId(i.Id, i.ServiceName)).ToArray();
-#else
-                    m_modId = _publishMethod(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths);
-#endif
+                    m_modId = items.ToWorkshopIds();
                 }
                 else
                 {
@@ -509,7 +326,7 @@ namespace Phoenix.WorkshopTool
                 // SE libraries don't support updating dependencies, so we have to do that separately
                 WorkshopHelper.PublishDependencies(m_modId, m_depsToAdd, m_depsToRemove);
             }
-            if (((IMod)this).ModId == 0 || !PublishSuccess)
+            if (((IMod)this).ModId == 0 || !WorkshopHelper.PublishSuccess)
             {
                 MySandboxGame.Log.WriteLineError("Upload/Publish FAILED!");
                 return false;
@@ -519,11 +336,7 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId.AsString()));
                 if (newMod)
                 {
-#if SE
-                    if (MyWorkshop.GenerateModInfo(m_modPath, items, MyGameService.UserId))
-#else
-                    if (MyWorkshop.UpdateModMetadata(m_modPath, m_modId, MySteam.UserId))
-#endif
+                    if(WorkshopHelper.GenerateModInfo(m_modPath, items, m_modId, MyGameService.UserId))
                     {
                         MySandboxGame.Log.WriteLineAndConsole(string.Format("Create modinfo.sbmi success: {0}", m_modId.AsString()));
                     }
@@ -539,27 +352,16 @@ namespace Phoenix.WorkshopTool
 
         bool FillPropertiesFromPublished()
         {
-            var results = new List<MyWorkshopItem>();
-#if SE
-            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
-#else
-            if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
-#endif
+            var results = WorkshopHelper.GetItemsBlocking(m_modId);
+            if(results?.Count > 0)
             {
                 System.Threading.Thread.Sleep(1000); // Fix for DLC not being filled in
                 if (results.Count > 0)
                 {
-#if SE
                     m_workshopItems[m_modId[0]] = results[0];
                     
                     if(m_modId.Length > 1 && results.Count > 1)
                         m_workshopItems[m_modId[1]] = results[1];
-#else
-                    m_workshopItems[m_modId] = results[0];
-
-                    if (results.Count > 1)
-                        m_modId = results[0].Id;
-#endif
 
                     m_title = results[0].Title;
 
@@ -597,11 +399,8 @@ namespace Phoenix.WorkshopTool
             else
             {
                 // Dependencies can only be mods (not blueprints, scripts, etc)
-#if SE
-                id = MyWorkshop.GetWorkshopIdFromMod(Path.Combine(WorkshopHelper.GetWorkshopItemPath(m_type), idOrName)).FirstOrDefault().Id;
-#else
-                id = MyWorkshop.GetWorkshopIdFromLocalMod(Path.Combine(WorkshopHelper.GetWorkshopItemPath(m_type), idOrName)) ?? 0;
-#endif
+                id = WorkshopHelper.GetWorkshopIdFromMod(Path.Combine(WorkshopHelper.GetWorkshopItemPath(m_type), idOrName)).FirstOrDefault().GetId();
+
                 // TODO: Better handle if an unpublished mod is passed in, but bailing on exception is fine for now
                 if (id == 0)
                     throw new ArgumentException($"Cannot determine Workshop ID of dependency '{idOrName}'. Is it a published mod?");
@@ -614,11 +413,8 @@ namespace Phoenix.WorkshopTool
         // Mod must be published for that to work.
         void ProcessDependencies(IEnumerable<string> deps, IEnumerable<string> add, IEnumerable<string> remove)
         {
-#if SE
             var existingDeps = m_workshopItems[m_modId[0]].Dependencies.ToList();
-#else
-            var existingDeps = m_workshopItems[m_modId].Dependencies.ToList();
-#endif
+
             // Check if the deps contains exactly one element, and that element is a 0 or "none",
             // if so, set the result to a list of a single ulong value of 0
             // Otherwise, just fill it with the contents transformed to ids.
@@ -649,8 +445,8 @@ namespace Phoenix.WorkshopTool
 
             // Filter out items that aren't actually mods, these can crash the game if set
             // Don't check depsToRemove though, so users can remove invalid ones that already exist
-            WorkshopHelper.GetItemDetails(explicitDeps).ForEach(i => { if (!CheckDependency(i)) explicitDeps.Remove(i.Id); });
-            WorkshopHelper.GetItemDetails(depsToAdd).ForEach(i => { if (!CheckDependency(i)) depsToAdd.Remove(i.Id); });
+            WorkshopHelper.GetItemsBlocking(explicitDeps).ForEach(i => { if (!CheckDependency(i)) explicitDeps.Remove(i.Id); });
+            WorkshopHelper.GetItemsBlocking(depsToAdd).ForEach(i => { if (!CheckDependency(i)) depsToAdd.Remove(i.Id); });
 
             m_deps = existingDeps.Union(explicitDeps ?? new List<ulong>()).Union(depsToAdd).Except(depsToRemove).Where(i => i != 0).Distinct().ToArray();
             m_depsToAdd = depsToAdd.Distinct().ToArray();
@@ -748,34 +544,15 @@ namespace Phoenix.WorkshopTool
             if (userTags.Count > 0)
             {
                 // Verify passed in tags are valid for this mod type
-                var validTags = new List<MyWorkshop.Category>()
-                {
-#if SE
-                    // 'obsolete' tag is always available, as is 'No Mods' and 'experimental'
-                    new MyWorkshop.Category() { Id = "obsolete" },
-                    new MyWorkshop.Category() { Id = "no mods" },
-                    new MyWorkshop.Category() { Id = "experimental" },
-#endif
-                };
-                switch(m_type)
+                var validTags = new List<MyWorkshop.Category>();
+                validTags.AddHiddenTags();
+                switch (m_type)
                 {
                     case WorkshopType.Mod:
                         MyWorkshop.ModCategories.ForEach(c => validTags.Add(c));
-                        // Mods have extra tags not in this list
-#if SE
-                        validTags.Add(new MyWorkshop.Category() { Id = "campaign" });
-                        validTags.Add(new MyWorkshop.Category() { Id = "font" });
-                        validTags.Add(new MyWorkshop.Category() { Id = "noscripts" });
-#endif
                         break;
                     case WorkshopType.Blueprint:
                         MyWorkshop.BlueprintCategories.ForEach(c => validTags.Add(c));
-#if SE
-                        // Blueprints have extra tags not in this list
-                        validTags.Add(new MyWorkshop.Category() { Id = "large_grid" });
-                        validTags.Add(new MyWorkshop.Category() { Id = "small_grid" });
-                        validTags.Add(new MyWorkshop.Category() { Id = "safe" });   // Mod.io only?
-#endif
                         break;
                     case WorkshopType.Scenario:
                         MyWorkshop.ScenarioCategories.ForEach(c => validTags.Add(c));
@@ -790,6 +567,9 @@ namespace Phoenix.WorkshopTool
                         MyDebug.FailRelease("Invalid category.");
                         break;
                 }
+
+                // Mods and blueprints have extra tags not in the above lists
+                validTags.AddHiddenTags(m_type);
 
                 // This query gets all the items in 'm_tags' that do *not* exist in 'validTags'
                 // This is for detecting invalid tags passed in
@@ -843,16 +623,11 @@ namespace Phoenix.WorkshopTool
 
         string[] GetTags()
         {
-            var results = new List<MyWorkshopItem>();
-
-#if SE
-            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
-#else
-            if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
-#endif
+            var results = m_workshopItems?.Values ?? (ICollection<MyWorkshopItem>)WorkshopHelper.GetItemsBlocking(m_modId);
+            if(results?.Count > 0)
             {
                 if (results.Count > 0)
-                    return results[0].Tags.ToArray();
+                    return results.First().Tags.ToArray();
                 else
                     return null;
             }
@@ -863,12 +638,12 @@ namespace Phoenix.WorkshopTool
         uint[] GetDLC()
         {
 #if SE
-            var results = new List<MyWorkshopItem>();
+            var results = m_workshopItems?.Values ?? (ICollection<MyWorkshopItem>)WorkshopHelper.GetItemsBlocking(m_modId);
 
-            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
+            if (results?.Count > 0)
             {
                 if (results.Count > 0)
-                    return results[0].DLCs.ToArray();
+                    return results.First().DLCs.ToArray();
                 else
                     return null;
             }
@@ -878,16 +653,11 @@ namespace Phoenix.WorkshopTool
 
         PublishedFileVisibility GetVisibility()
         {
-            var results = new List<MyWorkshopItem>();
-
-#if SE
-            if (MyWorkshop.GetItemsBlockingUGC(m_modId.ToList(), results))
-#else
-            if (MyWorkshop.GetItemsBlocking(new List<ulong>() { m_modId }, results))
-#endif
+            var results = m_workshopItems?.Values ?? (ICollection<MyWorkshopItem>)WorkshopHelper.GetItemsBlocking(m_modId);
+            if (results?.Count > 0)
             {
                 if (results.Count > 0)
-                    return (PublishedFileVisibility)(int)results[0].Visibility;
+                    return (PublishedFileVisibility)(int)results.First().Visibility;
                 else
                     return PublishedFileVisibility.Private;
             }
@@ -895,25 +665,20 @@ namespace Phoenix.WorkshopTool
             return PublishedFileVisibility.Private;
         }
 
-#if !SE
-        public bool UpdatePreviewFileOrTags()
+        public bool UpdatePreviewFileOrTags(WorkshopId modId)
         {
-            return UpdatePreviewFileOrTags(ModId, MyGameService.CreateWorkshopPublisher());
-        }
-#endif
+            MyWorkshopItemPublisher publisher = WorkshopHelper.GetPublisher(modId);
+            var modid = modId.GetId();
 
-        public bool UpdatePreviewFileOrTags(ulong modId, MyWorkshopItemPublisher publisher)
-        {
-            publisher.Id = modId;
+            publisher.Id = modid;
             publisher.Title = Title;
             publisher.Visibility = (MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
-#if SE
-            if(m_dlcs != null)
-                publisher.DLCs = new HashSet<uint>(m_dlcs);
-#else
             publisher.Folder = m_modPath;
+#if SE
+            if (m_dlcs != null)
+                publisher.DLCs = new HashSet<uint>(m_dlcs);
 #endif
             if (m_deps != null)
                 publisher.Dependencies = new List<ulong>(m_deps);
@@ -965,7 +730,7 @@ namespace Phoenix.WorkshopTool
 
             if (!File.Exists(m_previewFilename))
             {
-                foreach(var filename in _previewFileNames)
+                foreach(var filename in WorkshopHelper.PreviewFileNames)
                 {
                     var pathname = Path.Combine(m_modPath, filename);
 
@@ -1010,17 +775,12 @@ namespace Phoenix.WorkshopTool
 
             if (m_deps?.Length > 0)
             {
-                var depItems = new List<MyWorkshopItem>();
                 var width = Console.Out.IsInteractive() ? Console.WindowWidth : 256;
-#if SE
-                var depIds = new List<WorkshopId>();
-                foreach (var item in m_deps)
-                    depIds.Add(new WorkshopId(item, MyGameService.GetDefaultUGC().ServiceName));
 
-                if (MyWorkshop.GetItemsBlockingUGC(depIds, depItems))
-#else
-                if (MyWorkshop.GetItemsBlocking(m_deps, depItems))
-#endif
+                var depIds = m_deps.ToWorkshopIds();
+                var depItems = WorkshopHelper.GetItemsBlocking(depIds.ToArray());
+
+                if (depItems?.Count > 0)
                     depItems.ForEach(i => MySandboxGame.Log.WriteLineAndConsole(string.Format("{0,15} -> {1}",
                         i.Id, i.Title.Substring(0, Math.Min(i.Title.Length, width - 45)))));
                 else
