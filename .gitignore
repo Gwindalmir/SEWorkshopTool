@@ -255,3 +255,4 @@ paket-files/
 # Custom
 Bin64
 .upgrade-assistant
+launchSettings.json

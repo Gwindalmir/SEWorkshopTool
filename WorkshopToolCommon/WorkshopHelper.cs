@@ -77,6 +77,21 @@ namespace Phoenix.WorkshopTool
             }
         }
 #endif
+        public static List<MyWorkshopItem> GetItemDetails(ICollection<ulong> ids)
+        {
+            var results = new List<MyWorkshopItem>();
+#if SE
+            var workshopids = new List<WorkshopId>();
+            foreach (var id in ids)
+                workshopids.Add(new WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName));
+
+            MyWorkshop.GetItemsBlockingUGC(workshopids, results);
+#else
+            MyWorkshop.GetItemsBlocking(ids, results);
+#endif
+            return results;
+        }
+
         #region Collections
         public static IEnumerable<MySubscribedItem> GetCollectionDetails(ulong modid)
         {

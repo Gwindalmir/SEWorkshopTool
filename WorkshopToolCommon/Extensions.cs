@@ -1,8 +1,10 @@
-﻿using Sandbox;
+﻿using Gwindalmir.Updater;
+using Sandbox;
 using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using VRage;
 using VRage.GameServices;
@@ -81,9 +83,12 @@ namespace Phoenix.WorkshopTool
         /// <param name="customMessage">Message text to log, exception message will be appended.</param>
         public static void Log(this Exception ex, string customMessage = "ERROR: An exception occurred: ")
         {
-            MySandboxGame.Log.WriteLineAndConsole(customMessage + ex.Message);
-            MySandboxGame.Log.WriteLineToConsole("Check the log file for details.");
-            MySandboxGame.Log.WriteLine(ex.StackTrace);
+            ProgramBase.ConsoleWriteColored(ConsoleColor.Red, () =>
+            {
+                MySandboxGame.Log.WriteLineAndConsole(customMessage + ex.Message);
+                MySandboxGame.Log.WriteLineToConsole("Check the log file for details.");
+                MySandboxGame.Log.WriteLine(ex.StackTrace);
+            });
         }
 
         /// <summary>
@@ -94,6 +99,18 @@ namespace Phoenix.WorkshopTool
         public static void WriteLineToConsole(this MyLog log, string msg)
         {
             log.WriteLineAndConsole(msg);
+        }
+
+        public static void WriteLineError(this MyLog log, string msg)
+        {
+            ProgramBase.ConsoleWriteColored(ConsoleColor.Red, () =>
+                log.WriteLineAndConsole(msg));
+        }
+
+        public static void WriteLineWarning(this MyLog log, string msg)
+        {
+            ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
+                log.WriteLineAndConsole(msg));
         }
     }
 
@@ -120,5 +137,35 @@ namespace Phoenix.WorkshopTool
         return id.ToString();
         }
 #endif
+    }
+
+    public static class ConsoleHelper
+    {
+        public static bool IsInteractive(this TextWriter stream)
+        {
+            if (!Environment.UserInteractive)
+                return false;
+
+            if (Console.Out == stream)
+                return !Console.IsOutputRedirected;
+
+            if (Console.Error == stream)
+                return !Console.IsErrorRedirected;
+
+            return false;
+        }
+    }
+
+    public static class UpdaterExtensions
+    {
+        public static string GetChangelog(this Release release)
+        {
+            var end = release.Body.IndexOf("To Install");
+
+            if (end <= 0)
+                end = release.Body.Length;
+
+            return release.Body.Substring(0, end).Trim();
+        }
     }
 }
