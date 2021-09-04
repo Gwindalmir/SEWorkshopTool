@@ -1,0 +1,16 @@
+﻿<Project>
+  <PropertyGroup>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <Company/>
+    <Authors>Gwindalmir</Authors>
+    <RepositoryUrl>https://github.com/Gwindalmir/SEWorkshopTool</RepositoryUrl>
+    <Copyright>Copyright © Gwindalmir 2017</Copyright>
+
+    <VersionPrefix>0.7.14</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
+  </PropertyGroup>
+  <ItemGroup>
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
+</Project>

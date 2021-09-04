@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- https://docs.microsoft.com/en-us/archive/blogs/kirillosenkov/msbuild-unnecessary-rebuilds-because-of-generated-assemblyattributes-cs -->
+    <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
+  </PropertyGroup>
+</Project>

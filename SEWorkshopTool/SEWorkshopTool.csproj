@@ -3,8 +3,6 @@
     <TargetFramework>net461</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>Phoenix.SEWorkshopTool</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <Deterministic>false</Deterministic>
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -101,6 +99,10 @@
     <PackageReference Include="CommandLineParser">
       <Version>1.9.71</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   <Import Project="..\WorkshopToolCommon\WorkshopToolCommon.projitems" Label="Shared" />
   <Import Project="..\Updater\Updater.projitems" Label="Shared" />
@@ -108,6 +110,6 @@
     <Exec Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(SolutionDir)\Tools\LinkBinaries.ps1 244850 $(ProjectDir)\Bin64" />
   </Target>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if NOT exist &quot;$(TargetDir)steam_appid.txt&quot; echo 244850 &gt; &quot;$(TargetDir)steam_appid.txt&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)CommandLine.dll, $(TargetDir).wtignore, $(TargetDir)steam_appid.txt -DestinationPath $(TargetDir)$(TargetName)-latest.zip}&quot;" />
+    <Exec Command="set APPID=244850&#xD;&#xA;if NOT exist &quot;$(TargetDir)steam_appid.txt&quot; echo %APPID% &gt; &quot;$(TargetDir)steam_appid.txt&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(SolutionDir)\Tools\LinkBinaries.ps1 244850 $(TargetDir)\Bin64&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)$(TargetName).pdb, $(TargetDir)CommandLine.dll, $(TargetDir).wtignore, $(TargetDir)steam_appid.txt -DestinationPath $(TargetDir)$(TargetName)-latest.zip}&quot;" />
   </Target>
 </Project>
