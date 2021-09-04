@@ -1,9 +1,9 @@
-# SE Workshop Tool
-Tool which allows batch upload and download of mods for Space Engineers.
+# Workshop Tool
+This is a tool which allows batch upload and download of mods for both [Space Engineers](https://store.steampowered.com/app/244850) and [Medieval Engineers](https://store.steampowered.com/app/333950).  
+It is also known as SEWT (for Space Engineers Workshop Tool), or MEWT (Medieval Engineers Workshop Tool).
 
 # Introduction
-This tools allows you to script mod uploads to the workshop.
-It takes various command-line options, which can be displayed by running **SEWorkshopTool.exe** without arguments.
+This tools allows you to script mod uploads to the workshop. It takes various command-line options, which can be displayed by running **SEWorkshopTool.exe** without arguments.
 
 Please note, this is a command-line application only. A GUI may be considered in the future, however at this time it is not planned.
 
@@ -11,24 +11,25 @@ Please note, this is a command-line application only. A GUI may be considered in
 > If you are not interested in building this from source, skip ahead to [Installation](#installation).
 
 ## Requirements
-1. A copy of [Space](https://store.steampowered.com/app/244850) (or [Medieval](https://store.steampowered.com/app/333950)) Engineers on Steam
-1. [Visual Studio Community 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher
-    * [Build Tools for Visual Studio 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher as an command-line alternative to VS.
-    * JetBrains Rider is reported as working by the community as another alternative
-1. .NET Framework 4.6.1 Targeting Pack for Visual Studio, or the [Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net461) if using the Build Tools
-     * SE targets this version
-1. [.NET Core SDK 2.1.300](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300) or higher
+* A copy of [Space](https://store.steampowered.com/app/244850) (or [Medieval](https://store.steampowered.com/app/333950)) Engineers on Steam
+* [Visual Studio Community 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher
+  * [Build Tools for Visual Studio 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher as an command-line alternative to VS.
+  * JetBrains Rider is reported as working by the community as another alternative
+* .NET Framework 4.6.1 Targeting Pack for Visual Studio, or the [Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net461) if using the Build Tools
+  * SE targets this version
+* [.NET Core SDK 2.1.300](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300) or higher
 
 ## Build steps
 These steps refer to Space Engineers. If you are working with Medieval Engineers, just subsititute as appropriate.
 1. Clone repository.
 1. If using Visual Studio
-    a. Open [**WorkshopTool.sln**](WorkshopTool.sln).
-    a. If Steam and Space Engineers (or Medieval) are installed, they should be detected during the build and the project references to the game DLLs should automatically update. If not, you will need to manually create the junction. If there is a problem, the error message in the build output will explain how to create that manually.
-    a. Select **Release**, **Any CPU**, and build the solution.
+   * Open [**WorkshopTool.sln**](WorkshopTool.sln).
+   * If Steam and Space Engineers (or Medieval) are installed, they should be detected during the build and the project references to the game DLLs should automatically update. If not, you will need to manually create the junction. If there is a problem, the error message in the build output will explain how to create that manually.
+   * Select **Release**, **Any CPU**, and build the solution.
 1. If using the Build Tools, or don't want to open the IDE
-    a. Execute [**build.bat**](build.bat)
-1. Copy the following files into the Space Engineers *Bin64* directory above: *SEWorkshopTool.exe*, *SEWorkshopTool.exe.config*, *CommandLine.dll*, and *steam_appid.txt*. Alternatively, just grab *SEWorkshopTool-latest.zip* in the output folder, and extract that to the Bin64 directory.
+   * Execute [**build.bat**](build.bat)
+1. Copy the following files into the Space Engineers *Bin64* directory above: *SEWorkshopTool.exe*, *SEWorkshopTool.exe.config*, *CommandLine.dll*, and *steam_appid.txt*.
+   * Alternatively, just grab *SEWorkshopTool-latest.zip* in the output folder, and extract that to the Bin64 directory.
 1. Open a command prompt in the Space Engineers *Bin64* directory as used above.
 1. Run the tool with the appropriate options.
 
@@ -37,17 +38,17 @@ These steps refer to Space Engineers. If you are working with Medieval Engineers
 1. A copy of [Space](https://store.steampowered.com/app/244850) (or [Medieval](https://store.steampowered.com/app/333950)) Engineers on Steam
 
 ## Steps
-1. Either [build from source](#building-from-source), or download the most recent version over on the [releases](/releases/latest) page.
-1. Extract the contents of **SEWorkshopTool-*.zip** or **MEWorkshopTool-*.zip** (depending on the game you have) into the respective game's installation folder (e.g. *%ProgramFiles(x86)%\Steam\steamapps\common\SpaceEngineers\Bin64*).
-   a. The files can also be placed in the parent folder, outside of *Bin64* (e.g. *steamapps\common\SpaceEngineers*)
-   a. Advanced users can extract the zip anywhere and create a junction to the game's Bin64 folder at the same level where the executable is located. The steps for that are beyond the scope of this document. *While this will work, it is not a currently supported installation method.*   
-   This may be automated in the future.
-   a. If there was a previous installation, and mod.io was used, save a copy of SEWorkshopTool.config *before* overwriting. This has your authentication token. If this is lost you will be required to re-authenticate to mod.io to upload there again.  
-   You'll need to manually copy your authentication information from the old .config, and place it in the new one. See the section on [mod.io](#new-in-074) for an example of what to look for.
-1. Move [.wtignore](.wtignore) to *%AppData%\SpaceEngineers\Mods* or *%AppData%\MedievalEngineers\Mods*, as appropriate, and edit to taste.
-   a. This can be skipped if this step was completed previously.
-1. Open a Command Prompt or Powershell prompt in the above installation location (where the zip was extracted).
-   a. Hold down **Shift** and **Right-click** in a blank area to open the context menu in the folder, then select **Open command window here** or **Open PowerShell window here**.
+1. Either [build from source](#building-from-source), or download the most recent version over on the [releases](../../releases/latest) page.
+1. Extract the contents of **SEWorkshopTool-*.zip** or **MEWorkshopTool-*.zip** (depending on the game you have) into the respective game's installation folder (e.g. *%ProgramFiles(x86)%\Steam\steamapps\common\SpaceEngineers\Bin64*).  
+   * The files can also be placed in the parent folder, outside of *Bin64* (e.g. *steamapps\common\SpaceEngineers*)
+   * Advanced users can extract the zip anywhere and create a junction to the game's Bin64 folder at the same level where the executable is located. The steps for that are beyond the scope of this document. *While this will work, it is not a currently supported installation method.*  
+     This may be automated in the future.  
+   * If there was a previous installation, and mod.io was used, save a copy of SEWorkshopTool.config *before* overwriting. This has your authentication token. If this is lost you will be required to re-authenticate to mod.io to upload there again.  
+     You'll need to manually copy your authentication information from the old .config, and place it in the new one. See the section on [mod.io](#new-in-074) for an example of what to look for.  
+1. Move [.wtignore](.wtignore) to *%AppData%\SpaceEngineers\Mods* or *%AppData%\MedievalEngineers\Mods*, as appropriate, and edit to taste.  
+   * This can be skipped if this step was completed previously.  
+1. Open a Command Prompt or Powershell prompt in the above installation location (where the zip was extracted).  
+   * Hold down **Shift** and **Right-click** in a blank area to open the context menu in the folder, then select **Open command window here** or **Open PowerShell window here**.  
 1. Execute `SEWorkshopTool.exe` (`.\SEWorkshopTool.exe` in PowerShell) to get started.
 1. See the [examples](#usage-examples) below.
 
@@ -64,24 +65,23 @@ Want to skip ahead to the important bits?
 * [Downloading a mod or collection](#downloading-verb-get)
 
 ### Command-line changes as of 0.7.14!
-Starting with 0.7.14, the command-line argument format has changed. The examples below have been updated to reflect this change.
+Starting with 0.7.14, the command-line argument format has changed. The examples below have been updated to reflect this change.  
 The previous command-line options will still be accepted at least until 0.8, and a warning will show if you attempt to use one, with the corrected format displayed.
 
 In addition, some defaults changed:  
-1. --compile is now default (when appropriate), use --no-compile to disable compilation testing.
-1. --extract is now default, use --no-extract to disable automatic extraction to *%AppData%*.
-1. --dev has been removed. The **development** tag is no longer supported on mods, and will be removed from any updated mods. Using the option will not report an error, but it will not work. This argument only exists in the legacy (pre-0.7.14) command-line format, for compatibility, and will eventually be removed entirely.
+* **--compile** is now default (when appropriate), use --no-compile to disable compilation testing.
+* **--extract** is now default, use --no-extract to disable automatic extraction to *%AppData%*.
+* **--dev** has been removed. The **development** tag is no longer supported on mods, and will be removed from any updated mods. Using the option will not report an error, but it will not work. This argument only exists in the legacy (pre-0.7.14) command-line format, for compatibility, and will eventually be removed entirely.
 
 ## Command structure
 Commands are broken down into several distinct categories:
-1. [get](#downloading-verb-get) - Download workshop items
-1. [push](#uploading-verb-push) - Push (upload) changes to workshop items
-1. [change](#changing-metadata-verb-change) - Push metadata changes to items
-1. [compile](#compilation-verb-compile) - Compile test local mod
-1. [cloud](#steam-cloud-verb-cloud) - Manage Steam Cloud storage
+* [get](#downloading-verb-get) - Download workshop items
+* [push](#uploading-verb-push) - Push (upload) changes to workshop items
+* [change](#changing-metadata-verb-change) - Push metadata changes to items
+* [compile](#compilation-verb-compile) - Compile test local mod
+* [cloud](#steam-cloud-verb-cloud) - Manage Steam Cloud storage
 
-Each category corresponds to a command 'verb'.
-The various verbs are shown in more detail below.
+Each category corresponds to a command 'verb'. The various verbs are shown in more detail below.
 
 Any command-line can be appended with **--help** to get a listing of the the arguments accepted by the program, or the specified verb.  
 
@@ -171,6 +171,7 @@ All arguments below *also* apply to the **push** verb. They are just listed once
 
 You can update the the preview image (*thumb.jpg*) separately, without reuploading the entire mod.
 This also works for updating tags, DLC and dependencies as well.  
+
 To update the thumbnail (any image steam supports, can be in *any* location):  
 `SEWorkshopTool change --mods FTL --thumb "path\to\filename"`
 
@@ -190,14 +191,14 @@ For example: If a workshop mod contains the *Block* and *Script* categories, and
 This does not apply to **--add-tags** or **--remove-tags**.
 
 Starting with 0.7.14, tags can be added or removed selectively, with the **--add-tags** or **--remove-tags** options, respectively:  
-`SEWorkshopTool change --mods FTL --add-tags script --remove-tags block`
+`SEWorkshopTool change --mods FTL --add-tags script --remove-tags block`  
 The above command will add the *script* tag, if it wasn't already present on the workshop item; it will also remove the 'block' tag if it was present. All other tags will remain untouched.
 
 ### DLC Requirements
 * Added in 0.6.1
 
-You can add DLC as a requirement for workshop items.
-This is highly recommended if you intend to upload mods using DLC assets.
+You can add DLC as a requirement for workshop items.  
+This is *highly* recommended if you intend to upload mods using DLC assets.
 
 To see the list of the available DLC:  
 `SEWorkshopTool.exe --listdlc`
@@ -217,8 +218,7 @@ As with [tags](#workshop-tags), starting with 0.7.14, you can add or remove indi
 ### Dependencies
 * Added in 0.7.1
 
-You can add other workshop items as a requirement for your items.
-This operates similar to the DLC requirement feature.
+You can add other workshop items as a requirement for your items. This operates similar to the DLC requirement feature.
 
 To set a mod as requiring another mod:  
 `SEWorkshopTool change --mods FTL --dependencies 1992410560`  
@@ -226,7 +226,7 @@ To set a mod as requiring another mod:
 To easily remove all dependencies from an item, pass either *0* or *none* as the argument:  
 `SEWorkshopTool change --mods FTL --dependencies none`  
 
-As with [tags](#workshop-tags), starting with 0.7.14, you can add or remove individual DLC items with **--add-dependencies** or **--remove-dependencies**, respectively, without affecting existing dependencies listed on the item.  
+As with [tags](#workshop-tags), starting with 0.7.14, you can add or remove individual item dependencies with **--add-dependencies** or **--remove-dependencies**, respectively, without affecting existing dependencies listed on the item.  
 
 For convenience, local mods can be specified, as long as they have *already* been published. The Workshop ID will be determined from the local mod or mods, if possible.  
 
@@ -291,17 +291,17 @@ previewfile_2362147824.jpg                |      254 |  True  |  N/A
 1. Filename - The filename of the item. Use this name when referencing it for other operations.
 2. Size - This is the size of the file, in kiB (base 2 kilobytes)
 3. In Cloud - True or false if this file is actually stored on the cloud (consuming cloud storage)
-    a. True - File is stored on the cloud, and consuming cloud storage space
-	b. False - File is only stored locally, and is not consuming cloud storage space (deleting it won't free space)
+   * True - File is stored on the cloud, and consuming cloud storage space
+   * False - File is only stored locally, and is not consuming cloud storage space (deleting it won't free space)
 4. Forgotten/Deleted - True or false if the file was successfully deleted or forgotten.
-    a. True - File was succesfully forgotten (deleted on cloud, but still stored locally), or deleted (deleted on cloud and locally).
-    b. False - File was **not** succesfully forgotten or deleted. Check steam logs.
-	c. N/A - This column is not applicable to the current operation. Ignore.
+   * True - File was succesfully forgotten (deleted on cloud, but still stored locally), or deleted (deleted on cloud and locally).
+   * False - File was **not** succesfully forgotten or deleted. Check steam logs.
+   * N/A - This column is not applicable to the current operation. Ignore.
 
 ### *Deleted* vs *Forgotten*
 This naming scheme comes from the Steamworks API for [FileForget](https://partner.steamgames.com/doc/api/ISteamRemoteStorage#FileForget) and [FileDelete](https://partner.steamgames.com/doc/api/ISteamRemoteStorage#FileDelete).  
-*Forget* means the file has been deleted from the cloud storage, but is still present in the local cache. This file will remain accessible in the API for the local machine only.  
-*Delete* means the file has been deleted from both cloud and local storage. The file is really gone.
+* *Forget* means the file has been deleted from the cloud storage, but is still present in the local cache. This file will remain accessible in the API for the local machine only.  
+* *Delete* means the file has been deleted from both cloud and local storage. The file is really gone.
 
 To see a listing of all the files associated on your Steam cloud account:  
 `SEWorkshopTool cloud --list`
@@ -324,10 +324,10 @@ Mod.io support, for uploading or downloading mods used by the XBox version.
 
 **THIS IS EXPERIMENTAL AND BUGGY**
 
-It can only upload and download mods. It cannot update tags. Thumbnail editing is untested.
-Authentication is required, this is done via email. SEWT does not ask for your account password!
-If you do not want to use SEWT for authentication, you might be able to manually create an OAuth2 token from the mod.io website, however this is untested.
-If so, add the following to SEWorkshopTool.exe.config, just below :
+It can only upload and download mods. It cannot update tags. Thumbnail editing is untested.  
+Authentication is required, this is done via email. SEWT does not ask for your account password!  
+If you do not want to use SEWT for authentication, you might be able to manually create an OAuth2 token from the mod.io website, however this is untested.  
+If so, add the following to SEWorkshopTool.exe.config, just below:
 
 ```xml
   <appSettings>
@@ -336,6 +336,7 @@ If so, add the following to SEWorkshopTool.exe.config, just below :
     <add key="auth-expires" value="unix timestamp expiration" />
   </appSettings>
 ```
-To switch to mod.io, use the --modio option, in combination with all the other commands.
-For example, to upload a large ship blueprint named "My First Ship":
+To switch to mod.io, use the --modio option, in combination with all the other commands.  
+
+For example, to upload a large ship blueprint named "My First Ship":  
 `SEWorkshopTool.exe push --modio --blueprints "My First Ship" --tags ship,large_grid`
