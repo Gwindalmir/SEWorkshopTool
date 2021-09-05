@@ -683,8 +683,12 @@ namespace Phoenix.WorkshopTool
                         else
                         {
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Not uploading: {0}", mod.Title));
-                            foreach (var item in mod.ModId)
-                                mod.UpdatePreviewFileOrTags(item);
+                            // Don't send metadata updates unless it's a publishing verb
+                            if (options.Type.IsSubclassOf(typeof(PublishVerbBase)))
+                            {
+                                foreach (var item in mod.ModId)
+                                    mod.UpdatePreviewFileOrTags(item);
+                            }
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
                         }
                     }

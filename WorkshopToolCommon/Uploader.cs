@@ -515,12 +515,8 @@ namespace Phoenix.WorkshopTool
 
             // 2) Verify the modtype matches what was listed in the workshop
             // TODO If type doesn't match, process as workshop type
-            if (existingTags != null && existingTags.Length > 0)
-            {
-                var msg = string.Format("Workshop category '{0}' does not match expected '{1}'. Is something wrong?", existingTags[0], modtype);
-                MySandboxGame.Log.WriteLineWarning(msg);
-                MyDebug.AssertDebug(existingTags.Contains(modtype, StringComparer.InvariantCultureIgnoreCase), msg);
-            }
+            if (existingTags?.Length > 0 && !existingTags.Contains(modtype, StringComparer.InvariantCultureIgnoreCase))
+                MySandboxGame.Log.WriteLineWarning(string.Format("Workshop category '{0}' does not match expected '{1}'. Is something wrong?", existingTags[0], modtype));
 
 #if SE
             // 3a) check if user passed in the 'development' tag
@@ -675,10 +671,13 @@ namespace Phoenix.WorkshopTool
             publisher.Visibility = (MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
-            publisher.Folder = m_modPath;
 #if SE
             if (m_dlcs != null)
                 publisher.DLCs = new HashSet<uint>(m_dlcs);
+#else
+            // ME will throw an exception if this isn't set, however setting this in SE 
+            // will trigger a full change event (with a new change note entry), which we don't want.
+            publisher.Folder = m_modPath;
 #endif
             if (m_deps != null)
                 publisher.Dependencies = new List<ulong>(m_deps);
