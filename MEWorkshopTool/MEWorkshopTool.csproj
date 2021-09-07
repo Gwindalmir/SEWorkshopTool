@@ -8,8 +8,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Bin64\**" />
+    <Compile Remove="DedicatedServer64\**" />
     <EmbeddedResource Remove="Bin64\**" />
+    <EmbeddedResource Remove="DedicatedServer64\**" />
     <None Remove="Bin64\**" />
+    <None Remove="DedicatedServer64\**" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MedievalEngineers.Game">
@@ -81,7 +84,7 @@
   <Import Project="..\WorkshopToolCommon\WorkshopToolCommon.projitems" Label="Shared" />
   <Import Project="..\Updater\Updater.projitems" Label="Shared" />
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="set APPID=333950&#xD;&#xA;if NOT exist &quot;$(TargetDir)steam_appid.txt&quot; echo %APPID% &gt; &quot;$(TargetDir)steam_appid.txt&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(SolutionDir)\Tools\LinkBinaries.ps1 %APPID% $(TargetDir)\Bin64&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)$(TargetName).pdb, $(TargetDir)CommandLine.dll, $(TargetDir).wtignore -DestinationPath $(TargetDir)$(TargetName)-latest.zip}&quot;" />
+    <Exec Command="set APPID=333950&#xD;&#xA;if NOT exist &quot;$(TargetDir)steam_appid.txt&quot; echo %APPID% &gt; &quot;$(TargetDir)steam_appid.txt&quot;&#xD;&#xA;if NOT exist &quot;$(TargetDir)\Bin64&quot; mklink /j &quot;$(ProjectDir)\Bin64&quot; &quot;$(TargetDir)\Bin64&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)$(TargetName).pdb, $(TargetDir)CommandLine.dll, $(TargetDir).wtignore -DestinationPath $(TargetDir)$(TargetName)-v$(VersionPrefix).zip}&quot;" />
   </Target>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(SolutionDir)\Tools\LinkBinaries.ps1 333950 $(ProjectDir)\Bin64" />

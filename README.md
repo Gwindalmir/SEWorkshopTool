@@ -11,13 +11,17 @@ Please note, this is a command-line application only. A GUI may be considered in
 > If you are not interested in building this from source, skip ahead to [Installation](#installation).
 
 ## Requirements
-* A copy of [Space](https://store.steampowered.com/app/244850) (or [Medieval](https://store.steampowered.com/app/333950)) Engineers on Steam
-* [Visual Studio Community 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher
-  * [Build Tools for Visual Studio 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher as an command-line alternative to VS.
+* [Build Tools for Visual Studio 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher at a *minimum*.
+  * Or the full [Visual Studio Community 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher, if preferred instead
   * JetBrains Rider is reported as working by the community as another alternative
 * .NET Framework 4.6.1 Targeting Pack for Visual Studio, or the [Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net461) if using the Build Tools
   * SE targets this version
 * [.NET Core SDK 2.1.300](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300) or higher
+
+### Optional
+* A copy of [Space](https://store.steampowered.com/app/244850) (or [Medieval](https://store.steampowered.com/app/333950)) Engineers on Steam
+  * If either Steam or the game aren't found, the binaries will be downloaded from the Dedicated Server depot.
+  * A purchased copy of the game is still required to *run* the workshop tool, but not to build it.
 
 ## Build steps
 These steps refer to Space Engineers. If you are working with Medieval Engineers, just subsititute as appropriate.
@@ -27,7 +31,7 @@ These steps refer to Space Engineers. If you are working with Medieval Engineers
    * If Steam and Space Engineers (or Medieval) are installed, they should be detected during the build and the project references to the game DLLs should automatically update. If not, you will need to manually create the junction. If there is a problem, the error message in the build output will explain how to create that manually.
    * Select **Release**, **Any CPU**, and build the solution.
 1. If using the Build Tools, or don't want to open the IDE
-   * Execute [**build.bat**](build.bat)
+   * Execute [**build.bat**](build.bat) (Double click, or run from a command prompt)
 1. Copy the following files into the Space Engineers *Bin64* directory above: *SEWorkshopTool.exe*, *SEWorkshopTool.exe.config*, *CommandLine.dll*, and *steam_appid.txt*.
    * Alternatively, just grab *SEWorkshopTool-latest.zip* in the output folder, and extract that to the Bin64 directory.
 1. Open a command prompt in the Space Engineers *Bin64* directory as used above.

@@ -1,7 +1,18 @@
 @echo off
 setlocal enabledelayedexpansion
 
-for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -version [15.0^,^) -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe`) do (
-	"%%i" "%~dp0\WorkshopTool.sln" /t:Build /p:Configuration=Release /p:ContinuousIntegrationBuild=true
-	exit /b !errorlevel!
+call :FindVS
+
+msbuild "%~dp0\WorkshopTool.sln" /m /t:Restore,Build /p:Configuration=Release /p:ContinuousIntegrationBuild=true
+exit /b %ERRORLEVEL%
+
+goto :EOF
+
+:FindVS
+if NOT "%VSINSTALLDIR%"=="" goto :EOF
+
+for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -version [15.0^,^) -products * -requires Microsoft.Component.MSBuild -property installationPath`) do (
+	call "%%i\Common7\Tools\vsdevcmd.bat"
+	goto :EOF
 )
+goto :EOF
