@@ -9,6 +9,7 @@ using Gwindalmir.Updater;
 namespace Phoenix.WorkshopTool.Tests.Common
 {
     [TestFixture]
+    [Category("NoSteam")]
     public class UpdaterTests
     {
         [Test]

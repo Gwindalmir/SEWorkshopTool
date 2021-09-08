@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace Phoenix.WorkshopTool.Tests.Common
 {
     [TestFixture]
+    [Category("NoSteam")]
     public class IgnoreFileTests
     {
         [Test]

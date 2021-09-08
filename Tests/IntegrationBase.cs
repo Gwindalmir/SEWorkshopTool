@@ -18,6 +18,7 @@ namespace Phoenix.WorkshopTool.Tests
     {
         #region Base Setup
         protected string[] _extraArguments = new string[0];
+        protected string _previousDirectory;
 
         public IntegrationBase()
         {
@@ -59,6 +60,7 @@ namespace Phoenix.WorkshopTool.Tests
         [OneTimeSetUp]
         public virtual void OneTimeSetup()
         {
+            _previousDirectory = Environment.CurrentDirectory;
             Environment.CurrentDirectory = TestContext.Parameters[$"{ParameterPrefix}.Install"];
 
             if (TestContext.Parameters.Exists($"{ParameterPrefix}.AppData"))
@@ -66,6 +68,12 @@ namespace Phoenix.WorkshopTool.Tests
                 _extraArguments = new[] { "--appdata", TestContext.Parameters[$"{ParameterPrefix}.AppData"] };
             }
 
+        }
+
+        [OneTimeTearDown]
+        public virtual void OneTimeTearDown()
+        {
+            Environment.CurrentDirectory = _previousDirectory;
         }
         #endregion Base Setup
 

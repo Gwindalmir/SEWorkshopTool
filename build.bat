@@ -1,9 +1,11 @@
 @echo off
 setlocal enabledelayedexpansion
+set CONFIG=Release
 
 call :FindVS
 
-msbuild "%~dp0\WorkshopTool.sln" /m /t:Restore,Build /p:Configuration=Release /p:ContinuousIntegrationBuild=true
+msbuild "%~dp0\WorkshopTool.sln" /m /t:Restore,Build /p:Configuration=%CONFIG%
+vstest.console "%~dp0\Tests\bin\%CONFIG%\net461\Phoenix.WorkshopTool.Tests.dll" /Settings:"%~dp0\Tests\tests.runsettings"
 exit /b %ERRORLEVEL%
 
 goto :EOF

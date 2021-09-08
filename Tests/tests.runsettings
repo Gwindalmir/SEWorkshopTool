@@ -5,12 +5,11 @@
     <!-- Path relative to solution directory -->
     <ResultsDirectory>.\TestResults</ResultsDirectory>
     <TargetPlatform>x64</TargetPlatform>
-    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
   </RunConfiguration>
 
   <!-- Parameters used by tests at runtime -->
   <TestRunParameters>
-    <Parameter name="SE.Install" value="D:\Program Files\Steam\SteamApps\common\SpaceEngineers" />
+    <Parameter name="SE.Install" value="SEWorkshopTool\Bin64" />
     <Parameter name="SE.ModIDToDownload" value="637504549" />
     <Parameter name="SE.ModNameToUpload" value="test-dev" />
     <Parameter name="SE.ScriptNameToUpload" value="Test Script" />
@@ -18,7 +17,7 @@
     <Parameter name="SE.ModChangelogFile" value="se-mod-log.txt" />
     <!-- <Parameter name="SE.AppData" value="" /> -->
 
-    <Parameter name="ME.Install" value="D:\Program Files\Steam\SteamApps\common\MedievalEngineers" />
+    <Parameter name="ME.Install" value="MEWorkshopTool\Bin64" />
     <Parameter name="ME.ModIDToDownload" value="1342545091" />
     <Parameter name="ME.ModNameToUpload" value="PickaxeMod_mewt" />
     <Parameter name="ME.ModChangelogFile" value="me-mod-log.txt" />
