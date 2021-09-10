@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Serialization.Json;
 using System.IO;
-using Sandbox;
 
 namespace Gwindalmir.Updater
 {
