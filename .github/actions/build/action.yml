@@ -1,0 +1,24 @@
+name: 'Build'
+
+inputs:
+  solution:
+    required: true
+  configuration:
+    required: false
+    default: Release
+
+runs:
+  using: "composite"
+  steps:
+    - name: Restore Nuget
+      id: restore
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      shell: pwsh
+      run: msbuild ${{inputs.solution}} /t:Restore /p:Configuration=${{inputs.configuration}} /p:ContinuousIntegrationBuild=true
+
+    - name: Build Solution
+      id: msbuild
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      shell: pwsh
+      run: msbuild ${{inputs.solution}} /m /t:Build /p:Configuration=${{inputs.configuration}} /p:ContinuousIntegrationBuild=true
+

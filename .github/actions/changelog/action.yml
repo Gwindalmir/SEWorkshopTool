@@ -1,0 +1,44 @@
+name: 'Build Changelog'
+
+inputs:
+  project-path:
+    required: false
+    default: Directory.Build.props
+
+outputs:
+  version:
+    value: ${{steps.get-version.outputs.version}}
+  version-prefix:
+    value: ${{steps.get-version.outputs.version-prefix}}
+  changelog:
+    value: ${{env.CHANGELOG}}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Build Version
+      id: get-version
+      uses: naminodarie/get-net-sdk-project-versions-action@v1.1.1
+      with:
+        proj-path: ${{inputs.project-path}}
+
+    - name: Generate Changelog
+      id: changelog
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      shell: bash
+      run: |
+        tag=`git describe --tags --abbrev=0`
+        changelog="`git log --oneline --no-decorate --pretty=tformat:"- %h %s" --no-merges $tag..HEAD`"
+        echo "$changelog" > changelog.md
+        echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+        echo "$changelog" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+        
+    - uses: actions/upload-artifact@v2
+      name: Publish Changelog
+      id: artifact-changelog
+      with:
+        name: changelog
+        path: changelog.md
+        if-no-files-found: warn
+

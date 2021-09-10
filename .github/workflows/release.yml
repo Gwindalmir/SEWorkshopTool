@@ -1,0 +1,95 @@
+# This is a basic workflow to help you get started with Actions
+name: Publish Release
+
+# Controls when the workflow will run
+on: 
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: "Build configuration"
+        required: false
+        default: "Release"
+      draft:
+        description: "Create as draft"
+        required: false
+        default: "true"
+      prerelease:
+        description: "Create as pre-release"
+        required: false
+        default: "true"
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: WorkshopTool.sln
+
+  BUILD_CONFIGURATION: ${{ github.event.inputs.configuration || 'Release' }}
+  BUILD_FRAMEWORK: net461
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout Sources
+      id: checkout
+      with:
+        fetch-depth: 0
+
+    - uses: ./.github/actions/setup
+      name: Setup Environment
+
+    - uses: ./.github/actions/build
+      name: Build Solution
+      with:
+        solution: ${{env.SOLUTION_FILE_PATH}}
+        configuration: ${{env.BUILD_CONFIGURATION}}
+
+    - uses: ./.github/actions/test
+      name: Run Tests
+      with:
+        package: Tests\bin\${{env.BUILD_CONFIGURATION}}\${{env.BUILD_FRAMEWORK}}\Phoenix.WorkshopTool.Tests.dll
+        settings: Tests\tests.runsettings
+
+    - uses: ./.github/actions/changelog
+      name: Generate Changelog
+      id: changelog
+      with:
+        project-path: Directory.Build.props
+      
+    - uses: actions/upload-artifact@v2
+      name: Publish SEWT Artifacts
+      id: artifact-sewt
+      with:
+        name: SEWT
+        path: SEWorkshopTool/bin/${{env.BUILD_CONFIGURATION}}/${{env.BUILD_FRAMEWORK}}/SEWorkshopTool*.zip
+
+    - uses: actions/upload-artifact@v2
+      name: Publish MEWT Artifacts
+      id: artifact-mewt
+      with:
+        name: MEWT
+        path: MEWorkshopTool/bin/${{env.BUILD_CONFIGURATION}}/${{env.BUILD_FRAMEWORK}}/MEWorkshopTool*.zip
+          
+    - uses: ncipollo/release-action@v1
+      name: Publish Release
+      id: publish-release
+      with:
+        artifacts: "**/*WorkshopTool*.zip"
+        token: ${{secrets.GITHUB_TOKEN}}
+        name: Workshop Tool v${{steps.changelog.outputs.version-prefix}}
+        tag: v${{steps.changelog.outputs.version}}
+        commit: master
+        draft: ${{github.event.inputs.draft}}
+        prerelease: ${{github.event.inputs.prerelease}}
+        allowUpdates: true
+        body: |
+          Changelog:
+          ${{env.CHANGELOG}}
+          
+          To Install: Read the installation instructions listed on the [readme](https://github.com/Gwindalmir/SEWorkshopTool/tree/master#installation).
+          
+          PLEASE NOTE: This is a command-line (terminal) application. You cannot just double-click it to run it.
+          To run this, from the Bin64 folder, *Shift+Right* click in an empty area off to the side, then select **Open Powershell window here**. After the blue window appears, type the command with arguments you need, such as `.\SEWorkshopTool.exe --help` and then press the ENTER key.
+

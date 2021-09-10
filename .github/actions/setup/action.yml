@@ -1,0 +1,15 @@
+name: 'Setup environment for build'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Add MSBuild to PATH
+      id: detect-msbuild
+      uses: microsoft/setup-msbuild@v1.0.2
+      with: 
+        vs-version: '[15.7,)'
+        
+    - name: Add VSTest to Path
+      id: vstest-detect
+      uses: darenm/Setup-VSTest@v1
+

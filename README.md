@@ -1,3 +1,4 @@
+[![Tests](https://github.com/Gwindalmir/SEWorkshopTool/actions/workflows/tests.yml/badge.svg)](https://github.com/Gwindalmir/SEWorkshopTool/actions/workflows/tests.yml)  
 # Workshop Tool
 This is a tool which allows batch upload and download of mods for both [Space Engineers](https://store.steampowered.com/app/244850) and [Medieval Engineers](https://store.steampowered.com/app/333950).  
 It is also known as SEWT (for Space Engineers Workshop Tool), or MEWT (Medieval Engineers Workshop Tool).
