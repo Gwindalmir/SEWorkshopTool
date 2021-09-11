@@ -23,50 +23,73 @@
   <ItemGroup>
     <Reference Include="EmptyKeys.UserInterface.Core">
       <HintPath>Bin64\EmptyKeys.UserInterface.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="Sandbox.Common">
+    <Reference Include="Sandbox.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\Sandbox.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Game">
       <HintPath>Bin64\Sandbox.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="SpaceEngineers.Game">
+    <Reference Include="SpaceEngineers.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\SpaceEngineers.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Steamworks.NET">
       <HintPath>Bin64\Steamworks.NET.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="VRage">
+    <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\VRage.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Game">
+    <Reference Include="VRage.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\VRage.Game.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Library">
+    <Reference Include="VRage.Library, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\VRage.Library.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Mod.Io">
       <HintPath>Bin64\VRage.Mod.Io.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Platform.Windows">
       <HintPath>Bin64\VRage.Platform.Windows.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Render">
+    <Reference Include="VRage.Render, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\VRage.Render.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Render11">
+    <Reference Include="VRage.Render11, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\VRage.Render11.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="VRage.Scripting">
+    <Reference Include="VRage.Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\VRage.Scripting.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Steam">
       <HintPath>Bin64\VRage.Steam.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VRage.UserInterface">
       <HintPath>Bin64\VRage.UserInterface.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
