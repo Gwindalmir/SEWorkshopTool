@@ -25,6 +25,7 @@ namespace Phoenix.WorkshopTool.Options
         public bool UpdateOnly { get; set; }
         public bool DryRun { get; set; }
         public bool Compile { get; set; }
+        public string DiscordWebhookUrl { get; set; }
         public IList<string> Mods { get; set; }
         public IList<string> Blueprints { get; set; }
         public IList<string> Scenarios { get; set; }
@@ -158,6 +159,7 @@ namespace Phoenix.WorkshopTool.Options
 
             ExcludeExtensions = options.ExcludeExtensions?.ToList();
             IgnorePaths = options.IgnorePaths?.ToList();
+            DiscordWebhookUrl = options.DiscordWebhookUrl;
         }
 
         public ProcessedOptions(ChangeVerb options)
@@ -313,6 +315,7 @@ namespace Phoenix.WorkshopTool.Options
             result.DescriptionFile = options.Changelog;
             result.Compile = options.Compile;
             result.DryRun = options.DryRun;
+            result.DiscordWebhookUrl = options.DiscordWebhookUrl;
             result.Thumbnail = options.Thumbnail;
             result.UpdateOnly = options.UpdateOnly;
             result.Visibility = options.Visibility;
