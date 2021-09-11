@@ -33,5 +33,8 @@ namespace Phoenix.WorkshopTool.Options
 
         [Option("message", HelpText = "Changelog message (requires actual content update)", MetaValue = "<text or filename>")]
         public string Changelog { get; set; }
+
+        [Option("discord-webhook", HelpText = "A link to a webhook that will publish update notes", MetaValue = "<url>")]
+        public string DiscordWebhookUrl { get; set; }
     }
 }

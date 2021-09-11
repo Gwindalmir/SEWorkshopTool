@@ -674,7 +674,7 @@ namespace Phoenix.WorkshopTool
                                 if (hook.Call(options.DiscordWebhookUrl, out string error))
                                     MySandboxGame.Log.WriteLineAndConsole("Sent payload to discord webhook");
                                 else
-                                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Discord webhook error: {0}", error));
+                                    MySandboxGame.Log.WriteLineWarning(string.Format("Discord webhook error: {0}", error));
                             }
 
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));

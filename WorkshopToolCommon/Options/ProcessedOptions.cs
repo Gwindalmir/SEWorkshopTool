@@ -159,6 +159,7 @@ namespace Phoenix.WorkshopTool.Options
 
             ExcludeExtensions = options.ExcludeExtensions?.ToList();
             IgnorePaths = options.IgnorePaths?.ToList();
+            DiscordWebhookUrl = options.DiscordWebhookUrl;
         }
 
         public ProcessedOptions(ChangeVerb options)
@@ -187,7 +188,6 @@ namespace Phoenix.WorkshopTool.Options
             Thumbnail = options.Thumbnail;
             DescriptionFile = options.DescriptionFile;
             Visibility = options.Visibility;
-            DiscordWebhookUrl = options.DiscordWebhookUrl;
 
             Blueprints = options.Blueprints?.ToList();
             Scenarios = options.Scenarios?.ToList();
@@ -346,7 +346,6 @@ namespace Phoenix.WorkshopTool.Options
             result.ModIO = options.ModIO;
             result.DescriptionFile = options.Changelog;
             result.DryRun = options.DryRun;
-            result.DiscordWebhookUrl = options.DiscordWebhookUrl;
             result.Thumbnail = options.Thumbnail;
             result.Visibility = options.Visibility;
             result.Blueprints = options.Blueprints;

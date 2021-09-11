@@ -25,9 +25,6 @@ namespace Phoenix.WorkshopTool.Options
         [Option("dependencies", HelpText = "Specify dependencies to other mods. Use 0 to remove all.", MetaValue = "<id>")]
         public IEnumerable<string> Dependencies { get; set; }
 
-        [Option("discord-webhook", HelpText = "A link to a webhook that will publish update notes", MetaValue = "<url>")]
-        public string DiscordWebhookUrl { get; set; }
-
         // Provide aliases for add-dependency and remove-dependency, as add-dependencies and remove-dependencies, respectively
         protected IList<string> _dependenciesToAdd = new List<string>();
         [Option("add-dependency", HelpText = "List of dependencies to add", Hidden = true)]
