@@ -665,8 +665,20 @@ namespace Phoenix.WorkshopTool
 
                     if (options.Upload)
                     {
-                        if (mod.Publish())
+                        if (mod.Publish()) 
+                        {
+                            if (!options.DryRun && !string.IsNullOrEmpty(options.DiscordWebhookUrl))
+                            {
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Discord-Webhook-Url: {0}", options.DiscordWebhookUrl));
+                                DiscordWebhook hook = new DiscordWebhook(type, mod.Title, changelog);
+                                if (hook.Call(options.DiscordWebhookUrl, out string error))
+                                    MySandboxGame.Log.WriteLineAndConsole("Sent payload to discord webhook");
+                                else
+                                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Discord webhook error: {0}", error));
+                            }
+
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
+                        }
                         else
                         {
                             success = false;
