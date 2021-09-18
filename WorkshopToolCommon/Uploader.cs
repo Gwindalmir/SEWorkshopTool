@@ -671,6 +671,7 @@ namespace Phoenix.WorkshopTool
             publisher.Visibility = (MyPublishedFileVisibility)(int)(m_visibility ?? GetVisibility());
             publisher.Thumbnail = m_previewFilename;
             publisher.Tags = new List<string>(m_tags);
+            publisher.Description = m_description;
 #if SE
             if (m_dlcs != null)
                 publisher.DLCs = new HashSet<uint>(m_dlcs);

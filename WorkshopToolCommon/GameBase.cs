@@ -17,6 +17,7 @@ using CommandLine;
 using Phoenix.WorkshopTool.Options;
 using CommandLine.Text;
 using Phoenix.WorkshopTool.Extensions;
+using System.Text;
 #if SE
 using ParallelTasks;
 using MyDebug = Phoenix.WorkshopTool.Extensions.MyDebug;
@@ -584,6 +585,8 @@ namespace Phoenix.WorkshopTool
 
         static bool ProcessItemsUpload(WorkshopType type, List<string> paths, ProcessedOptions options)
         {
+            const int MAX_DESCRIPTION_LENGTH = 8000;
+
             bool success = true;
             for (int idx = 0; idx < paths.Count; idx++)
             {
@@ -613,8 +616,20 @@ namespace Phoenix.WorkshopTool
                     if (!Path.IsPathRooted(options.DescriptionFile))
                         options.DescriptionFile = Path.GetFullPath(Path.Combine(LaunchDirectory, options.DescriptionFile));
 
-                    if (File.Exists(options.DescriptionFile))
+                    var fi = new FileInfo(options.DescriptionFile);
+                    if (fi.Exists)
+                    {
                         description = File.ReadAllText(options.DescriptionFile);
+                        // If the file size itself is <= 8000, no problem
+                        if (fi.Length > MAX_DESCRIPTION_LENGTH)
+                        {
+                            // Steamworks sends the description to Steam as UTF-8, so verify UTF-8 size.
+                            // If the file was saved as UTF-16 encoding, but only used 7-bit characters, then the UTF-8 size will be lower.
+                            var utf8len = Encoding.UTF8.GetByteCount(description);
+                            if (utf8len > MAX_DESCRIPTION_LENGTH)
+                                MySandboxGame.Log.WriteLineWarning(string.Format("Description is too long, current UTF-8 size: {0} bytes; maximum: {1}", utf8len, MAX_DESCRIPTION_LENGTH));
+                        }
+                    }
                     else
                         MySandboxGame.Log.WriteLineWarning(string.Format("Unable to set description, file does not exist: {0}", options.DescriptionFile));
                 }
