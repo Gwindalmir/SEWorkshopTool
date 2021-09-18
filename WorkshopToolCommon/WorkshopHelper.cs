@@ -96,6 +96,8 @@ namespace Phoenix.WorkshopTool
 
         public static List<MyWorkshopItem> GetItemsBlocking(ICollection<ulong> ids)
         {
+            if (ids == null)
+                return null;
 #if SE
             var workshopIds = new List<WorkshopId>();
             ids.ForEach(i => workshopIds.Add(new WorkshopId(i, MyGameService.GetDefaultUGC().ServiceName)));

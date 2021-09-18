@@ -745,13 +745,13 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole("Beginning batch workshop download...");
                 MySandboxGame.Log.WriteLineAndConsole(string.Empty);
 
-                if (options.Collections?.Count() > 0)
+                if (options.Collections?.Count() > 0 || options.Ids?.Count() > 0)
                 {
                     var items = new List<MyWorkshopItem>();
 
                     // get collection information
-                    options.Collections.ForEach(i => items.AddRange(WorkshopHelper.GetCollectionDetails(i)));
-                    WorkshopHelper.GetItemsBlocking(options.Ids).ForEach(item =>
+                    options.Collections?.ForEach(i => items.AddRange(WorkshopHelper.GetCollectionDetails(i)));
+                    WorkshopHelper.GetItemsBlocking(options?.Ids)?.ForEach(item =>
                     {
                         // Ids can contain any workshop id, including collections, so check each one
                         if (item.ItemType == MyWorkshopItemType.Collection)
@@ -1007,7 +1007,7 @@ namespace Phoenix.WorkshopTool
 
                 return tempList.ToArray();
             }
-            return existingitems.ToArray();
+            return existingitems?.ToArray();
         }
 
         public static void CopyAll(string source, string target)
