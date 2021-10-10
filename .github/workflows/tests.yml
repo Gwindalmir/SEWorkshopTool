@@ -63,3 +63,4 @@ jobs:
       with:
         project-path: Directory.Build.props
 
+https://github.com/microsoft/azure-pipelines-agent/issues/2342#issue-465374273
