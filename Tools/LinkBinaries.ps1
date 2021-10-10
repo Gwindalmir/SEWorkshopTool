@@ -1,12 +1,12 @@
 [cmdletBinding(SupportsShouldProcess=$false)]
 param(
-	[Parameter(Mandatory=$true)]
-	[System.UInt32]$AppId = 244850
+    [Parameter(Mandatory=$true)]
+    [System.UInt32]$AppId = 244850
 ,
-	[Parameter(Mandatory=$false)]
-	[System.String]$LinkDestination = $null
+    [Parameter(Mandatory=$false)]
+    [System.String]$LinkDestination = $null
 ,
-	[switch]$Force = $false
+    [switch]$Force = $false
 )
 
 function Get-ViaDepotDownloader {
@@ -49,14 +49,14 @@ function Get-ViaDepotDownloader {
 }
 
 if ($LinkDestination -and (Test-Path -Path $LinkDestination)) {
-	if ($Force) {
-		# -Force and -Recurse are required to delete a junction. However it won't delete the contents, as expected.
-		Remove-Item $LinkDestination -Force -Recurse
-	}
-	else {
-		Write-Verbose "Destination '$($LinkDestination)' already exists, skipping"
-		exit 0
-	}
+    if ($Force) {
+        # -Force and -Recurse are required to delete a junction. However it won't delete the contents, as expected.
+        Remove-Item $LinkDestination -Force -Recurse
+    }
+    else {
+        Write-Verbose "Destination '$($LinkDestination)' already exists, skipping"
+        exit 0
+    }
 }
 
 $GamePath = $null
@@ -72,23 +72,23 @@ try {
     $librarys = ConvertFrom-VDF -InputObject (Get-Content "$($steamPath)\steamapps\libraryfolders.vdf")
 
     for ($i = 1; $true; $i++) {
-	    if ($librarys.LibraryFolders."$i" -eq $null) {
-		    break
-	    }
+        if ($librarys.LibraryFolders."$i" -eq $null) {
+            break
+        }
 
-	    $path = $librarys.LibraryFolders."$i".Replace("\\","\")
-	    Write-Verbose "Additional Steam library found in '$($path)'"
-	    [array]$steamLibraries += $path
+        $path = $librarys.LibraryFolders."$i".path.Replace("\\","\")
+        Write-Verbose "Additional Steam library found in '$($path)'"
+        [array]$steamLibraries += $path
     }
 
     ForEach ($library in ($steamLibraries) ) {
-	    Write-Verbose ("Checking library: " + $library)
-	    ForEach ($file in (Get-ChildItem "$($library)\SteamApps\*.acf") ) {
-		    $acf = ConvertFrom-VDF (Get-Content $file -Encoding UTF8)
-		    if ($acf.AppState.appID -eq $AppId) {
-			    $GamePath = "$($library)\SteamApps\common\$($acf.AppState.InstallDir)\Bin64"
-		    }
-	    }
+        Write-Verbose ("Checking library: " + $library)
+        $manifest = "$($library)\SteamApps\appmanifest_$($AppId).acf"
+        if (-not (Test-Path -Path $manifest -PathType Leaf)) { continue }
+        $acf = ConvertFrom-VDF -InputObject (Get-Content $manifest -Encoding UTF8)
+        if ($acf.AppState.appID -eq $AppId) {
+            $GamePath = "$($library)\SteamApps\common\$($acf.AppState.InstallDir)\Bin64"
+        }
     }
     if (-not $GamePath) { throw New-Object System.IO.DirectoryNotFoundException }
 } catch {
@@ -101,29 +101,29 @@ try {
 }
 
 if ($GamePath) {
-	if ($LinkDestination) {
-		Write-Output ("Found Game: $($GamePath)")
-		New-Item -Path $LinkDestination -ItemType Junction -Value "$($GamePath)" | Out-Null
+    if ($LinkDestination) {
+        Write-Output ("Found Game: $($GamePath)")
+        New-Item -Path $LinkDestination -ItemType Junction -Value "$($GamePath)" | Out-Null
         Write-Output ("Created symbolic link: $($LinkDestination) <-> $($GamePath)")
-	}
-	else {
-		Write-Output $GamePath
-	}
+    }
+    else {
+        Write-Output $GamePath
+    }
 }
 else {
-	if ($AppId -eq 244850) {
-		$path = Resolve-Path -Path "$($PSScriptRoot)\..\SEWorkshopTool"
-		$msg = ("`nCould not find Space Engineers installation. Manually create a junction to the Bin64 directory.`n" + 
-				"mklink /j '$($path)\Bin64' '<Location of SpaceEngineers\Bin64>'`n-")
-		Write-Error $msg
-	}
-	elseif ($AppId -eq 333950) {
-		$path = Resolve-Path -Path "$($PSScriptRoot)\..\MEWorkshopTool"
-		$msg = ("`nCould not find Medieval Engineers installation. Manually create a junction to the Bin64 directory.`n" + 
-				"mklink /j '$($path)\Bin64' '<Location of MedievalEngineers\Bin64>'`n-")
-		Write-Error $msg
-	}
-	exit 1
+    if ($AppId -eq 244850) {
+        $path = Resolve-Path -Path "$($PSScriptRoot)\..\SEWorkshopTool"
+        $msg = ("`nCould not find Space Engineers installation. Manually create a junction to the Bin64 directory.`n" + 
+                "mklink /j '$($path)\Bin64' '<Location of SpaceEngineers\Bin64>'`n-")
+        Write-Error $msg
+    }
+    elseif ($AppId -eq 333950) {
+        $path = Resolve-Path -Path "$($PSScriptRoot)\..\MEWorkshopTool"
+        $msg = ("`nCould not find Medieval Engineers installation. Manually create a junction to the Bin64 directory.`n" + 
+                "mklink /j '$($path)\Bin64' '<Location of MedievalEngineers\Bin64>'`n-")
+        Write-Error $msg
+    }
+    exit 1
 }
 
 exit 0
