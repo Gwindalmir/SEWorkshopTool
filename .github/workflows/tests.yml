@@ -1,66 +1,17 @@
-name: Tests
+j = j + 1
 
-on:
-  push:
-    branches:
-      - 'master'
-    tags-ignore:
-      - '**'
-    paths-ignore:
-      - '**.md'
+for i in range(13263):
 
-  pull_request:
-    branches:
-      - 'master'
-    tags-ignore:
-      - '**'
-    paths-ignore:
-      - '**.md'
+    if caseid[i] == j:
 
-  workflow_dispatch:
-    inputs:
-      configuration:
-        description: "Build configuration"
-        required: false
-        default: "Release"
+        if taskid[i] == 'MakeTicket':
 
-env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: WorkshopTool.sln
+            if eventtype[i] == 'start':
 
-  BUILD_CONFIGURATION: ${{ github.event.inputs.configuration || 'Release' }}
-  BUILD_FRAMEWORK: net461
-  MANUAL_TRIGGER: ${{ github.event.workflow != null }}
+                start_time = starttime[i]
 
-jobs:
-  build:
-    runs-on: windows-latest
+            if eventtype[i] == 'complete':
 
-    steps:
-    - uses: actions/checkout@v2
-      name: Checkout Sources
-      id: checkout
-      with:
-        fetch-depth: 0
+                complete_time = complete[i]
 
-    - uses: ./.github/actions/setup
-      name: Setup Environment
-
-    - uses: ./.github/actions/build
-      name: Build Solution
-      with:
-        solution: ${{env.SOLUTION_FILE_PATH}}
-        configuration: ${{env.BUILD_CONFIGURATION}}
-
-    - uses: ./.github/actions/test
-      name: Run Tests
-      with:
-        package: Tests\bin\${{env.BUILD_CONFIGURATION}}\${{env.BUILD_FRAMEWORK}}\Phoenix.WorkshopTool.Tests.dll
-        settings: Tests\tests.runsettings
-
-    - uses: ./.github/actions/changelog
-      name: Generate Changelog
-      with:
-        project-path: Directory.Build.props
-
-https://github.com/microsoft/azure-pipelines-agent/issues/2342#issue-465374273
+print(start_time, complete_time)
