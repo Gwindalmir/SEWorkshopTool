@@ -41,6 +41,8 @@ namespace Phoenix.WorkshopTool
 
         static GameBase()
         {
+            // Make sure the current directory is where the game files are
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(FastResourceLock).Assembly.Location));
             var root = Path.Combine(Path.GetDirectoryName(typeof(FastResourceLock).Assembly.Location), "..");
 #if SE
             // Steam API doesn't initialize correctly if it can't find steam_appid.txt
