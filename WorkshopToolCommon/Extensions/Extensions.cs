@@ -266,6 +266,10 @@ namespace Phoenix.WorkshopTool.Extensions
                     categories.Add(new MyWorkshop.Category() { Id = "obsolete" });
                     categories.Add(new MyWorkshop.Category() { Id = "no mods" });
                     categories.Add(new MyWorkshop.Category() { Id = "experimental" });
+#else
+                    // ME also has tags for supported game version
+                    categories.Add(new MyWorkshop.Category() { Id = "0.6" });
+                    categories.Add(new MyWorkshop.Category() { Id = "0.7" });
 #endif
                     break;
                 default:
