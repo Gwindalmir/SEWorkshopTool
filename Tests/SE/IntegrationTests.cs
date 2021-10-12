@@ -19,6 +19,11 @@ namespace Phoenix.WorkshopTool.Tests.SE
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Compilation successful!"));
+            Assert.That(output, Contains.Substring("Updating IngameScript: "));
+            Assert.That(output, Contains.Substring("Upload/Publish success: "));
         }
 
         [Test]
@@ -30,6 +35,10 @@ namespace Phoenix.WorkshopTool.Tests.SE
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Compilation successful!"));
+            Assert.That(output, Contains.Substring("DRY-RUN; Publish skipped"));
         }
     }
 }

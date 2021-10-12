@@ -17,6 +17,8 @@ namespace Phoenix.WorkshopTool.Tests
     public abstract class IntegrationBase : GameTestBase
     {
         #region Base Setup
+        protected TextWriter ConsoleOut = new StringWriter();
+        protected TextWriter ConsoleError = new StringWriter();
         protected string[] _extraArguments = new string[0];
 
         public IntegrationBase()
@@ -65,6 +67,29 @@ namespace Phoenix.WorkshopTool.Tests
             }
 
         }
+
+        [SetUp]
+        public void Setup()
+        {
+            // Setup console stream redirection, so we can check the output during the test
+            Console.SetOut(ConsoleOut);
+            Console.SetError(ConsoleError);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            // Restore previous streams for the next test
+            ConsoleOut.Close();
+            ConsoleError.Close();
+
+            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()));
+            Console.SetError(new StreamWriter(Console.OpenStandardError()));
+
+            // Write out the contents to the real stdout/stderr, so they are visible in the test explorer.
+            TestContext.Out.Write(ConsoleOut.ToString());
+            TestContext.Error.Write(ConsoleError.ToString());
+        }
         #endregion Base Setup
 
         #region Common Tests
@@ -77,6 +102,10 @@ namespace Phoenix.WorkshopTool.Tests
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Download success!"));
+            Assert.That(output, Contains.Substring($"\\{TestContext.Parameters[$"{ParameterPrefix}.ModIDToDownload"]}"));
         }
 
         [Test]
@@ -88,6 +117,10 @@ namespace Phoenix.WorkshopTool.Tests
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Tags: Mod, other"));
+            Assert.That(output, Contains.Substring("Published file update successful"));
         }
 
         [Test]
@@ -99,6 +132,10 @@ namespace Phoenix.WorkshopTool.Tests
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Updating Mod: "));
+            Assert.That(output, Contains.Substring("Upload/Publish success: "));
         }
 
         [Test]
@@ -110,6 +147,10 @@ namespace Phoenix.WorkshopTool.Tests
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Compilation successful!"));
+            Assert.That(output, Contains.Substring("Publish skipped"));
         }
 
         [Test]
@@ -122,6 +163,12 @@ namespace Phoenix.WorkshopTool.Tests
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var desc = File.ReadAllText(filename);
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Updating Mod: "));
+            Assert.That(output, Contains.Substring($"Description: {desc.Substring(0, 20)}"));
+            Assert.That(output, Contains.Substring("Upload/Publish success: "));
         }
 
         // This requires an actual change to push, otherwise there's no changelog posted.
@@ -129,11 +176,17 @@ namespace Phoenix.WorkshopTool.Tests
         [Explicit]
         public void UploadModWithChangelog()
         {
-            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--message", $"SEWT Unit Test: {DateTime.Now.ToShortTimeString()}" });
+            var changelog = $"SEWT Unit Test: {DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}";
+            var args = new List<string>(new[] { "--upload", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--message", changelog });
             args.AddRange(_extraArguments);
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Updating Mod: "));
+            Assert.That(output, Contains.Substring($"Changelog: {changelog}"));
+            Assert.That(output, Contains.Substring("Upload/Publish success: "));
         }
 
         // This requires an actual change to push, otherwise there's no changelog posted.
@@ -147,6 +200,12 @@ namespace Phoenix.WorkshopTool.Tests
 
             var exitCode = LaunchMain(args.ToArray());
             Assert.That(exitCode, Is.EqualTo(0));
+
+            var log = File.ReadAllText(filename);
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Updating Mod: "));
+            Assert.That(output, Contains.Substring($"Changelog: {log.Substring(0, 20)}"));
+            Assert.That(output, Contains.Substring("Upload/Publish success: "));
         }
 
         [Test]
@@ -166,6 +225,15 @@ namespace Phoenix.WorkshopTool.Tests
 
                 var exitCode = LaunchMain(args.ToArray());
                 Assert.That(exitCode, Is.EqualTo(0));
+
+                // Since this is a new upload, this needs to be a throughout check
+                var output = ConsoleOut.ToString();
+                Assert.That(output, Contains.Substring($"Uploading new Mod: {newModName}"));
+                Assert.That(output, Contains.Substring("Visibility: Private"));
+                Assert.That(output, Contains.Substring("Tags: Mod"));
+                Assert.That(output, Contains.Substring("DLC requirements: None"));
+                Assert.That(output, Contains.Substring("Thumbnail: No change"));
+                Assert.That(output, Contains.Substring("DRY-RUN; Publish skipped"));
             }
             finally
             {
