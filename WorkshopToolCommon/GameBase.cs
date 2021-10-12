@@ -255,7 +255,7 @@ namespace Phoenix.WorkshopTool
                         return Cleanup(3);
                 }
 
-                MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
+                MySandboxGame.Log.WriteLineAndConsole($"{AppName} {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}");
 
                 ProgramBase.CheckForUpdate(MySandboxGame.Log.WriteLineAndConsole);
 
