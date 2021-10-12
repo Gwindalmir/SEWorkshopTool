@@ -219,6 +219,32 @@ namespace Phoenix.WorkshopTool
                     return Cleanup(2);
                 }
 
+                // Check if .wtignore is in the same location as the exe, as this is WRONG!
+                var exepath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                if (File.Exists(Path.Combine(exepath, ".wtignore")))
+                {
+                    var dest = Path.Combine(options.AppData, "Mods");
+                    ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, $"A .wtignore file is present in '{exepath}'.");
+                    try
+                    {
+                        if (File.Exists(Path.Combine(Path.Combine(dest, ".wtignore"))))
+                            throw new Exception($"File already exists: {Path.Combine(Path.Combine(dest, ".wtignore"))}");
+
+                        if (!Debugger.IsAttached)   // Don't move the file when debugging, as it'll be in the output directory
+                        {
+                            File.Move(Path.Combine(exepath, ".wtignore"), Path.Combine(dest, ".wtignore"));
+                            ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, $"Moved to '{dest}'.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // If Microsoft didn't want me to catch everything here,
+                        // they shouldn't have had File.Move throw every exception under the sun.
+                        MySandboxGame.Log.WriteLine(ex);
+                        ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, $"THIS IS WRONG! Move it to '{options.AppData}\\Mods'.");
+                    }
+                }
+
                 if (!SteamAPI.IsSteamRunning())
                 {
                     MySandboxGame.Log.WriteLineWarning("ERROR: * Steam not detected. Is Steam running and not as Admin? *");
