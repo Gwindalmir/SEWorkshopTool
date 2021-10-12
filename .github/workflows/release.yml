@@ -77,7 +77,7 @@ jobs:
       id: publish-release
       with:
         artifacts: "**/*WorkshopTool*.zip"
-        token: ${{secrets.GITHUB_TOKEN}}
+        token: ${{secrets.PAT_WORKFLOW}}
         name: Workshop Tool v${{steps.changelog.outputs.version-prefix}}
         tag: v${{steps.changelog.outputs.version}}
         commit: master
