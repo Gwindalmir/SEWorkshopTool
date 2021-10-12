@@ -214,7 +214,7 @@ namespace Phoenix.WorkshopTool.Options
         {
             Type = options.GetType();
             ModIO = options.ModIO;
-            AppData = options.AppData;
+            AppData = Environment.ExpandEnvironmentVariables(options.AppData);
             Force = options.Force;
         }
 
@@ -230,7 +230,7 @@ namespace Phoenix.WorkshopTool.Options
                 Type = typeof(CloudVerb);
 
             ModIO = options.ModIO;
-            AppData = options.AppData;
+            AppData = Environment.ExpandEnvironmentVariables(options.AppData);
             Force = options.Force;
 
             UpdateOnly = options.UpdateOnly;

@@ -12,7 +12,11 @@ namespace Phoenix.WorkshopTool.Options
 #endif
         public bool ModIO { get; set; } = false;
 
+#if SE
         [Option("appdata", Default = "%AppData%\\SpaceEngineers", HelpText = "Specify custom AppData location")]
+#else
+        [Option("appdata", Default = "%AppData%\\MedievalEngineers", HelpText = "Specify custom AppData location")]
+#endif
         public string AppData { get; set; }
 
         [Option('f', "force", Default = false, HelpText = "Force operation. USE WITH CAUTION! (not valid everywhere)")]
