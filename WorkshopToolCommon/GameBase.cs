@@ -178,6 +178,7 @@ namespace Phoenix.WorkshopTool
                         ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
                             Console.Error.WriteLine(helptext.ToString()));
                 });
+                return Cleanup(1);
             }
             else
             {

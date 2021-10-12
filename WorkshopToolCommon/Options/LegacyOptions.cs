@@ -29,7 +29,7 @@ namespace Phoenix.WorkshopTool
         [Option('e', "extract", Default = false, HelpText = "Extract downloaded mods (valid for download only)")]
         public bool Extract { get; set; }
 
-        [Option('u', "update-only", Default = false, HelpText = "Only update existing mods (don't upload new)")]
+        [Option('u', "update-only", Group = "main", Default = false, HelpText = "Only update existing mods (don't upload new)")]
         public bool UpdateOnly { get; set; }
 
         [Option('x', "exclude", HelpText = "List of extensions to exclude from upload")]

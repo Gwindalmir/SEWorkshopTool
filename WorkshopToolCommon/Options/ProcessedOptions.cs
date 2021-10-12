@@ -222,6 +222,8 @@ namespace Phoenix.WorkshopTool.Options
         {
             if (options.Download)
                 Type = typeof(DownloadVerb);
+            else if (options.UpdateOnly)    // ORDER MATTERS! UpdateOnly must come before Upload
+                Type = typeof(ChangeVerb);
             else if (options.Upload)
                 Type = typeof(UploadVerb);
             else if (options.ClearSteamCloud || options.DeleteSteamCloudFiles?.Count() > 0)
@@ -252,9 +254,24 @@ namespace Phoenix.WorkshopTool.Options
                     allids.Add(val);
             });
 
-            Blueprints?.ForEach(s => allids.Add(ulong.Parse(s)));
-            Scenarios?.ForEach(s => allids.Add(ulong.Parse(s)));
-            IngameScripts?.ForEach(s => allids.Add(ulong.Parse(s)));
+            Blueprints?.ForEach(s =>
+            {
+                ulong val;
+                if (ulong.TryParse(s, out val))
+                    allids.Add(val);
+            });
+            Scenarios?.ForEach(s =>
+            {
+                ulong val;
+                if (ulong.TryParse(s, out val))
+                    allids.Add(val);
+            });
+            IngameScripts?.ForEach(s =>
+            {
+                ulong val;
+                if (ulong.TryParse(s, out val))
+                    allids.Add(val);
+            });
             Ids = allids.ToList();
 
             Extract = options.Extract;
