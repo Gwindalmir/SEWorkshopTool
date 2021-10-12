@@ -75,7 +75,8 @@ namespace Phoenix.WorkshopTool
                 m_modId = WorkshopHelper.GetWorkshopIdFromMod(m_modPath);
 
             // Fill defaults before assigning user-defined ones
-            FillPropertiesFromPublished();
+            if (m_modId.Length > 0 && m_modId.GetIds()[0] != 0 && !FillPropertiesFromPublished())
+                MySandboxGame.Log.WriteLineWarning("Mod has a published ID, but unable to look up properties. This is wrong.");
 
             m_compile = options.Compile;
             m_dryrun = options.DryRun;
@@ -387,7 +388,7 @@ namespace Phoenix.WorkshopTool
                 }
                 return false;
             }
-            return true;
+            return false;
         }
 
         ulong ParseOrGetWorkshopID(string idOrName)
@@ -413,7 +414,7 @@ namespace Phoenix.WorkshopTool
         // Mod must be published for that to work.
         void ProcessDependencies(IEnumerable<string> deps, IEnumerable<string> add, IEnumerable<string> remove)
         {
-            var existingDeps = m_workshopItems[m_modId[0]].Dependencies.ToList();
+            var existingDeps = m_workshopItems.GetValueOrDefault(m_modId.FirstOrDefault())?.Dependencies.ToList() ?? new List<ulong>();
 
             // Check if the deps contains exactly one element, and that element is a 0 or "none",
             // if so, set the result to a list of a single ulong value of 0
@@ -468,7 +469,7 @@ namespace Phoenix.WorkshopTool
         void ProcessDLCs(IEnumerable<uint> dlcs, IEnumerable<uint> add, IEnumerable<uint> remove)
         {
 #if SE
-            var existingDeps = m_workshopItems[m_modId[0]].DLCs.ToList();
+            var existingDeps = m_workshopItems.GetValueOrDefault(m_modId.FirstOrDefault())?.DLCs.ToList() ?? new List<uint>();
             var explicitDeps = dlcs?.ToList();
             var depsToAdd = add?.ToList();
             var depsToRemove = remove?.ToList();
