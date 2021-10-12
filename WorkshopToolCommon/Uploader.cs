@@ -236,6 +236,7 @@ namespace Phoenix.WorkshopTool
 #if SE
                 else if(m_type == WorkshopType.IngameScript)
                 {
+                    MySandboxGame.Log.WriteLineAndConsole("Compiling...");
                     // Load the ingame script from the disk
                     // I don't like this, but meh
                     var input = new StreamReader(Path.Combine(m_modPath, "Script.cs"));
@@ -245,7 +246,7 @@ namespace Phoenix.WorkshopTool
                     scripts.Add(MyScriptCompiler.Static.GetIngameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial"));
 
                     var messages = new List<Message>();
-                    var assembly = MyVRage.Platform.Scripting.CompileIngameScriptAsync(Path.Combine(VRage.FileSystem.MyFileSystem.UserDataPath, "SEWT-Script" + Path.GetFileName(m_modPath)), program, out messages, "SEWT Compiled PB Script", "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name).Result;
+                    var assembly = MyVRage.Platform.Scripting.CompileIngameScriptAsync(Path.Combine(VRage.FileSystem.MyFileSystem.UserDataPath, "SEWT-Script - " + Path.GetFileName(m_modPath)), program, out messages, "SEWT Compiled PB Script", "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name).Result;
 
                     if (messages.Count > 0)
                     {
@@ -262,12 +263,19 @@ namespace Phoenix.WorkshopTool
                         }
                         if (errors > 0)
                         {
+                            MySandboxGame.Log.WriteLineError("Compilation FAILED!");
                             return false;
                         }
                     }
 
                     if (assembly == null)
+                    {
+                        // How can this happen?
+                        MySandboxGame.Log.WriteLineError("Compilation FAILED!");
                         return false;
+                    }
+
+                    MySandboxGame.Log.WriteLineAndConsole("Compilation successful!");
                 }
 #endif
                 return true;
