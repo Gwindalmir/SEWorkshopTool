@@ -43,8 +43,12 @@
       <HintPath>Bin64\Steamworks.NET.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Configuration" />
-    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Configuration">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <Private>false</Private>
+    </Reference>
     <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Bin64\VRage.dll</HintPath>
@@ -113,6 +117,51 @@
     <Exec Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(SolutionDir)\Tools\LinkBinaries.ps1 244850 $(ProjectDir)\Bin64" />
   </Target>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="set APPID=244850&#xD;&#xA;if NOT exist &quot;$(TargetDir)steam_appid.txt&quot; echo %APPID% &gt; &quot;$(TargetDir)steam_appid.txt&quot;&#xD;&#xA;if NOT exist &quot;$(TargetDir)\Bin64&quot; mklink /j &quot;$(TargetDir)\Bin64&quot; &quot;$(ProjectDir)\Bin64&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)$(TargetName).pdb, $(TargetDir)CommandLine.dll, $(TargetDir).wtignore, $(TargetDir)steam_appid.txt -DestinationPath $(TargetDir)$(TargetName)-v$(VersionPrefix).zip}&quot;" />
+    <Exec Command="set APPID=244850&#xD;&#xA;if NOT exist &quot;$(TargetDir)\Bin64&quot; mklink /j &quot;$(TargetDir)\Bin64&quot; &quot;$(ProjectDir)\Bin64&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)$(TargetName).pdb, $(TargetDir)CommandLine.dll, $(TargetDir).wtignore -DestinationPath $(TargetDir)$(TargetName)-v$(VersionPrefix).zip}&quot;" />
   </Target>
+  <ItemGroup>
+    <Reference Update="System">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Core">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Data">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Drawing">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.IO.Compression.FileSystem">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Numerics">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Runtime.Serialization">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Xml">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Xml.Linq">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
 </Project>

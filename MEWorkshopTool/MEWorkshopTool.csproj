@@ -32,8 +32,12 @@
       <HintPath>Bin64\Steamworks.NET.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
+    <Reference Include="Microsoft.CSharp">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Net.Http">
+      <Private>false</Private>
+    </Reference>
     <Reference Include="VRage">
       <HintPath>Bin64\VRage.dll</HintPath>
       <Private>False</Private>
@@ -84,9 +88,54 @@
   <Import Project="..\WorkshopToolCommon\WorkshopToolCommon.projitems" Label="Shared" />
   <Import Project="..\Updater\Updater.projitems" Label="Shared" />
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="set APPID=333950&#xD;&#xA;if NOT exist &quot;$(TargetDir)steam_appid.txt&quot; echo %APPID% &gt; &quot;$(TargetDir)steam_appid.txt&quot;&#xD;&#xA;if NOT exist &quot;$(TargetDir)\Bin64&quot; mklink /j &quot;$(TargetDir)\Bin64&quot; &quot;$(ProjectDir)\Bin64&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)$(TargetName).pdb, $(TargetDir)CommandLine.dll, $(TargetDir)MEWT.config, $(TargetDir).wtignore -DestinationPath $(TargetDir)$(TargetName)-v$(VersionPrefix).zip}&quot;" />
+    <Exec Command="set APPID=333950&#xD;&#xA;if NOT exist &quot;$(TargetDir)\Bin64&quot; mklink /j &quot;$(TargetDir)\Bin64&quot; &quot;$(ProjectDir)\Bin64&quot;&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command &quot;&amp; {Compress-Archive -Force -Path $(TargetDir)$(TargetName).exe, $(TargetDir)$(TargetName).exe.config, $(TargetDir)$(TargetName).pdb, $(TargetDir)CommandLine.dll, $(TargetDir)MEWT.config, $(TargetDir).wtignore -DestinationPath $(TargetDir)$(TargetName)-v$(VersionPrefix).zip}&quot;" />
   </Target>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File $(SolutionDir)\Tools\LinkBinaries.ps1 333950 $(ProjectDir)\Bin64" />
   </Target>
+  <ItemGroup>
+    <Reference Update="System">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Core">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Data">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Drawing">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.IO.Compression.FileSystem">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Numerics">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Runtime.Serialization">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Xml">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Update="System.Xml.Linq">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
 </Project>

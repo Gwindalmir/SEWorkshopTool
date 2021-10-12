@@ -44,13 +44,11 @@ namespace Phoenix.WorkshopTool
             // Make sure the current directory is where the game files are
             Directory.SetCurrentDirectory(Path.GetDirectoryName(typeof(FastResourceLock).Assembly.Location));
             var root = Path.Combine(Path.GetDirectoryName(typeof(FastResourceLock).Assembly.Location), "..");
-#if SE
-            // Steam API doesn't initialize correctly if it can't find steam_appid.txt
-            if (!File.Exists("steam_appid.txt"))
-                Directory.SetCurrentDirectory(root);
-#else
+
+#if !SE
             AppName = "MEWT";
             IsME = true;
+            AppId = 333950;
 #endif
             // If the file can't be found, assume it's SE
             if (File.Exists("steam_appid.txt"))
@@ -58,6 +56,9 @@ namespace Phoenix.WorkshopTool
                 var appid = File.ReadAllText(Path.Combine(root, "steam_appid.txt"));
                 AppId = uint.Parse(appid);
             }
+
+            // Set the AppId in an environment variable, so steam_appid.txt isn't needed anymore.
+            Environment.SetEnvironmentVariable("SteamAppId", AppId.ToString());
 
             // Override the ExePath, so the game classes can initialize when the exe is outside the game directory
             MyFileSystem.ExePath = new FileInfo(Assembly.GetAssembly(typeof(FastResourceLock)).Location).DirectoryName;
@@ -214,7 +215,7 @@ namespace Phoenix.WorkshopTool
                 catch (Exception ex)
                 {
                     ProgramBase.CheckForUpdate();
-                    ex.Log("ERROR: An exception occurred intializing game libraries: ");
+                    ex.Log("ERROR: An exception occurred initializing game libraries: ");
                     return Cleanup(2);
                 }
 
