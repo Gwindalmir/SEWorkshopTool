@@ -81,8 +81,11 @@ namespace Phoenix.WorkshopTool
             m_compile = options.Compile;
             m_dryrun = options.DryRun;
 
+            // Set visibilty
             if (options.Visibility != null)
                 m_visibility = options.Visibility;
+            else
+                m_visibility = m_visibility ?? PublishedFileVisibility.Private; // If not already set, set to Private
 
             if (string.IsNullOrEmpty(m_title))
                 m_title = Path.GetFileName(path);
@@ -315,7 +318,7 @@ namespace Phoenix.WorkshopTool
             else
             {
                 InjectedMethod.ChangeLog = m_changelog;
-                if (WorkshopHelper.PublishItemBlocking(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)(m_visibility ?? PublishedFileVisibility.Private), m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs, out items))
+                if (WorkshopHelper.PublishItemBlocking(m_modPath, m_title, m_description, m_modId, (MyPublishedFileVisibility)m_visibility, m_tags, m_ignoredExtensions, m_ignoredPaths, m_dlcs, out items))
                 {
                     m_modId = items.ToWorkshopIds();
                 }
