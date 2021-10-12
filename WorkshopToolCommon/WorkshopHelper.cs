@@ -32,7 +32,7 @@ using VRage.Session;
 namespace Phoenix.WorkshopTool
 {
     // This class is meant to consolidate all the game-specific workshop logic, to keep the rest of the app cleaner.
-    class WorkshopHelper
+    public class WorkshopHelper
     {
 #if SE
         static IMyGameService MySteam { get => (IMyGameService)MyServiceManager.Instance.GetService<IMyGameService>(); }
@@ -269,25 +269,11 @@ namespace Phoenix.WorkshopTool
         {
             if (_compileMethod == null)
             {
+                _compileMethod = ReflectLoadScripts();
                 if (_compileMethod == null)
                 {
-                    var compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public, null
-#if SE
-                        , new[] { typeof(string), typeof(MyModContext) }
-#else
-                        , new[] { typeof(MyModContext) }
-#endif
-                        , null);
-                    MyDebug.AssertDebug(compileMethod != null);
-
-                    if (compileMethod != null)
-                        _compileMethod = Delegate.CreateDelegate(typeof(LoadScriptsDelegate), _scriptManager, compileMethod, false) as LoadScriptsDelegate;
-
-                    if (_compileMethod == null)
-                    {
-                        MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
-                        return false;
-                    }
+                    MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "LoadScripts"));
+                    return false;
                 }
             }
 #if SE
@@ -302,30 +288,7 @@ namespace Phoenix.WorkshopTool
         {
             if (_publishMethod == null)
             {
-                var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic, Type.DefaultBinder, new Type[]
-                {
-                    typeof(string),
-                    typeof(string),
-                    typeof(string),
-#if SE
-                    typeof(WorkshopId[]),
-#else
-                    typeof(ulong),
-#endif
-                    typeof(MyPublishedFileVisibility),
-                    typeof(string[]),
-                    typeof(HashSet<string>),
-                    typeof(HashSet<string>),
-#if SE
-                    typeof(uint[]),
-                    typeof(MyWorkshopItem[]).MakeByRefType()
-#endif
-                }, null);
-
-                MyDebug.AssertDebug(publishMethod != null);
-
-                if (publishMethod != null)
-                    _publishMethod = Delegate.CreateDelegate(typeof(PublishItemBlockingDelegate), publishMethod, false) as PublishItemBlockingDelegate;
+                _publishMethod = ReflectPublishItemBlocking();
 
                 if (_publishMethod == null)
                 {
@@ -338,7 +301,7 @@ namespace Phoenix.WorkshopTool
                 try
                 {
                     if (__refget_m_publishSuccess == null)
-                        __refget_m_publishSuccess = MethodUtil.create_refgetter<MyWorkshop, bool>("m_publishSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+                        __refget_m_publishSuccess = ReflectPublishSuccess();
                 }
                 catch (Exception ex)
                 {
@@ -374,11 +337,108 @@ namespace Phoenix.WorkshopTool
 #if SE
             var errors = MyDefinitionErrors.GetErrors();
 #else
-            var compileMessages = _scriptManager.GetType().GetField("m_messages", BindingFlags.NonPublic | BindingFlags.Instance);
+            var compileMessages = ReflectCompileMessages();
             var errors = (compileMessages.GetValue(_scriptManager) as List<MyScriptCompiler.Message>) ?? new List<MyScriptCompiler.Message>();
 #endif
             return errors.ToList();
         }
+
+        private static LoadScriptsDelegate ReflectLoadScripts()
+        {
+            var compileMethod = _scriptManager.GetType().GetMethod("LoadScripts", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public, null
+#if SE
+                        , new[] { typeof(string), typeof(MyModContext) }
+#else
+                        , new[] { typeof(MyModContext) }
+#endif
+                        , null);
+            MyDebug.AssertDebug(compileMethod != null);
+
+            if (compileMethod != null)
+                return Delegate.CreateDelegate(typeof(LoadScriptsDelegate), _scriptManager, compileMethod, false) as LoadScriptsDelegate;
+            return null;
+        }
+
+        private static PublishItemBlockingDelegate ReflectPublishItemBlocking()
+        {
+            var publishMethod = typeof(MyWorkshop).GetMethod("PublishItemBlocking", BindingFlags.Static | BindingFlags.NonPublic, Type.DefaultBinder, new Type[]
+            {
+                    typeof(string),
+                    typeof(string),
+                    typeof(string),
+#if SE
+                    typeof(WorkshopId[]),
+#else
+                    typeof(ulong),
+#endif
+                    typeof(MyPublishedFileVisibility),
+                    typeof(string[]),
+                    typeof(HashSet<string>),
+                    typeof(HashSet<string>),
+#if SE
+                    typeof(uint[]),
+                    typeof(MyWorkshopItem[]).MakeByRefType()
+#endif
+            }, null);
+
+            MyDebug.AssertDebug(publishMethod != null);
+
+            if (publishMethod != null)
+                return Delegate.CreateDelegate(typeof(PublishItemBlockingDelegate), publishMethod, false) as PublishItemBlockingDelegate;
+            return null;
+        }
+
+        public static MethodInfo ReflectInitSteamWorkshop()
+        {
+#if SE
+            return typeof(SpaceEngineers.Game.SpaceEngineersGame).GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
+#else
+            return typeof(Medieval.MyMedievalGame).GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
+#endif
+        }
+
+        public static MethodInfo ReflectSteamWorkshopItemPublisherMethod(string method, BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic)
+        {
+            return ReflectionHelper.GetMethod(InjectedMethod.MySteamWorkshopItemPublisherType, method, flags);
+        }
+
+        public static FieldInfo ReflectSteamWorkshopItemPublisherField(string method, BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic)
+        {
+            return InjectedMethod.MySteamWorkshopItemPublisherType.GetField(method, flags);
+        }
+
+        public static PropertyInfo ReflectSteamWorkshopItemPublisherProperty(string method, BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic)
+        {
+            return InjectedMethod.MySteamWorkshopItemPublisherType.GetProperty(method, flags);
+        }
+
+        public static MethodInfo ReflectToService()
+        {
+            return ReflectionHelper.GetMethod(InjectedMethod.MySteamHelperType, "ToService", BindingFlags.Static | BindingFlags.Public);
+        }
+
+        public static MethodInfo ReflectToSteam()
+        {
+            return ReflectionHelper.GetMethod(InjectedMethod.MySteamHelperType, "ToSteam", BindingFlags.Static | BindingFlags.Public);
+        }
+
+#if SE
+        public static MethodInfo ReflectCreateRequest()
+        {
+            return ReflectionHelper.GetMethod(typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo"), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
+        }
+
+#else
+        internal static MethodUtil.RefGetter<MyWorkshop, bool> ReflectPublishSuccess()
+        {
+            return MethodUtil.create_refgetter<MyWorkshop, bool>("m_publishSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+        }
+
+        internal static FieldInfo ReflectCompileMessages()
+        {
+            return _scriptManager.GetType().GetField("m_messages", BindingFlags.NonPublic | BindingFlags.Instance);
+        }
+#endif
         #endregion Reflection
 
         #region Collections

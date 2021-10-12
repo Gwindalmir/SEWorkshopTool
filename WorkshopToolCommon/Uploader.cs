@@ -25,7 +25,7 @@ namespace Phoenix.WorkshopTool
 {
     // The enum values must match the workshop tags used
     // Case is important here
-    enum WorkshopType
+    public enum WorkshopType
     {
         Invalid,
         Mod,

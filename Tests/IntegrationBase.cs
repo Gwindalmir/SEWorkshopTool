@@ -14,17 +14,15 @@ namespace Phoenix.WorkshopTool.Tests
     [TestFixture]
     [RequiresThread]
     [NonParallelizable]
-    public abstract class IntegrationBase
+    public abstract class IntegrationBase : GameTestBase
     {
         #region Base Setup
         protected string[] _extraArguments = new string[0];
-        protected string _previousDirectory;
 
         public IntegrationBase()
         {
         }
 
-        internal abstract string ParameterPrefix { get; }
         internal abstract string GameName { get; }
 
         protected int LaunchMain(string[] args)
@@ -57,23 +55,15 @@ namespace Phoenix.WorkshopTool.Tests
             domainManagerField.SetValue(domain, manager);
         }
 
-        [OneTimeSetUp]
-        public virtual void OneTimeSetup()
+        public override void OneTimeSetup()
         {
-            _previousDirectory = Environment.CurrentDirectory;
-            Environment.CurrentDirectory = TestContext.Parameters[$"{ParameterPrefix}.Install"];
+            base.OneTimeSetup();
 
             if (TestContext.Parameters.Exists($"{ParameterPrefix}.AppData"))
             {
                 _extraArguments = new[] { "--appdata", TestContext.Parameters[$"{ParameterPrefix}.AppData"] };
             }
 
-        }
-
-        [OneTimeTearDown]
-        public virtual void OneTimeTearDown()
-        {
-            Environment.CurrentDirectory = _previousDirectory;
         }
         #endregion Base Setup
 

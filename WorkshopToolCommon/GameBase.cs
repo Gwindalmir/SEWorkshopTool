@@ -27,7 +27,7 @@ using VRage.Library.Threading;
 
 namespace Phoenix.WorkshopTool
 {
-    abstract class GameBase
+    public abstract class GameBase
     {
         protected static readonly string LaunchDirectory = Environment.CurrentDirectory;
         protected MySandboxGame m_game = null;
@@ -65,13 +65,13 @@ namespace Phoenix.WorkshopTool
 
         public GameBase()
         {
-            ReplaceMethod(typeof(SteamAPI), nameof(SteamAPI.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public, typeof(InjectedMethod), nameof(InjectedMethod.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public);
+            ReflectionHelper.ReplaceMethod(ReflectionHelper.ReflectSteamRestartApp(), typeof(InjectedMethod), nameof(InjectedMethod.RestartAppIfNecessary), BindingFlags.Static | BindingFlags.Public);
 
             Type[] copyAllBaseTypes = { typeof(string), typeof(string) };
-            ReplaceMethod(typeof(VRage.FileSystem.MyFileSystem), nameof(VRage.FileSystem.MyFileSystem.CopyAll), BindingFlags.Static | BindingFlags.Public, typeof(GameBase), nameof(GameBase.CopyAll), types: copyAllBaseTypes);
+            ReflectionHelper.ReplaceMethod(ReflectionHelper.ReflectFileCopy(copyAllBaseTypes), typeof(GameBase), nameof(GameBase.CopyAll), BindingFlags.Static | BindingFlags.Public, types: copyAllBaseTypes);
 
             Type[] copyAllConditionalTypes = { typeof(string), typeof(string), typeof(Predicate<string>) };
-            ReplaceMethod(typeof(VRage.FileSystem.MyFileSystem), nameof(VRage.FileSystem.MyFileSystem.CopyAll), BindingFlags.Static | BindingFlags.Public, typeof(GameBase), nameof(GameBase.CopyAllConditional), types: copyAllConditionalTypes);
+            ReflectionHelper.ReplaceMethod(ReflectionHelper.ReflectFileCopy(copyAllConditionalTypes), typeof(GameBase), nameof(GameBase.CopyAllConditional), BindingFlags.Static | BindingFlags.Public, types: copyAllConditionalTypes);
         }
 
         // Event handler for loading assemblies not in the same directory as the exe.
@@ -240,21 +240,9 @@ namespace Phoenix.WorkshopTool
                 MySandboxGame.Log.WriteLineAndConsole($"Relative root: {LaunchDirectory}");
 
 #if SE
-                ParameterInfo[] parameters;
                 if (options.Compile)
                 {
-                    // Init ModAPI
-                    var initmethod = typeof(MySandboxGame).GetMethod("InitModAPI", BindingFlags.Instance | BindingFlags.NonPublic);
-                    MyDebug.AssertRelease(initmethod != null);
-
-                    if (initmethod != null)
-                    {
-                        parameters = initmethod.GetParameters();
-                        MyDebug.AssertRelease(parameters.Count() == 0);
-
-                        if(!(parameters.Count() == 0))
-                            initmethod = null;
-                    }
+                    var initmethod = ReflectionHelper.ReflectInitModAPI();
 
                     if (initmethod != null)
                         initmethod.Invoke(m_game, null);
@@ -307,58 +295,14 @@ namespace Phoenix.WorkshopTool
         void ReplaceMethods()
         {
 #if SE
-            ReplaceMethod(InjectedMethod.MySteamWorkshopItemPublisherType, "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic, typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
-            ReplaceMethod(InjectedMethod.MySteamHelperType, "ToService", BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToService));
-            ReplaceMethod(InjectedMethod.MySteamHelperType, "ToSteam", BindingFlags.Static | BindingFlags.Public, typeof(MySteamHelper), nameof(MySteamHelper.ToSteam));
-            ReplaceMethod(typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo"), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic, typeof(InjectedMethod), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
+            ReflectionHelper.ReplaceMethod(WorkshopHelper.ReflectSteamWorkshopItemPublisherMethod("UpdatePublishedItem"), typeof(InjectedMethod), "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.NonPublic);
+            ReflectionHelper.ReplaceMethod(WorkshopHelper.ReflectToService(), typeof(MySteamHelper), nameof(MySteamHelper.ToService), BindingFlags.Static | BindingFlags.Public);
+            ReflectionHelper.ReplaceMethod(WorkshopHelper.ReflectToSteam(), typeof(MySteamHelper), nameof(MySteamHelper.ToSteam), BindingFlags.Static | BindingFlags.Public);
+            ReflectionHelper.ReplaceMethod(WorkshopHelper.ReflectCreateRequest(), typeof(InjectedMethod), "CreateRequest", BindingFlags.Static | BindingFlags.NonPublic);
 
 #else
-            ReplaceMethod(InjectedMethod.MySteamWorkshopItemPublisherType, "UpdatePublishedItem", BindingFlags.Instance | BindingFlags.Public, typeof(InjectedMethod), nameof(InjectedMethod.UpdatePublishedItem));
+            ReflectionHelper.ReplaceMethod(WorkshopHelper.ReflectSteamWorkshopItemPublisherMethod("UpdatePublishedItem", BindingFlags.Instance | BindingFlags.Public), typeof(InjectedMethod), nameof(InjectedMethod.UpdatePublishedItem), BindingFlags.Public | BindingFlags.Instance);
 #endif
-        }
-
-        /// <summary>
-        /// Replaces a method with another one
-        /// </summary>
-        /// <param name="sourceType">Original type</param>
-        /// <param name="sourceMethod">Original method name</param>
-        /// <param name="destinationType">New type</param>
-        /// <param name="destinationMethod">New method name</param>
-        void ReplaceMethod(Type sourceType, string sourceMethod, BindingFlags sourceBinding, Type destinationType, string destinationMethod, BindingFlags? destinationBinding = null, Type[] types = null)
-        {
-            ParameterInfo[] sourceParameters;
-            ParameterInfo[] destinationParameters;
-            MethodInfo methodtoreplace = null;
-            if (types == null)
-                methodtoreplace = sourceType.GetMethod(sourceMethod, sourceBinding);
-            else
-                methodtoreplace = sourceType.GetMethod(sourceMethod, types);
-            var methodtoinject = destinationType.GetMethod(destinationMethod, destinationBinding ?? sourceBinding);
-
-            MyDebug.AssertRelease(methodtoreplace != null);
-            if (methodtoreplace != null && methodtoinject != null)
-            {
-                sourceParameters = methodtoreplace.GetParameters();
-                destinationParameters = methodtoinject.GetParameters();
-                MyDebug.AssertDebug(sourceParameters.Length == destinationParameters.Length);
-                bool valid = true;
-
-                // Verify signatures
-                for (var x = 0; x < Math.Min(destinationParameters.Length, sourceParameters.Length); x++)
-                {
-                    MyDebug.AssertDebug(destinationParameters[x].ParameterType == sourceParameters[x].ParameterType);
-                    if (destinationParameters[x].ParameterType != sourceParameters[x].ParameterType)
-                        valid = false;
-                }
-
-                if (sourceParameters.Length != destinationParameters.Length || !valid)
-                    methodtoreplace = null;
-            }
-
-            if (methodtoreplace != null && methodtoinject != null)
-                MethodUtil.ReplaceMethod(methodtoreplace, methodtoinject);
-            else
-                MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, sourceMethod));
         }
 
         // Returns argument for chaining
@@ -434,7 +378,7 @@ namespace Phoenix.WorkshopTool
                 m_game = InitGame();
 
                 // Initializing the workshop means the categories are available
-                var initWorkshopMethod = m_game.GetType().GetMethod("InitSteamWorkshop", BindingFlags.NonPublic | BindingFlags.Instance);
+                var initWorkshopMethod = WorkshopHelper.ReflectInitSteamWorkshop();
                 MyDebug.AssertRelease(initWorkshopMethod != null);
 
                 if (initWorkshopMethod != null)

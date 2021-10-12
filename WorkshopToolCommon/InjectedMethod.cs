@@ -45,8 +45,8 @@ namespace Phoenix.WorkshopTool
                 return false;
 #endif
 
-            var steamService = MySteamWorkshopItemPublisherType.GetField("m_steamService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(thisobj);
-            var steamUGC = MySteamWorkshopItemPublisherType.GetProperty("SteamUGC", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(thisobj);
+            var steamService = WorkshopHelper.ReflectSteamWorkshopItemPublisherField("m_steamService")?.GetValue(thisobj);
+            var steamUGC = WorkshopHelper.ReflectSteamWorkshopItemPublisherProperty("SteamUGC").GetValue(thisobj);
             var appid = (AppId_t)steamService.GetType().GetField("SteamAppId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(steamService);
             UGCUpdateHandle_t ugcUpdateHandleT = SteamUGC.StartItemUpdate(appid, (PublishedFileId_t)thisobj.Id);
 
@@ -58,7 +58,7 @@ namespace Phoenix.WorkshopTool
 
             try
             {
-                SteamUGC.SetItemVisibility(ugcUpdateHandleT, (ERemoteStoragePublishedFileVisibility)MySteamHelperType.GetMethod("ToSteam", BindingFlags.Public | BindingFlags.Static).Invoke(null, new[] { thisobj.Visibility }));
+                SteamUGC.SetItemVisibility(ugcUpdateHandleT, (ERemoteStoragePublishedFileVisibility)WorkshopHelper.ReflectToSteam().Invoke(null, new[] { thisobj.Visibility }));
             }
             catch(TargetInvocationException)
             {
@@ -76,8 +76,8 @@ namespace Phoenix.WorkshopTool
             if (thisobj.Metadata != null)
                 SteamUGC.SetItemMetadata(ugcUpdateHandleT, MyModMetadataLoader.Serialize((ModMetadataFile)thisobj.Metadata));
 
-            dynamic submitItemUpdateResult = MySteamWorkshopItemPublisherType.GetField("m_submitItemUpdateResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(thisobj);
-            var SubmitItemUpdateResult = MySteamWorkshopItemPublisherType.GetMethod("SubmitItemUpdateResult", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            dynamic submitItemUpdateResult = WorkshopHelper.ReflectSteamWorkshopItemPublisherField("m_submitItemUpdateResult")?.GetValue(thisobj);
+            var SubmitItemUpdateResult = WorkshopHelper.ReflectSteamWorkshopItemPublisherMethod("SubmitItemUpdateResult");
             
             var SubmitItemUpdateResultMethod = (SubmitItemUpdateResult)Delegate.CreateDelegate(typeof(SubmitItemUpdateResult), thisobj, SubmitItemUpdateResult);
             submitItemUpdateResult.Set(SteamUGC.SubmitItemUpdate(ugcUpdateHandleT, ChangeLog), new CallResult<SubmitItemUpdateResult_t>.APIDispatchDelegate(SubmitItemUpdateResultMethod));
@@ -233,15 +233,15 @@ namespace Phoenix.WorkshopTool
           params string[] p)
         {
             var clsMyModIo = typeof(VRage.Mod.Io.MyModIoService).Assembly.GetType("VRage.Mod.Io.MyModIo");
-            var clsMyRequestSetup = clsMyModIo?.GetNestedType("MyRequestSetup", System.Reflection.BindingFlags.NonPublic);
+            var clsMyRequestSetup = clsMyModIo?.GetNestedType("MyRequestSetup", BindingFlags.NonPublic);
 
             if (clsMyRequestSetup != null)
             {
-                var mtdGetUrl = clsMyModIo.GetMethod("GetUrl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                var mtdAddAuthorizationHeader = clsMyModIo.GetMethod("AddAuthorizationHeader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                var mtdGetUrl = clsMyModIo.GetMethod("GetUrl", BindingFlags.NonPublic | BindingFlags.Static);
+                var mtdAddAuthorizationHeader = clsMyModIo.GetMethod("AddAuthorizationHeader", BindingFlags.NonPublic | BindingFlags.Static);
 
                 var request = Activator.CreateInstance(clsMyRequestSetup, true);
-                var parameters = request.GetType().GetField("Parameters", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                var parameters = request.GetType().GetField("Parameters", BindingFlags.Instance | BindingFlags.Public);
                 parameters.SetValue(request, new List<HttpData>()
                 {
                     new HttpData("Accept", (object) "application/json", HttpDataType.HttpHeader)
@@ -261,9 +261,9 @@ namespace Phoenix.WorkshopTool
                     }
                 }
 
-                request.GetType().GetField("Url", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                request.GetType().GetField("Url", BindingFlags.Instance | BindingFlags.Public)
                     .SetValue(request, (string)mtdGetUrl.Invoke(null, new object[] { function, p }));
-                request.GetType().GetField("Method", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                request.GetType().GetField("Method", BindingFlags.Instance | BindingFlags.Public)
                     .SetValue(request, method);
 
                 if (contentType != null)

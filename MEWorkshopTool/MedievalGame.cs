@@ -29,11 +29,11 @@ namespace Phoenix.MEWorkshopTool
             var appInformation = new VRage.Engine.AppInformation("Medieval Engineers", Medieval.MyMedievalGame.ME_VERSION, "", "", "", Medieval.MyMedievalGame.VersionString);
             var vrageCore = new VRage.Engine.VRageCore(appInformation, true);
             var configuration = VRage.Engine.Util.CoreProgram.LoadParameters("MEWT.config");
-            vrageCore.GetType().GetMethod("LoadSystems", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(vrageCore, new[] { configuration });
-            vrageCore.GetType().GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(vrageCore, 1);
-            vrageCore.GetType().GetMethod("InitSystems", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(vrageCore, new object[] { configuration.SystemConfiguration, true });
-            vrageCore.GetType().GetMethod("LoadMetadata", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(vrageCore, new[] { configuration });
-            vrageCore.GetType().GetMethod("InitSystems", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(vrageCore, new object[] { configuration.SystemConfiguration, false });
+            ReflectionHelper.ReflectVRageCoreMethod("LoadSystems")?.Invoke(vrageCore, new[] { configuration });
+            ReflectionHelper.ReflectVRageCoreField("m_state")?.SetValue(vrageCore, 1);
+            ReflectionHelper.ReflectVRageCoreMethod("InitSystems")?.Invoke(vrageCore, new object[] { configuration.SystemConfiguration, true });
+            ReflectionHelper.ReflectVRageCoreMethod("LoadMetadata")?.Invoke(vrageCore, new[] { configuration });
+            ReflectionHelper.ReflectVRageCoreMethod("InitSystems")?.Invoke(vrageCore, new object[] { configuration.SystemConfiguration, false });
 
             m_steamService = new MySteamService();
             ((MySteamService)(m_steamService)).Init(new VRage.Steam.MySteamService.Parameters() { Server = MySandboxGame.IsDedicated, AppId = AppId });

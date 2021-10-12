@@ -32,6 +32,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Options\UGCOptionsBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Options\UploadVerb.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProgramBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ReflectionHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Uploader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WorkshopHelper.cs" />
   </ItemGroup>
