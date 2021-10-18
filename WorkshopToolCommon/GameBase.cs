@@ -656,14 +656,18 @@ namespace Phoenix.WorkshopTool
                     {
                         if (mod.Publish()) 
                         {
-                            if (!options.DryRun && !string.IsNullOrEmpty(options.DiscordWebhookUrl))
+                            if (!options.DryRun && options.DiscordWebhookUrls != null)
                             {
-                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Discord-Webhook-Url: {0}", options.DiscordWebhookUrl));
-                                DiscordWebhook hook = new DiscordWebhook(type, mod.Title, changelog);
-                                if (hook.Call(options.DiscordWebhookUrl, out string error))
-                                    MySandboxGame.Log.WriteLineAndConsole("Sent payload to discord webhook");
-                                else
-                                    MySandboxGame.Log.WriteLineWarning(string.Format("Discord webhook error: {0}", error));
+                                MySandboxGame.Log.WriteLineAndConsole(string.Format("Preparing {0} webhooks", options.DiscordWebhookUrls.Count.ToString()));
+                                foreach (var entry in options.DiscordWebhookUrls)
+                                {
+                                    MySandboxGame.Log.WriteLineAndConsole(string.Format("Discord-Webhook-Url: {0}", options.DiscordWebhookUrls));
+                                    DiscordWebhook hook = new DiscordWebhook(type, mod.Title, changelog);
+                                    if (hook.Call(entry, out string error))
+                                        MySandboxGame.Log.WriteLineAndConsole("Sent payload to discord webhook");
+                                    else
+                                        MySandboxGame.Log.WriteLineWarning(string.Format("Discord webhook error: {0}", error));
+                                }
                             }
 
                             MySandboxGame.Log.WriteLineAndConsole(string.Format("Complete: {0}", mod.Title));
