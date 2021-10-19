@@ -125,21 +125,7 @@ namespace Phoenix.WorkshopTool.Options
             }
         }
 
-        IList<string> _discordWebhookUrls { get; set; }
-        public IList<string> DiscordWebhookUrls
-        {
-            get => _discordWebhookUrls;
-            set
-            {
-                if (value != null)
-                {
-                    var webhooks = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-                    value.ForEach(s => s.Split(',', ';').ForEach(t => webhooks.Add(t)));
-                    _discordWebhookUrls = webhooks.ToList();
-                }
-            }
-        }
-
+        public IList<string> DiscordWebhookUrls { get; set; }
         public IList<string> DLCs { get; set; }
         public IList<string> DLCToAdd { get; set; }
         public IList<string> DLCToRemove { get; set; }

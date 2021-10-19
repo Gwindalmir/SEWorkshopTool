@@ -6,7 +6,15 @@ using System.Text.RegularExpressions;
 
 namespace Phoenix.WorkshopTool
 {
-    class DiscordWebhook
+
+    public enum WebhookFailCause
+    {
+        None,
+        InvalidURL,
+        NoResponse,
+    }
+
+    public class DiscordWebhook
     {
         WorkshopType m_type;
         string m_title;
@@ -25,7 +33,7 @@ namespace Phoenix.WorkshopTool
             m_changelog = changelog;
         }
 
-        public bool Call(string url, out string error)
+        public WebhookFailCause Call(string url)
         {
             if (_urlValidator.IsMatch(url))
             {
@@ -33,21 +41,24 @@ namespace Phoenix.WorkshopTool
                 var request = (HttpWebRequest)WebRequest.Create(url);
                 request.ContentType = "application/json";
                 request.Method = "POST";
-
-                byte[] data = Encoding.UTF8.GetBytes(requestPayload);
-                using (var stream = request.GetRequestStream())
+                
+                try
                 {
-                    stream.Write(data, 0, data.Length);
+                    byte[] data = Encoding.UTF8.GetBytes(requestPayload);
+                    using (var stream = request.GetRequestStream())
+                    {
+                        stream.Write(data, 0, data.Length);
+                    }
+                    request.GetResponse();
+                } 
+                catch
+                {
+                    return WebhookFailCause.NoResponse;
                 }
-                request.GetResponse();
 
-                error = string.Empty;
-                return true;
-            } 
-            else
-                error = "Invalid webhook Url";
-
-            return false;
+                return WebhookFailCause.None;
+            }
+            return WebhookFailCause.InvalidURL;
         }
 
     }
