@@ -15,7 +15,7 @@ Please note, this is a command-line application only. A GUI may be considered in
 * [Build Tools for Visual Studio 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher at a *minimum*.
   * Or the full [Visual Studio Community 2017](https://visualstudio.microsoft.com/vs/older-downloads/#visual-studio-2017-and-other-products) 15.7 or higher, if preferred instead
   * JetBrains Rider is reported as working by the community as another alternative
-* .NET Framework 4.6.1 Targeting Pack for Visual Studio, or the [Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net461) if using the Build Tools
+* .NET Framework 4.8 Targeting Pack for Visual Studio, or the [Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net48) if using the Build Tools
   * SE targets this version
 * [.NET Core SDK 2.1.300](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300) or higher
 

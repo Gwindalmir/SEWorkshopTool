@@ -29,7 +29,7 @@ env:
   SOLUTION_FILE_PATH: WorkshopTool.sln
 
   BUILD_CONFIGURATION: ${{ github.event.inputs.configuration || 'Release' }}
-  BUILD_FRAMEWORK: net461
+  BUILD_FRAMEWORK: net48
   MANUAL_TRIGGER: ${{ github.event.workflow != null }}
 
 jobs:

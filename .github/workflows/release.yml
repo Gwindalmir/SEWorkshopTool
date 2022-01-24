@@ -23,7 +23,8 @@ env:
   SOLUTION_FILE_PATH: WorkshopTool.sln
 
   BUILD_CONFIGURATION: ${{ github.event.inputs.configuration || 'Release' }}
-  BUILD_FRAMEWORK: net461
+  BUILD_FRAMEWORK: net48
+  BUILD_FRAMEWORK_ME: net461
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -70,7 +71,7 @@ jobs:
       id: artifact-mewt
       with:
         name: MEWT
-        path: MEWorkshopTool/bin/${{env.BUILD_CONFIGURATION}}/${{env.BUILD_FRAMEWORK}}/MEWorkshopTool*.zip
+        path: MEWorkshopTool/bin/${{env.BUILD_CONFIGURATION}}/${{env.BUILD_FRAMEWORK_ME}}/MEWorkshopTool*.zip
           
     - uses: ncipollo/release-action@v1
       name: Publish Release
