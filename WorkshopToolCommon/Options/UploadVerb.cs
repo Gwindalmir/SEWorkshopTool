@@ -18,8 +18,8 @@ namespace Phoenix.WorkshopTool.Options
         [Option('u', "update-only", Default = false, HelpText = "Only update existing mods (don't upload new)")]
         public bool UpdateOnly { get; set; }
 
-        private bool _compile;
-        [Option('c', "compile", Required = false, Default = true, SetName = "compile", HelpText = "Compile the mod before uploading; Skip upload if compilation fails")]
+        private bool _compile = true;
+        [Option('c', "compile", Required = false, SetName = "compile", HelpText = "Compile the mod before uploading; Skip upload if compilation fails")]
         public bool Compile { get => _compile; set => _compile = value; }
 
         [Option('C', "no-compile", Required = false, SetName = "nocompile", HelpText = "Don't compile the mod before uploading")]
