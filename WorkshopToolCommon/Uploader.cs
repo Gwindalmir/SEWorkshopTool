@@ -189,7 +189,7 @@ namespace Phoenix.WorkshopTool
                 if (m_type == WorkshopType.Mod)
                 {
                     MySandboxGame.Log.WriteLineAndConsole("Compiling...");
-                    var mod = WorkshopHelper.GetContext(m_modPath, m_workshopItems[m_modId[0]], m_modId, m_title);
+                    var mod = WorkshopHelper.GetContext(m_modPath, m_workshopItems.GetValueOrDefault(m_modId.FirstOrDefault()), m_modId, m_title);
                     if (WorkshopHelper.LoadScripts(m_modPath, mod))
                     {
                         // Process any errors
