@@ -61,10 +61,14 @@ namespace Phoenix.WorkshopTool.Options
 #endif
         public IEnumerable<string> DLCs { get; set; }
 
+#if SE
         [Option("add-dlc", HelpText = "Add DLC dependency to mod.")]
+#endif
         public IEnumerable<string> DLCToAdd { get; set; }
 
+#if SE
         [Option("remove-dlc", HelpText = "Remove DLC dependency from mod.")]
+#endif
         public IEnumerable<string> DLCToRemove { get; set; }
 
         [Option("blueprints", Min = 1, Group = "workshop", HelpText = "List of folder names of blueprints")]
