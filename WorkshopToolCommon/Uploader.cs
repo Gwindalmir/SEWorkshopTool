@@ -442,6 +442,7 @@ namespace Phoenix.WorkshopTool
                 {
                     // Remove ALL dependencies
                     depsToRemove.AddRange(existingDeps);
+                    explicitDeps.Clear();
                 }
                 else if (existingDeps?.Count > 0)
                 {
@@ -451,14 +452,18 @@ namespace Phoenix.WorkshopTool
                 }
             }
 
-            // Remove from add/remove list any dependencies that don't exist, or aren't configured to set
-            depsToAdd.RemoveAll(d => existingDeps.Contains(d) || explicitDeps?.Contains(d) == true);
+            // Remove from add list any that already exist
+            depsToAdd.RemoveAll(d => existingDeps.Contains(d));
+            // Remove from remove list any dependencies that don't exist, or aren't configured to set
             depsToRemove.RemoveAll(d => !existingDeps.Contains(d) && !(explicitDeps?.Contains(d) == true));
 
             // Filter out items that aren't actually mods, these can crash the game if set
             // Don't check depsToRemove though, so users can remove invalid ones that already exist
             WorkshopHelper.GetItemsBlocking(explicitDeps).ForEach(i => { if (!CheckDependency(i)) explicitDeps.Remove(i.Id); });
             WorkshopHelper.GetItemsBlocking(depsToAdd).ForEach(i => { if (!CheckDependency(i)) depsToAdd.Remove(i.Id); });
+
+            // Add all explicit deps to the add list that don't already exist
+            depsToAdd.AddRange(explicitDeps.Except(existingDeps));
 
             m_deps = existingDeps.Union(explicitDeps ?? new List<ulong>()).Union(depsToAdd).Except(depsToRemove).Where(i => i != 0).Distinct().ToArray();
             m_depsToAdd = depsToAdd.Distinct().ToArray();
