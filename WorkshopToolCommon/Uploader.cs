@@ -39,7 +39,9 @@ namespace Phoenix.WorkshopTool
     {
         readonly HashSet<string> m_ignoredExtensions = new HashSet<string>();
         readonly HashSet<string> m_ignoredPaths = new HashSet<string>();
-        uint[] m_dlcs;
+        uint[] m_dlcs = null;
+        uint[] m_dlcsToAdd = null;
+        uint[] m_dlcsToRemove = null;
         ulong[] m_deps;
         ulong[] m_depsToAdd;
         ulong[] m_depsToRemove;
@@ -337,6 +339,8 @@ namespace Phoenix.WorkshopTool
                 
                 // SE libraries don't support updating dependencies, so we have to do that separately
                 WorkshopHelper.PublishDependencies(m_modId, m_depsToAdd, m_depsToRemove);
+                // SE also doesn't support removing DLC items, so do that too
+                WorkshopHelper.PublishDLC(m_modId, m_dlcsToAdd, m_dlcsToRemove);
             }
             if (((IMod)this).ModId == 0 || !WorkshopHelper.PublishSuccess)
             {
@@ -498,6 +502,7 @@ namespace Phoenix.WorkshopTool
                 {
                     // Remove ALL DLCS
                     depsToRemove.AddRange(existingDeps);
+                    explicitDeps.Clear();
                 }
                 else if (existingDeps?.Count > 0)
                 {
@@ -507,11 +512,17 @@ namespace Phoenix.WorkshopTool
                 }
             }
 
-            // Remove from add/remove list any dependencies that don't exist, or aren't configured to set
-            depsToAdd.RemoveAll(d => existingDeps.Contains(d) || explicitDeps?.Contains(d) == true);
+            // Remove from add list any that already exist
+            depsToAdd.RemoveAll(d => existingDeps.Contains(d));
+            // Remove from remove list any dependencies that don't exist, or aren't configured to set
             depsToRemove.RemoveAll(d => !existingDeps.Contains(d) && !(explicitDeps?.Contains(d) == true));
 
+            // Add all explicit deps to the add list that don't already exist
+            depsToAdd.AddRange(explicitDeps.Except(existingDeps));
+
             m_dlcs = existingDeps.Union(explicitDeps ?? new List<uint>()).Union(depsToAdd).Except(depsToRemove).Where(i => i != 0).Distinct().ToArray();
+            m_dlcsToAdd = depsToAdd.Distinct().ToArray();
+            m_dlcsToRemove = depsToRemove.Distinct().ToArray();
 #endif
         }
 

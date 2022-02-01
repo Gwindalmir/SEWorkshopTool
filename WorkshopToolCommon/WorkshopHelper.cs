@@ -159,6 +159,11 @@ namespace Phoenix.WorkshopTool
             dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddDependency((Steamworks.PublishedFileId_t)modId[0], (Steamworks.PublishedFileId_t)id));
         }
 
+        public static void PublishDLC(ulong[] modId, uint[] dependenciesToAdd, uint[] dependenciesToRemove = null)
+        {
+            dependenciesToRemove?.ForEach(id => Steamworks.SteamUGC.RemoveAppDependency((Steamworks.PublishedFileId_t)modId[0], (Steamworks.AppId_t)id));
+            dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddAppDependency((Steamworks.PublishedFileId_t)modId[0], (Steamworks.AppId_t)id));
+        }
 #if SE
         public static void PublishDependencies(WorkshopId[] modId, ulong[] dependenciesToAdd, ulong[] dependenciesToRemove = null)
         {
@@ -172,6 +177,26 @@ namespace Phoenix.WorkshopTool
                 else if (item.ServiceName == "mod.io")
                 {
                     throw new NotImplementedException("Setting mod dependencies on mod.io is not implemented yet.");
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(item.ServiceName), $"Unknown service: {item.ServiceName}");
+                }
+            }
+        }
+
+        public static void PublishDLC(WorkshopId[] modId, uint[] dependenciesToAdd, uint[] dependenciesToRemove = null)
+        {
+            foreach (var item in modId)
+            {
+                if (item.ServiceName == "Steam")
+                {
+                    dependenciesToRemove?.ForEach(id => Steamworks.SteamUGC.RemoveAppDependency((Steamworks.PublishedFileId_t)item.Id, (Steamworks.AppId_t)id));
+                    dependenciesToAdd?.ForEach(id => Steamworks.SteamUGC.AddAppDependency((Steamworks.PublishedFileId_t)item.Id, (Steamworks.AppId_t)id));
+                }
+                else if (item.ServiceName == "mod.io")
+                {
+                    throw new NotImplementedException("Setting mod DLC on mod.io is not implemented yet.");
                 }
                 else
                 {
