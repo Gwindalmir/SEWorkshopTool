@@ -53,6 +53,11 @@ namespace Phoenix.WorkshopTool
             // If the file can't be found, assume it's SE
             if (File.Exists("steam_appid.txt"))
             {
+                var appid = File.ReadAllText("steam_appid.txt");
+                AppId = uint.Parse(appid);
+            }
+            else if (File.Exists(Path.Combine(root, "steam_appid.txt")))
+            {
                 var appid = File.ReadAllText(Path.Combine(root, "steam_appid.txt"));
                 AppId = uint.Parse(appid);
             }
