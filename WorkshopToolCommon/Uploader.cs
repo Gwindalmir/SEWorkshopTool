@@ -349,7 +349,7 @@ namespace Phoenix.WorkshopTool
             }
             else
             {
-                MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId.AsString()));
+                MySandboxGame.Log.WriteLineAndConsole(string.Format("Upload/Publish success: {0}", m_modId.AsStringURL()));
                 if (newMod)
                 {
                     if(WorkshopHelper.GenerateModInfo(m_modPath, items, m_modId, MyGameService.UserId))

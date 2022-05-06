@@ -148,6 +148,25 @@ namespace Phoenix.WorkshopTool.Extensions
             return result.ToString();
         }
 
+        public static string AsStringURL(this VRage.Game.WorkshopId[] ids)
+        {
+            var result = new StringBuilder();
+
+            if (ids is null)
+                return result.ToString();
+
+            foreach (var id in ids)
+            {
+                if(id.ServiceName == "modio")
+                    result.Append($"https://mod.io/search/id/mods/{id.Id};");
+                else
+                    result.Append($"https://steamcommunity.com/sharedfiles/filedetails/?id={id.Id};");
+            }
+            result.Remove(result.Length - 1, 1);
+
+            return result.ToString();
+        }
+
         public static WorkshopId[] ToWorkshopIds(this IEnumerable<ulong> ids)
         {
             return ids.Select(id => new VRage.Game.WorkshopId(id, MyGameService.GetDefaultUGC().ServiceName)).ToArray();
@@ -172,6 +191,11 @@ namespace Phoenix.WorkshopTool.Extensions
         public static string AsString(this ulong[] id)
         {
             return id[0].ToString();
+        }
+
+        public static string AsStringURL(this ulong[] id)
+        {
+            return $"https://steamcommunity.com/sharedfiles/filedetails/?id={id[0]}";
         }
 
         public static ulong[] ToWorkshopIds(this MyWorkshopItem[] items)
