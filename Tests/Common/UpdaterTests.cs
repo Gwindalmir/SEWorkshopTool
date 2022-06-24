@@ -38,7 +38,9 @@ namespace Phoenix.WorkshopTool.Tests.Common
             var updateChecker = new UpdateChecker(prereleases: true);
             var asset = updateChecker.GetLatestRelease().GetMatchingAsset(prefix);
 
-            Assert.That(asset, Is.Not.Null);
+            if (asset == null)
+                Assert.Inconclusive("No asset for the latest release, cannot continue test.");
+
             Assert.That(asset.Id, Is.Not.Zero);
             Assert.That(asset.Url, Is.Not.Null.And.Not.Empty.And.Contains($"{prefix}WorkshopTool"));
         }
