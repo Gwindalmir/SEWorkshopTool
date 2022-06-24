@@ -20,7 +20,7 @@ function Get-ViaDepotDownloader {
 
     $depotId = $serverAppId + 1
 
-    $ver = "2.4.5"
+    $ver = "2.4.6"
     $name = "depotdownloader-$($ver)"
     if (-not(Test-Path -Path "$($PSScriptRoot)\$($name)\DepotDownloader.exe" -PathType Leaf)) {
         # Don't allow parallel builds to each trigger this download
@@ -42,8 +42,12 @@ function Get-ViaDepotDownloader {
         }
     }
 
-    Write-Host "Fetching Dedicated Server binaries..."
-    & "$($PSScriptRoot)\$($name)\DepotDownloader.exe" -app $serverAppId -depot $depotId -dir $dsrootdir -filelist "$($PSScriptRoot)\filelist_ds.txt" | Write-Verbose
+    $beta = ""
+    Write-Host "Fetching Dedicated Server binaries to '$dsrootdir'..."
+    if ($AppId -eq 333950) {
+        $beta = "-beta communityedition"
+    }
+    & "$($PSScriptRoot)\$($name)\DepotDownloader.exe" -app $serverAppId -depot $depotId -dir $dsrootdir -filelist "$($PSScriptRoot)\filelist_ds.txt" $beta | Write-Verbose
 
     return $dsdir
 }

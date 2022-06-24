@@ -20,6 +20,7 @@
     <Parameter name="ME.Install" value="MEWorkshopTool" />
     <Parameter name="ME.ModIDToDownload" value="1342545091" />
     <Parameter name="ME.ModNameToUpload" value="PickaxeMod_mewt" />
+    <Parameter name="ME.ModDescriptionFile" value="me-mod-desc.txt" />
     <Parameter name="ME.ModChangelogFile" value="me-mod-log.txt" />
     <!-- <Parameter name="ME.AppData" value="" /> -->
   </TestRunParameters>

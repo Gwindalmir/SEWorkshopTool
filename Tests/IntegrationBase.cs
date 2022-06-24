@@ -231,13 +231,15 @@ namespace Phoenix.WorkshopTool.Tests
                 Assert.That(output, Contains.Substring($"Uploading new Mod: {newModName}"));
                 Assert.That(output, Contains.Substring("Visibility: Private"));
                 Assert.That(output, Contains.Substring("Tags: Mod"));
-                Assert.That(output, Contains.Substring("DLC requirements: None"));
+                Assert.That(output, Contains.Substring("Dependencies: None"));
+                if(ParameterPrefix == "SE")
+                    Assert.That(output, Contains.Substring("DLC requirements: None"));
                 Assert.That(output, Contains.Substring("Thumbnail: No change"));
                 Assert.That(output, Contains.Substring("DRY-RUN; Publish skipped"));
             }
             finally
             {
-                Directory.Delete(moddir);
+                Directory.Delete(moddir, true);
             }
         }
         #endregion Common Tests

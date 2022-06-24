@@ -13,3 +13,8 @@ runs:
       id: vstest-detect
       uses: darenm/Setup-VSTest@v1
 
+    - name: Add .NET 6.0
+      id: dotnet-6
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0.x'
