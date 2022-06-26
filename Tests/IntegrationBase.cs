@@ -242,6 +242,135 @@ namespace Phoenix.WorkshopTool.Tests
                 Directory.Delete(moddir, true);
             }
         }
+
+        [Test]
+        [Explicit]
+        public void UploadModNoData()
+        {
+            var newModName = "NewMod";
+            var appdata = TestContext.Parameters[$"{ParameterPrefix}.AppData"] ??
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GameName);
+            var moddir = Path.Combine(appdata, "Mods", newModName);
+
+            Directory.CreateDirectory(moddir);
+            try
+            {
+                var args = new List<string>(new[] { "--upload", "--mods", newModName, "--tags", "Mod", "--dry-run" });
+                args.AddRange(_extraArguments);
+
+                var exitCode = LaunchMain(args.ToArray());
+                Assert.That(exitCode, Is.EqualTo(0));
+
+                // Since this is a new upload, this needs to be a throughout check
+                var output = ConsoleOut.ToString();
+                Assert.That(output, Contains.Substring("ERROR: Data folder doesn't exist, this is required for mods!"));
+                Assert.That(output, Contains.Substring("ERROR: Use --force to create a placeholder file automatically."));
+            }
+            finally
+            {
+                Directory.Delete(moddir, true);
+            }
+        }
+
+        [Test]
+        [Explicit]
+        public void UploadModEmptyData()
+        {
+            var newModName = "NewMod";
+            var appdata = TestContext.Parameters[$"{ParameterPrefix}.AppData"] ??
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GameName);
+            var moddir = Path.Combine(appdata, "Mods", newModName);
+
+            Directory.CreateDirectory(moddir);
+            Directory.CreateDirectory(Path.Combine(moddir, "Data"));
+
+            try
+            {
+                var args = new List<string>(new[] { "--upload", "--mods", newModName, "--tags", "Mod", "--dry-run" });
+                args.AddRange(_extraArguments);
+
+                var exitCode = LaunchMain(args.ToArray());
+                Assert.That(exitCode, Is.EqualTo(0));
+
+                // Since this is a new upload, this needs to be a throughout check
+                var output = ConsoleOut.ToString();
+                Assert.That(output, Contains.Substring("ERROR: Data folder exists, but is empty, this will be removed on publish!"));
+                Assert.That(output, Contains.Substring("ERROR: Place an empty file in that folder to ensure it will be uploaded."));
+                Assert.That(output, Contains.Substring("ERROR: Use --force to create a placeholder file automatically."));
+            }
+            finally
+            {
+                Directory.Delete(moddir, true);
+            }
+        }
+
+        [Test]
+        [Explicit]
+        public void UploadModNoDataForce()
+        {
+            var newModName = "NewMod";
+            var appdata = TestContext.Parameters[$"{ParameterPrefix}.AppData"] ??
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GameName);
+            var moddir = Path.Combine(appdata, "Mods", newModName);
+
+            Directory.CreateDirectory(moddir);
+            try
+            {
+                var args = new List<string>(new[] { "--upload", "--mods", newModName, "--tags", "Mod", "--dry-run", "--force" });
+                args.AddRange(_extraArguments);
+
+                var exitCode = LaunchMain(args.ToArray());
+                Assert.That(exitCode, Is.EqualTo(0));
+
+                // Since this is a new upload, this needs to be a throughout check
+                var output = ConsoleOut.ToString();
+                Assert.That(output, Contains.Substring("WARNING: Data folder doesn't exist, this is required for mods!"));
+                Assert.That(output, Contains.Substring("WARNING: Creating folder and temporary file to ensure upload."));
+
+                var path = Path.Combine(moddir, "Data", ".sewt-preserved");
+                Assert.That(path, Does.Exist);
+                Assert.That(File.GetAttributes(path).HasFlag(FileAttributes.Hidden));
+            }
+            finally
+            {
+                Directory.Delete(moddir, true);
+            }
+        }
+
+        [Test]
+        [Explicit]
+        public void UploadModEmptyDataForce()
+        {
+            var newModName = "NewMod";
+            var appdata = TestContext.Parameters[$"{ParameterPrefix}.AppData"] ??
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GameName);
+            var moddir = Path.Combine(appdata, "Mods", newModName);
+
+            Directory.CreateDirectory(moddir);
+            Directory.CreateDirectory(Path.Combine(moddir, "Data"));
+
+            try
+            {
+                var args = new List<string>(new[] { "--upload", "--mods", newModName, "--tags", "Mod", "--dry-run", "--force" });
+                args.AddRange(_extraArguments);
+
+                var exitCode = LaunchMain(args.ToArray());
+                Assert.That(exitCode, Is.EqualTo(0));
+
+                // Since this is a new upload, this needs to be a thorough check
+                var output = ConsoleOut.ToString();
+                Assert.That(output, Contains.Substring("WARNING: Data folder exists, but is empty, this will be removed on publish!"));
+                Assert.That(output, Contains.Substring("WARNING: Creating temporary file to ensure upload."));
+
+                var path = Path.Combine(moddir, "Data", ".sewt-preserved");
+                Assert.That(path, Does.Exist);
+                Assert.That(File.GetAttributes(path).HasFlag(FileAttributes.Hidden));
+            }
+            finally
+            {
+                Directory.Delete(moddir, true);
+            }
+        }
         #endregion Common Tests
     }
 }

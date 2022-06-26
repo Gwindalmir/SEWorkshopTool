@@ -252,7 +252,7 @@ namespace Phoenix.WorkshopTool
 
                 if (!SteamAPI.IsSteamRunning())
                 {
-                    MySandboxGame.Log.WriteLineWarning("ERROR: * Steam not detected. Is Steam running and not as Admin? *");
+                    MySandboxGame.Log.WriteLineWarning("* Steam not detected. Is Steam running and not as Admin? *");
                     MySandboxGame.Log.WriteLineWarning("* Only compile testing is available. *");
                     MySandboxGame.Log.WriteLineAndConsole("");
 

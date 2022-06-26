@@ -107,16 +107,16 @@ namespace Phoenix.WorkshopTool.Extensions
             log.WriteLineAndConsole(msg);
         }
 
-        public static void WriteLineError(this MyLog log, string msg)
+        public static void WriteLineError(this MyLog log, string msg, bool includePrefix = true)
         {
             ProgramBase.ConsoleWriteColored(ConsoleColor.Red, () =>
-                log.WriteLineAndConsole(msg));
+                log.WriteLineAndConsole((includePrefix ? "ERROR: " : "") + msg));
         }
 
-        public static void WriteLineWarning(this MyLog log, string msg)
+        public static void WriteLineWarning(this MyLog log, string msg, bool includePrefix = true)
         {
             ProgramBase.ConsoleWriteColored(ConsoleColor.Yellow, () =>
-                log.WriteLineAndConsole(msg));
+                log.WriteLineAndConsole((includePrefix ? "WARNING: " : "") + msg));
         }
     }
 

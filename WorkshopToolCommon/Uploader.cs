@@ -316,6 +316,9 @@ namespace Phoenix.WorkshopTool
             // Add the global game filter for file extensions
             WorkshopHelper.IgnoredExtensions?.ForEach(s => m_ignoredExtensions.Add(s));
 
+            if (m_type == WorkshopType.Mod)
+                CheckForEmptyData();
+
             PrintItemDetails();
 
             MyWorkshopItem[] items = null;
@@ -816,6 +819,71 @@ namespace Phoenix.WorkshopTool
             }
             MySandboxGame.Log.WriteLineAndConsole(string.Format("Thumbnail: {0}", m_previewFilename ?? "No change"));
             ValidateThumbnail();
+        }
+
+        // Checks if the Data directory is empty.
+        // SE requires this directory to be present, even if it's not used.
+        // However the copy to a temporary location will not copy empty directories.
+        void CheckForEmptyData()
+        {
+            var dataDir = Path.Combine(m_modPath, "Data");
+            const string NO_EXIST_MSG = "Data folder doesn't exist, this is required for mods!";
+            const string EMPTY_DIR_MSG = "Data folder exists, but is empty, this will be removed on publish!";
+            bool create = false;
+
+            if (!Directory.Exists(dataDir))
+            {
+                create = true;
+
+                if (!m_force)
+                    MySandboxGame.Log.WriteLineError(NO_EXIST_MSG);
+                else
+                    MySandboxGame.Log.WriteLineWarning(NO_EXIST_MSG);
+            }
+            else
+            {
+                if (Directory.GetFileSystemEntries(dataDir).Length == 0)
+                {
+                    create = true;
+
+                    if (!m_force)
+                    {
+                        MySandboxGame.Log.WriteLineError(EMPTY_DIR_MSG);
+                        MySandboxGame.Log.WriteLineError("Place an empty file in that folder to ensure it will be uploaded.");
+                    }
+                    else
+                    {
+                        MySandboxGame.Log.WriteLineWarning(EMPTY_DIR_MSG);
+                    }
+                }
+            }
+
+            if(create)
+            {
+                if (m_force)
+                {
+                    if(!Directory.Exists(dataDir))
+                        MySandboxGame.Log.WriteLineWarning("Creating folder and temporary file to ensure upload.");
+                    else
+                        MySandboxGame.Log.WriteLineWarning("Creating temporary file to ensure upload.");
+                    Directory.CreateDirectory(dataDir);
+
+                    var placeholderFileName = Path.Combine(dataDir, ".sewt-preserved");
+
+                    using (var file = File.CreateText(placeholderFileName))
+                    {
+                        file.WriteLine(
+                            "This file was created by SEWT to ensure an empty Data folder is uploaded.\n" +
+                            "The game requires this folder to exist, even if it's empty.\n" +
+                            "This file can be safely deleted once any files are added here or in a subfolder.");
+                    }
+                    File.SetAttributes(placeholderFileName, FileAttributes.Temporary | FileAttributes.Hidden);
+                }
+                else
+                {
+                    MySandboxGame.Log.WriteLineError("Use --force to create a placeholder file automatically.");
+                }
+            }
         }
     }
 }
