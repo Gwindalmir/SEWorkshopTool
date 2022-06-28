@@ -384,9 +384,6 @@ namespace Phoenix.WorkshopTool
 
                     m_title = results[0].Title;
 
-                    // Check if the mod owner in the sbmi matches steam owner
-                    var owner = results[0].OwnerId;
-
                     if (m_visibility == null)
                         m_visibility = (PublishedFileVisibility)(int)results[0].Visibility;
 
@@ -394,6 +391,9 @@ namespace Phoenix.WorkshopTool
                     m_dlcs = results[0].DLCs.ToArray();
 #endif
                     m_deps = results[0].Dependencies.ToArray();
+
+                    // Check if the mod owner in the sbmi matches steam owner
+                    var owner = results[0].OwnerId;
 
                     MyDebug.AssertDebug(owner == MyGameService.UserId);
                     if (owner != MyGameService.UserId)

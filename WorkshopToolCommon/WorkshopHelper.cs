@@ -104,7 +104,28 @@ namespace Phoenix.WorkshopTool
             return GetItemsBlocking(workshopIds.ToArray());
 #else
             var results = new List<MyWorkshopItem>();
-            MyWorkshop.GetItemsBlocking(ids, results);
+
+            // We have to execute the query manually, since ME doesn't have a DS compatible version of the method.
+            var query = MyGameService.CreateWorkshopQuery();
+            query.ItemIds = ids.ToList();
+            query.CacheExpirationTime = 300;
+            using (var resetEvent = new AutoResetEvent(false))
+            {
+                query.QueryCompleted += (q, r) =>
+                {
+                    if (r == MyGameServiceCallResult.OK)
+                    {
+                        foreach (var item in q.Items)
+                            results.Add(item);
+
+                        results.Sort();
+                    }
+                    resetEvent.Set();
+                };
+
+                query.Run();
+                resetEvent.WaitOne();
+            }
             return results;
 #endif
         }
@@ -462,6 +483,18 @@ namespace Phoenix.WorkshopTool
         internal static FieldInfo ReflectCompileMessages()
         {
             return _scriptManager.GetType().GetField("m_messages", BindingFlags.NonPublic | BindingFlags.Instance);
+        }
+#endif
+
+#if !SE
+        public static MethodInfo ReflectMySteamUgcInstance()
+        {
+            var propertyInfo = typeof(VRage.Steam.MySteamService).Assembly.GetType("VRage.Steam.Steamworks.MySteamUgc").GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
+
+            MyDebug.AssertDebug(propertyInfo != null);
+
+            var getMethod = propertyInfo?.GetGetMethod();
+            return getMethod;
         }
 #endif
         #endregion Reflection

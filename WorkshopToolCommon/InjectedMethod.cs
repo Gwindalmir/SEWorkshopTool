@@ -27,6 +27,8 @@ namespace Phoenix.WorkshopTool
 #else
         public static readonly Type MySteamWorkshopItemPublisherType = typeof(VRage.Steam.MySteamWorkshopItemPublisher);
         public static readonly Type MySteamHelperType = typeof(VRage.Steam.MySteamHelper);
+
+        public static object Instance => typeof(VRage.Steam.MySteamService).Assembly.GetType("VRage.Steam.Steamworks.MySteamUgcGameServer").GetField("Instance", BindingFlags.Static | BindingFlags.Public).GetValue(null);
 #endif
         // THIS IS A HACK TO GET A CHANGELOG TO THIS CODE
         public static string ChangeLog = null;

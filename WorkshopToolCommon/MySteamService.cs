@@ -34,17 +34,13 @@ namespace Phoenix.WorkshopTool
 
             // TODO: Add protection for this mess... somewhere
             GameServer?.Shutdown();
-            steam.GetField("m_gameServer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(this, null);
+            var gameServerField = steam.GetField("m_gameServer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            gameServerField.SetValue(this, null);
             steam.GetProperty("AppId").GetSetMethod(true).Invoke(this, new object[] { appId });
 
             if (isDedicated)
             {
-                steam.GetProperty("SteamServerAPI").GetSetMethod(true).Invoke(this, new object[] { null });
-                steam.GetField("m_gameServer").SetValue(this, new VRage.Steam.MySteamGameServer());
-
-                var method = typeof(MySteamServiceBase).GetMethod("OnModServerDownloaded", System.Reflection.BindingFlags.NonPublic);
-                var del = method.CreateDelegate<Callback<DownloadItemResult_t>.DispatchDelegate>(this);
-                steam.GetField("m_modServerDownload").SetValue(this, Callback<DownloadItemResult_t>.CreateGameServer(new Callback<DownloadItemResult_t>.DispatchDelegate(del)));
+                gameServerField.SetValue(this, new VRage.Steam.MySteamGameServer());
             }
             else
             {

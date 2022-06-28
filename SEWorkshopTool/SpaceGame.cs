@@ -44,10 +44,10 @@ namespace Phoenix.SEWorkshopTool
             if (m_startup.PerformColdStart()) return false;
             if (!m_startup.Check64Bit()) return false;
             
-            m_steamService = MySteamGameService.Create(MySandboxGame.IsDedicated, AppId);
+            m_steamService = MySteamGameService.Create(m_ds, AppId);
             MyServiceManager.Instance.AddService(m_steamService);
             MyServerDiscoveryAggregator serverDiscoveryAggregator = new MyServerDiscoveryAggregator();
-            MySteamGameService.InitNetworking(false, m_steamService, MyPerGameSettings.BasicGameInfo.GameName, serverDiscoveryAggregator, true, true);
+            MySteamGameService.InitNetworking(m_ds, m_steamService, MyPerGameSettings.BasicGameInfo.GameName, null);
 
             // If user specified --modio, set that as the "default" (added first)
             var modioService = MyModIoService.Create(MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, m_useModIO ? true : false);

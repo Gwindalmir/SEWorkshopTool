@@ -18,6 +18,9 @@ using Phoenix.WorkshopTool.Options;
 using CommandLine.Text;
 using Phoenix.WorkshopTool.Extensions;
 using System.Text;
+using System.Net;
+using VRage.Game;
+using System.Threading;
 #if SE
 using ParallelTasks;
 using MyDebug = Phoenix.WorkshopTool.Extensions.MyDebug;
@@ -38,6 +41,7 @@ namespace Phoenix.WorkshopTool
         protected static readonly bool IsME = false;
         protected string[] m_args;
         protected bool m_useModIO = false;
+        protected bool m_ds = false;
 
         static GameBase()
         {
@@ -78,6 +82,9 @@ namespace Phoenix.WorkshopTool
 
             Type[] copyAllConditionalTypes = { typeof(string), typeof(string), typeof(Predicate<string>) };
             ReflectionHelper.ReplaceMethod(ReflectionHelper.ReflectFileCopy(copyAllConditionalTypes), typeof(GameBase), nameof(GameBase.CopyAllConditional), BindingFlags.Static | BindingFlags.Public, types: copyAllConditionalTypes);
+
+            if (!SteamAPI.IsSteamRunning())
+                m_ds = true;
         }
 
         // Event handler for loading assemblies not in the same directory as the exe.
@@ -250,13 +257,11 @@ namespace Phoenix.WorkshopTool
                     }
                 }
 
-                if (!SteamAPI.IsSteamRunning())
+                if (m_ds)
                 {
-                    MySandboxGame.Log.WriteLineWarning("* Steam not detected. Is Steam running and not as Admin? *");
-                    MySandboxGame.Log.WriteLineWarning("* Only compile testing is available. *");
-                    MySandboxGame.Log.WriteLineAndConsole("");
+                    InitSteamWithoutClient();
 
-                    if (options.Download || (options.Upload && !options.Compile))
+                    if (options.Upload)
                         return Cleanup(3);
                 }
 
@@ -302,6 +307,11 @@ namespace Phoenix.WorkshopTool
                     while (!Task.Wait(100))
                     {
                         MyGameService.Update();
+                        if(MyGameService.HasGameServer)
+                            GameServer.RunCallbacks();
+#if SE
+                        MyGameService.UpdateNetworkThread(true);
+#endif
                     }
                 }
                 catch(AggregateException ex)
@@ -325,6 +335,47 @@ namespace Phoenix.WorkshopTool
             return Cleanup();
         }
 
+        bool InitSteamWithoutClient()
+        {
+            MySandboxGame.Log.WriteLineWarning("* Steam not detected. Is Steam running and not as Admin? *");
+            MySandboxGame.Log.WriteLineWarning("* Publishing not available. *");
+            MySandboxGame.Log.WriteLineAndConsole("");
+
+            // Try initializing the DS workshop API
+            // We have to "start" a server to make sure the Steamworks game server API is properly initialized.
+            using (var resetEvent = new AutoResetEvent(false))
+            {
+                MyGameService.GameServer.PlatformConnected += () =>
+                {
+                    resetEvent.Set();
+                };
+
+                var init = MyGameService.GameServer.Start(new IPEndPoint(IPAddress.Loopback, 0),
+#if SE
+                0, MyFinalBuildConstants.APP_VERSION.ToString());
+#else
+                0, MyFinalBuildConstants.GAME_VERSION.ToString());
+#endif
+                MyGameService.GameServer.SetDedicated(true);
+                MyGameService.GameServer.LogOnAnonymous();
+                MyGameService.GameServer.EnableHeartbeats(false);
+
+#if SE
+                MyGameService.GameServer.WaitStart(10000);
+#endif
+                var timeout = 1000;
+                while (!resetEvent.WaitOne(100) && timeout > 0)
+                {
+#if SE
+                    MyGameService.Update();
+#endif
+                    GameServer.RunCallbacks();
+                    timeout--;
+                }
+            }
+            return true;
+        }
+
         void ReplaceMethods()
         {
 #if SE
@@ -335,6 +386,7 @@ namespace Phoenix.WorkshopTool
 
 #else
             ReflectionHelper.ReplaceMethod(WorkshopHelper.ReflectSteamWorkshopItemPublisherMethod("UpdatePublishedItem", BindingFlags.Instance | BindingFlags.Public), typeof(InjectedMethod), nameof(InjectedMethod.UpdatePublishedItem), BindingFlags.Public | BindingFlags.Instance);
+            ReflectionHelper.ReplaceMethod(WorkshopHelper.ReflectMySteamUgcInstance(), typeof(InjectedMethod), "get_" + nameof(InjectedMethod.Instance), BindingFlags.Public | BindingFlags.Static);
 #endif
         }
 
@@ -353,6 +405,9 @@ namespace Phoenix.WorkshopTool
         {
             try
             {
+                if (MyGameService.GameServer.Running)
+                    MyGameService.GameServer.Shutdown();
+
                 m_steamService?.ShutDown();
                 m_game?.Dispose();
                 m_steamService = null;

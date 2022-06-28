@@ -36,7 +36,7 @@ namespace Phoenix.MEWorkshopTool
             ReflectionHelper.ReflectVRageCoreMethod("InitSystems")?.Invoke(vrageCore, new object[] { configuration.SystemConfiguration, false });
 
             m_steamService = new MySteamService();
-            ((MySteamService)(m_steamService)).Init(new VRage.Steam.MySteamService.Parameters() { Server = MySandboxGame.IsDedicated, AppId = AppId });
+            ((MySteamService)(m_steamService)).Init(new VRage.Steam.MySteamService.Parameters() { Server = m_ds, AppId = AppId });
 
             VRage.Logging.MyLog.Default = MySandboxGame.Log = new VRage.Logging.MyLog();
             MySandboxGame.Log.Init(MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool.log", null);

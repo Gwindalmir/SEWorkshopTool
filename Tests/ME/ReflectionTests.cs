@@ -58,5 +58,12 @@ namespace Phoenix.WorkshopTool.Tests.ME
 
             Assert.NotNull(field);
         }
+
+        [Test]
+        public void MySteamUgcInstanceTest()
+        {
+            var method = M.WorkshopHelper.ReflectMySteamUgcInstance();
+            Assert.NotNull(method);
+        }
     }
 }
