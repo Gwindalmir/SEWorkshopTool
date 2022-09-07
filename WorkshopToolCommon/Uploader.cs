@@ -609,10 +609,7 @@ namespace Phoenix.WorkshopTool
 
                 if (invalidItems.Count() > 0)
                 {
-                    MySandboxGame.Log.WriteLineWarning(string.Format("{0} invalid tags: {1}", (m_force ? "Forced" : "Removing"), string.Join(", ", invalidItems)));
-
-                    if (!m_force)
-                        invalidItems.ToList().ForEach(t => userTags.RemoveAll(n => n.Equals(t, StringComparison.InvariantCultureIgnoreCase)));
+                    MySandboxGame.Log.WriteLineWarning(string.Format("Using unknown tags: {0}", string.Join(", ", invalidItems)));
                 }
 
                 // Now prepend the 'Type' tag
