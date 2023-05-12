@@ -254,7 +254,7 @@ namespace Phoenix.WorkshopTool
                                                     MyWorkshop.MyWorkshopPathInfo.CreateWorldInfo() :
                                                     MyWorkshop.MyWorkshopPathInfo.CreateScenarioInfo();
 
-            return MyWorkshop.TryCreateWorldInstanceBlocking(world, pathinfo, out sessionPath, overwrite);
+            return MyWorkshop.TryCreateWorldInstanceBlocking(world, pathinfo, out sessionPath, overwrite, null);
 #else
             return MyWorkshop.TryCreateWorldInstanceBlocking(world, out sessionPath, overwrite, null);
 #endif

@@ -3,6 +3,7 @@ using Phoenix.WorkshopTool.Extensions;
 using Sandbox;
 using Sandbox.Engine.Networking;
 using Sandbox.Game;
+using Sandbox.Game.Multiplayer;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -37,7 +38,7 @@ namespace Phoenix.SEWorkshopTool
 
             var appDataPath = m_startup.GetAppDataPath();
             VRage.Platform.Windows.MyVRageWindows.Init(MyPerGameSettings.BasicGameInfo.ApplicationName, MySandboxGame.Log, appDataPath, false);
-            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.System.GetAppDataPath());
+            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.System.GetRootPath(), MyVRage.Platform.System.GetAppDataPath());
             MyRenderProxy.Initialize((IMyRender)new MyNullRender());
             MyInitializer.InitCheckSum();
 
@@ -50,7 +51,7 @@ namespace Phoenix.SEWorkshopTool
             MySteamGameService.InitNetworking(m_ds, m_steamService, MyPerGameSettings.BasicGameInfo.GameName, null);
 
             // If user specified --modio, set that as the "default" (added first)
-            var modioService = MyModIoService.Create(MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, m_useModIO ? true : false);
+            var modioService = MyModIoService.Create(MyServiceManager.Instance.GetService<IMyGameService>(), ModIO_GameName, ModIO_GameID, ModIO_Key, ModIO_TestGameID, ModIO_TestKey, MyPlatformGameSettings.UGC_TEST_ENVIRONMENT, Sync.IsDedicated, MyPlatformGameSettings.MODIO_PLATFORM, MyPlatformGameSettings.MODIO_PORTAL);
             
             if (m_useModIO)
                 MyGameService.WorkshopService.AddAggregate(modioService);
@@ -162,7 +163,7 @@ namespace Phoenix.SEWorkshopTool
         private void ManuallyAddDLCs()
         {
             var obj = typeof(MyDLCs.MyDLC).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null,
-                new Type[] { typeof(uint), typeof(string), typeof(MyStringId), typeof(MyStringId), typeof(string), typeof(string), typeof(string), typeof(string) }, null);
+                new Type[] { typeof(uint), typeof(string), typeof(MyStringId), typeof(MyStringId), typeof(string), typeof(string), typeof(string), typeof(string), typeof(PsProductIds), typeof(PsProductIds) }, null);
 
             if (obj == null)
             {
@@ -181,7 +182,9 @@ namespace Phoenix.SEWorkshopTool
                 string.Empty,
                 string.Empty,
                 string.Empty,
-                string.Empty
+                string.Empty,
+                default(PsProductIds),
+                default(PsProductIds)
             }) as MyDLCs.MyDLC;
 
 
