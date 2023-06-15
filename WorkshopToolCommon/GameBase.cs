@@ -226,7 +226,7 @@ namespace Phoenix.WorkshopTool
                 }
                 catch (Exception ex)
                 {
-                    ProgramBase.CheckForUpdate();
+                    ProgramBase.CheckForUpdate(ex);
                     ex.Log("ERROR: An exception occurred initializing game libraries: ");
                     return Cleanup(2);
                 }

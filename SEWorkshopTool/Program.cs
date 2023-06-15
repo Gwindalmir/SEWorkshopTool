@@ -15,9 +15,9 @@ namespace Phoenix.SEWorkshopTool
                 var game = new SpaceGame();
                 return game.InitGame(args);
             }
-            catch
+            catch(Exception e)
             {
-                CheckForUpdate();
+                CheckForUpdate(e);
                 throw;
             }
         }

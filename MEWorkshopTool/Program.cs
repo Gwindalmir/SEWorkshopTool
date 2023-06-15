@@ -24,9 +24,9 @@ namespace Phoenix.MEWorkshopTool
                 int resultCode = game.InitGame(args);
                 return resultCode;
             }
-            catch
+            catch (Exception e)
             {
-                CheckForUpdate();
+                CheckForUpdate(e);
                 throw;
             }
         }

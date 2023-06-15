@@ -10,7 +10,12 @@ namespace Phoenix.WorkshopTool
     // DO NOT REFERENCE GAME LIBRARIES HERE!
     public abstract class ProgramBase
     {
-        internal static void CheckForUpdate(Action<string> logMethod = null, Action<string> errorMethod = null)
+        internal static void CheckForUpdate(Exception exception)
+        {
+            CheckForUpdate(null, null, exception);
+        }
+
+        internal static void CheckForUpdate(Action<string> logMethod = null, Action<string> errorMethod = null, Exception exception = null)
         {
             // Direct log to console, in an attempt to check for an update if there's
             // an initialization problem (ie. game updated, and many runtime errors).
@@ -19,6 +24,12 @@ namespace Phoenix.WorkshopTool
 
             if (errorMethod == null)
                 errorMethod = Console.Error.WriteLine;
+
+            if (exception != null)
+            {
+                ConsoleWriteColored(ConsoleColor.Red, () => errorMethod(string.Format("Unexpected error occurred: {0}", exception.Message)));
+                ConsoleWriteColored(ConsoleColor.Yellow, () => errorMethod("Has the game updated?"));
+            }
 
             try
             {
