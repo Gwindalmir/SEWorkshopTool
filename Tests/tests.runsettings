@@ -2,14 +2,14 @@
 <RunSettings>
   <!-- Configurations that affect the Test Framework -->
   <RunConfiguration>
-    <!-- Path relative to solution directory -->
+    <!-- Path relative to location of this file -->
     <ResultsDirectory>.\TestResults</ResultsDirectory>
     <TargetPlatform>x64</TargetPlatform>
   </RunConfiguration>
 
   <!-- Parameters used by tests at runtime -->
   <TestRunParameters>
-    <Parameter name="SE.Install" value="SEWorkshopTool" />
+    <Parameter name="SE.Install" value="..\..\..\..\SEWorkshopTool" />
     <Parameter name="SE.ModIDToDownload" value="637504549" />
     <Parameter name="SE.ModNameToUpload" value="test-dev" />
     <Parameter name="SE.ScriptNameToUpload" value="Test Script" />
@@ -17,7 +17,7 @@
     <Parameter name="SE.ModChangelogFile" value="se-mod-log.txt" />
     <!-- <Parameter name="SE.AppData" value="" /> -->
 
-    <Parameter name="ME.Install" value="MEWorkshopTool" />
+    <Parameter name="ME.Install" value="..\..\..\..\MEWorkshopTool" />
     <Parameter name="ME.ModIDToDownload" value="1342545091" />
     <Parameter name="ME.ModNameToUpload" value="PickaxeMod_mewt" />
     <Parameter name="ME.ModDescriptionFile" value="me-mod-desc.txt" />
