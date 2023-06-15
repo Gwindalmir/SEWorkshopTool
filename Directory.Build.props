@@ -5,9 +5,9 @@
     <Company/>
     <Authors>Gwindalmir</Authors>
     <RepositoryUrl>https://github.com/Gwindalmir/SEWorkshopTool</RepositoryUrl>
-    <Copyright>Copyright © 2022 Gwindalmir</Copyright>
+    <Copyright>Copyright © 2023 Gwindalmir</Copyright>
 
-    <VersionPrefix>0.7.17</VersionPrefix>
+    <VersionPrefix>0.7.18</VersionPrefix>
     <VersionSuffix>alpha</VersionSuffix>
   </PropertyGroup>
   <ItemGroup>
