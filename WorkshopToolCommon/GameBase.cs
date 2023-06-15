@@ -864,7 +864,11 @@ namespace Phoenix.WorkshopTool
                 if (type == WorkshopType.Mod)
                 {
                     var result = WorkshopHelper.DownloadModsBlocking(items);
+#if SE
+                    success = result.Result == MyGameServiceCallResult.OK;
+#else
                     success = result.Success;
+#endif
                 }
                 else
                 {
@@ -883,12 +887,12 @@ namespace Phoenix.WorkshopTool
 #if SE
                     else if (type == WorkshopType.IngameScript)
                     {
-                        var loopsuccess = false;
+                        var loopsuccess = default(MyGameServiceCallResult);
                         foreach (var item in items)
                         {
                             loopsuccess = MyWorkshop.DownloadScriptBlocking(item);
-                            if (!loopsuccess)
-                                MySandboxGame.Log.WriteLineError(string.Format("Download of {0} FAILED!", item.Id));
+                            if (loopsuccess != MyGameServiceCallResult.OK)
+                                MySandboxGame.Log.WriteLineError(string.Format("Download of {0} FAILED! - {1}", item.Id, loopsuccess));
                             else
                                 success = true;
                         }

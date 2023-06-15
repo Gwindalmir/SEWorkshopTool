@@ -241,7 +241,7 @@ namespace Phoenix.WorkshopTool
         public static bool DownloadBlueprintBlocking(MyWorkshopItem item, bool check = true)
         {
 #if SE
-            return MyWorkshop.DownloadBlueprintBlockingUGC(item, check);
+            return MyWorkshop.DownloadBlueprintBlockingUGC(item, check) == MyGameServiceCallResult.OK;
 #else
             return MyWorkshop.DownloadBlueprintBlocking(item, null, check);
 #endif
@@ -254,7 +254,7 @@ namespace Phoenix.WorkshopTool
                                                     MyWorkshop.MyWorkshopPathInfo.CreateWorldInfo() :
                                                     MyWorkshop.MyWorkshopPathInfo.CreateScenarioInfo();
 
-            return MyWorkshop.TryCreateWorldInstanceBlocking(world, pathinfo, out sessionPath, overwrite, null);
+            return MyWorkshop.TryCreateWorldInstanceBlocking(world, pathinfo, out sessionPath, overwrite, null) == MyGameServiceCallResult.OK;
 #else
             return MyWorkshop.TryCreateWorldInstanceBlocking(world, out sessionPath, overwrite, null);
 #endif
