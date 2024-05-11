@@ -308,11 +308,19 @@ namespace Phoenix.WorkshopTool.Extensions
         public static uint TryGetDLC(this string dlc)
         {
 #if SE
-            Sandbox.Game.MyDLCs.MyDLC dlcvalue;
-            if (Sandbox.Game.MyDLCs.TryGetDLC(dlc, out dlcvalue))
-                return dlcvalue.AppId;
-            else
+            VRage.Game.Definitions.MyDlcDefinition dlcvalue;
+            try
+            {
+                if (Sandbox.Game.MyDLCs.TryGetDLC(dlc, out dlcvalue))
+                    return dlcvalue.AppId;
+                else
+                    return 0;
+            }
+            catch(NullReferenceException)
+            {
+                MySandboxGame.Log.WriteLineWarning($"Could not look up DLC with name '{dlc}'. As of SE version 1.204, name lookups are not available. Please use the AppId when specifying DLC instead. Valid AppIds are found in '{Path.Combine(MyModContext.BaseGame.ModPathData, "Game", "DLCs.sbc")}'.");
                 return 0;
+            }
 #else
             return 0;
 #endif

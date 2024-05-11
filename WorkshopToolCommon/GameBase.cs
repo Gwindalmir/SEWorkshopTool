@@ -1039,9 +1039,16 @@ namespace Phoenix.WorkshopTool
         {
 #if SE
             MySandboxGame.Log.WriteLineAndConsole("Valid DLC:");
-            foreach (var dlc in Sandbox.Game.MyDLCs.DLCs.Values)
+            try
             {
-                MySandboxGame.Log.WriteLineAndConsole($"Name: {dlc.Name}, ID: {dlc.AppId}");
+                foreach (var dlc in Sandbox.Game.MyDLCs.DLCs.Values)
+                {
+                    MySandboxGame.Log.WriteLineAndConsole($"Name: {dlc.Name}, ID: {dlc.AppId}");
+                }
+            }
+            catch(NullReferenceException)
+            {
+                MySandboxGame.Log.WriteLineWarning($"This option is no longer available as of SE version 1.204.\nValid DLC AppIds are in '{Path.Combine(MyModContext.BaseGame.ModPathData, "Game", "DLCs.sbc")}'.");
             }
 #endif
         }
