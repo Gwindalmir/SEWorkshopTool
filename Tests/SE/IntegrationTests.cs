@@ -40,5 +40,22 @@ namespace Phoenix.WorkshopTool.Tests.SE
             Assert.That(output, Contains.Substring("Compilation successful!"));
             Assert.That(output, Contains.Substring("DRY-RUN; Publish skipped"));
         }
+
+        [Test]
+        [Explicit]
+        [TestCase(1676100U)]
+        public void UploadModWithDLC(uint appid)
+        {
+            var args = new List<string>(new[] { "push", "--mods", TestContext.Parameters[$"{ParameterPrefix}.ModNameToUpload"], "--tags", "Mod", "--dlc", appid.ToString() });
+            args.AddRange(_extraArguments);
+
+            var exitCode = LaunchMain(args.ToArray());
+            Assert.That(exitCode, Is.EqualTo(0));
+
+            var output = ConsoleOut.ToString();
+            Assert.That(output, Contains.Substring("Updating Mod: "));
+            Assert.That(output, Contains.Substring($"DLC requirements: Unknown({appid.ToString()})"));
+            Assert.That(output, Contains.Substring("Upload/Publish success: "));
+        }
     }
 }
