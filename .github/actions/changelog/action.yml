@@ -18,7 +18,7 @@ runs:
   steps:
     - name: Get Build Version
       id: get-version
-      uses: naminodarie/get-net-sdk-project-versions-action@v1.1.1
+      uses: kzrnm/get-net-sdk-project-versions-action@v2
       with:
         proj-path: ${{inputs.project-path}}
 
@@ -34,7 +34,7 @@ runs:
         echo "$changelog" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
         
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       name: Publish Changelog
       id: artifact-changelog
       with:

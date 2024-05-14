@@ -32,7 +32,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       name: Checkout Sources
       id: checkout
       with:
@@ -59,14 +59,14 @@ jobs:
       with:
         project-path: Directory.Build.props
       
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       name: Publish SEWT Artifacts
       id: artifact-sewt
       with:
         name: SEWT
         path: SEWorkshopTool/bin/${{env.BUILD_CONFIGURATION}}/${{env.BUILD_FRAMEWORK}}/SEWorkshopTool*.zip
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       name: Publish MEWT Artifacts
       id: artifact-mewt
       with:
