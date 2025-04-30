@@ -245,7 +245,7 @@ namespace Phoenix.WorkshopTool
                     var program = input.ReadToEnd();
                     input.Close();
                     var scripts = new List<Script>();
-                    scripts.Add(MyScriptCompiler.Static.GetIngameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial"));
+                    scripts.Add(MyScriptCompiler.Static.GetInGameScript(program, "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name, "sealed partial"));
 
                     var messages = new List<Message>();
                     var assembly = MyVRage.Platform.Scripting.CompileIngameScriptAsync(Path.Combine(VRage.FileSystem.MyFileSystem.UserDataPath, "SEWT-Script - " + Path.GetFileName(m_modPath)), program, out messages, "SEWT Compiled PB Script", "Program", typeof(Sandbox.ModAPI.Ingame.MyGridProgram).Name).Result;
