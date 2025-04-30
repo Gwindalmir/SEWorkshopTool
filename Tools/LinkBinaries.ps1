@@ -20,8 +20,8 @@ function Get-ViaDepotDownloader {
 
     $depotId = $serverAppId + 1
 
-    $ver = "2.5.0"
-    $name = "depotdownloader-$($ver)"
+    $ver = "3.2.0"
+    $name = "depotdownloader-windows-x64"
     if (-not(Test-Path -Path "$($PSScriptRoot)\$($name)\DepotDownloader.exe" -PathType Leaf)) {
         # Don't allow parallel builds to each trigger this download
         $lockfile = $null
