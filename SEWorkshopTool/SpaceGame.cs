@@ -34,7 +34,7 @@ namespace Phoenix.SEWorkshopTool
 
             var appDataPath = m_startup.GetAppDataPath();
             VRage.Platform.Windows.MyVRageWindows.Init(MyPerGameSettings.BasicGameInfo.ApplicationName, MySandboxGame.Log, appDataPath, false);
-            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.System.GetRootPath(), MyVRage.Platform.System.GetAppDataPath());
+            MyInitializer.InvokeBeforeRun(AppId, MyPerGameSettings.BasicGameInfo.ApplicationName + "ModTool", MyVRage.Platform.System.GetRootPath(), MyVRage.Platform.System.GetAppDataPath(), true, 1, null, MyVRage.Platform.System.GetModsCachePath());
             MyRenderProxy.Initialize((IMyRender)new MyNullRender());
 
             if (m_startup.PerformColdStart()) return false;
