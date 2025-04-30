@@ -361,6 +361,11 @@ namespace Phoenix.WorkshopTool
 #if SE
             var result = _publishMethod(localFolder, publishedTitle, publishedDescription, workshopId, visibility, tags, ignoredExtensions, ignoredPaths, requiredDLCs, out outIds);
             PublishSuccess = result.Item1 == MyGameServiceCallResult.OK;
+
+            if(!PublishSuccess)
+            {
+                MySandboxGame.Log.WriteLineError(string.Format("Publishing failed with error: {0}", result.Item1.ToString()));
+            }
 #else
             var result = _publishMethod(localFolder, publishedTitle, publishedDescription, workshopId[0], visibility, tags, ignoredExtensions, ignoredPaths);
             if (result > 0)

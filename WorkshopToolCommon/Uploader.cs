@@ -337,7 +337,7 @@ namespace Phoenix.WorkshopTool
                 }
                 else
                 {
-                    MySandboxGame.Log.WriteLineError(string.Format(Constants.ERROR_Reflection, "PublishItemBlocking"));
+                    MySandboxGame.Log.WriteLineError("Publishing failed");
                 }
                 
                 // SE libraries don't support updating dependencies, so we have to do that separately
