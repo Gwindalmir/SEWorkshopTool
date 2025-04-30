@@ -405,7 +405,7 @@ namespace Phoenix.WorkshopTool
         {
             try
             {
-                if (MyGameService.GameServer.Running)
+                if (MyGameService.GameServer?.Running == true)
                     MyGameService.GameServer.Shutdown();
 
                 m_steamService?.ShutDown();
